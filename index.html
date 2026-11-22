@@ -258,9 +258,16 @@
         display: flex;
         align-items: center;
         gap: 6px;
+        max-width: 100%;
+        overflow: hidden;
         white-space: nowrap;
         animation: killFeedSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+      }
+      .kill-feed-item > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
       }
       .kill-feed-item.fade-out {
         opacity: 0;
@@ -520,16 +527,9 @@
         }
       }
 
-      /* ROTATE TO LANDSCAPE PROMPT (PORTRAIT SCREEN DETECTION) */
-      @media screen and (orientation: portrait) and (max-width: 900px) {
-        #landscape-prompt:not(.dismissed) {
-          display: flex !important;
-        }
-      }
-      @media screen and (orientation: landscape) {
-        #landscape-prompt {
-          display: none !important;
-        }
+      /* ROTATE TO LANDSCAPE PROMPT (OPTIONAL VIA SETTINGS — PORTRAIT IS FULLY PLAYABLE) */
+      #landscape-prompt {
+        display: none;
       }
       .landscape-prompt-overlay {
         position: fixed;
@@ -682,12 +682,20 @@
       .gem-pill { color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); }
       .crystal-pill { color: #c084fc; border-color: rgba(192, 132, 252, 0.4); background: rgba(88, 28, 135, 0.28); }
       .lvl-pill {
-        color: #a855f7;
-        border-color: rgba(168, 85, 247, 0.4);
+        color: #c084fc;
+        border-color: rgba(168, 85, 247, 0.45);
         flex-direction: column;
         align-items: flex-start;
         padding: 4px 10px;
         gap: 3px;
+      }
+      .lvl-pill.is-max {
+        color: #fde047;
+        border-color: rgba(251, 191, 36, 0.72);
+        background: rgba(120, 53, 15, 0.28);
+      }
+      .lvl-pill.is-max .xp-fill {
+        background: linear-gradient(90deg, #f59e0b, #fde047);
       }
       .lvl-pill-top {
         display: flex;
@@ -1030,9 +1038,36 @@
       .reward-values {
         display: flex;
         justify-content: center;
-        gap: 16px;
+        flex-wrap: wrap;
+        gap: 14px;
         font-size: 16px;
         font-weight: 900;
+      }
+      .milestone-banner {
+        width: 100%;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.28), rgba(251, 191, 36, 0.22));
+        border: 1px solid rgba(251, 191, 36, 0.65);
+        border-radius: 12px;
+        padding: 9px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        box-shadow: 0 0 18px rgba(168, 85, 247, 0.24);
+      }
+      .milestone-banner.hidden {
+        display: none;
+      }
+      .milestone-title {
+        font-size: 11px;
+        font-weight: 900;
+        color: #fde047;
+        text-transform: uppercase;
+        letter-spacing: 0.9px;
+      }
+      .milestone-rewards-text {
+        font-size: 13px;
+        font-weight: 800;
+        color: #f8fafc;
       }
       .go-stats {
         width: 100%;
@@ -1655,6 +1690,16 @@
         border-radius: 999px; background: rgba(4,12,24,0.88); color: #c8edf5; text-align: center;
         font-size: 10px; font-weight: 700; pointer-events: none;
       }
+      .combat-stats {
+        position: absolute;
+        top: var(--minimap-bottom, 274px);
+        left: var(--minimap-left, 14px);
+        z-index: 24;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        pointer-events: none;
+      }
       .combat-stat { padding: 5px 9px; border: 1px solid var(--line); border-radius: 9px; background: rgba(7,11,23,0.62); color: var(--muted); font-size: 10px; font-weight: 750; }
       .combat-stat strong { color: var(--gold); font-variant-numeric: tabular-nums; }
       #joystick-zone { left: var(--safe-left); bottom: var(--safe-bottom); background: radial-gradient(circle, rgba(160,181,230,0.11), rgba(63,76,113,0.04)); border-color: rgba(200,215,255,0.26); backdrop-filter: blur(4px); }
@@ -1783,10 +1828,16 @@
         .hero-display-card > button { grid-column: 1 / -1; min-height: 34px; padding: 6px 12px; }
         .lobby-buttons-row { grid-column: 1 / -1; }
         .version-note { display: none; }
-        .currency-bar { flex-direction: row; align-items: center; }
-        .wallet-group { width: auto; }
-        .currency-actions { width: auto; }
-        .lvl-pill { display: none; }
+        .currency-bar { flex-direction: row; align-items: center; gap: 6px; padding: 6px 8px; }
+        .wallet-group { width: auto; gap: 5px; overflow: visible; flex-shrink: 0; }
+        .wallet-group .currency-pill { padding: 4px 8px; font-size: 11px; gap: 4px; }
+        .currency-actions { width: auto; gap: 5px; flex-shrink: 0; }
+        .currency-actions .btn-lobby-sec { padding: 4px 8px !important; font-size: 10px !important; min-height: 30px; }
+        .currency-actions .btn-icon { width: 32px; height: 32px; }
+        .lvl-pill { display: inline-flex; min-width: 104px; padding: 3px 8px !important; gap: 2px; flex-shrink: 0; }
+        .lvl-pill .lvl-pill-top { font-size: 10px; gap: 4px; white-space: nowrap; }
+        .lvl-pill .xp-track { min-width: 82px; height: 4px; }
+        #lobby-xp-text { display: none; }
         #drop-screen { justify-content: flex-start; }
         #drop-map-container { width: min(250px, 49vh) !important; height: min(250px, 49vh) !important; }
         .drop-actions { margin-top: 8px; }
@@ -1803,7 +1854,6 @@
         .alive-badge { display: none; }
         .hud-tool { min-width: 58px; padding: 4px 6px !important; }
         #fps-counter { display: none; }
-        .combat-stats { top: calc(var(--safe-top) + 68px); }
         .shop-tabs { border-radius: 12px; }
       }
       @media (max-width: 520px) and (orientation: portrait) {
@@ -1826,6 +1876,392 @@
       }
       @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+      }
+
+      /* =========================================================
+         ADAPTIVE DEVICE OPTIMIZATION (AUTO + MANUAL OVERRIDES)
+         ========================================================= */
+      :root {
+        --control-scale: 1;
+        --hud-scale: 1;
+      }
+      .overlay-screen {
+        height: 100%;
+        max-height: 100dvh;
+        overflow-x: hidden;
+      }
+      .settings-card {
+        max-height: calc(100dvh - 28px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .settings-device-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 10px;
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        font-size: 11px;
+        font-weight: 700;
+        color: #bae6fd;
+      }
+      .settings-divider {
+        height: 1px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.09);
+        margin: 2px 0;
+      }
+      .settings-section-label {
+        font-size: 10px;
+        font-weight: 850;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin-top: 2px;
+      }
+      .settings-scale-value {
+        min-width: 38px;
+        text-align: right;
+        font-size: 11px;
+        font-weight: 800;
+        color: #e2e8f0;
+        font-variant-numeric: tabular-nums;
+      }
+      .hud-tools-col {
+        min-width: 80px;
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+      }
+
+      /* Scale touch controls smoothly from DeviceOptimizer */
+      #joystick-zone {
+        transform: scale(var(--control-scale, 1));
+        transform-origin: bottom left;
+      }
+      #action-buttons {
+        transform: scale(var(--control-scale, 1));
+        transform-origin: bottom right;
+      }
+      html[data-touch-controls="off"] #joystick-zone,
+      html[data-touch-controls="off"] #action-buttons {
+        display: none !important;
+      }
+
+      /* MOBILE PORTRAIT PROFILE (e.g. 360x780, 390x844, 430x932) */
+      html[data-device-profile="mobile-portrait"] #hud-top {
+        padding: var(--safe-top) 10px 0 10px;
+        align-items: flex-start;
+      }
+      html[data-device-profile="mobile-portrait"] .hud-stats-card {
+        min-width: 142px;
+        max-width: 164px;
+        padding: 5px 8px;
+      }
+      html[data-device-profile="mobile-portrait"] .bar-label {
+        font-size: 9.5px;
+      }
+      html[data-device-profile="mobile-portrait"] #fps-counter {
+        display: none;
+      }
+      html[data-device-profile="mobile-portrait"] .hud-tools-col {
+        min-width: auto;
+        display: grid;
+        grid-template-columns: repeat(2, auto);
+        gap: 4px;
+        align-items: stretch;
+      }
+      html[data-device-profile="mobile-portrait"] .hud-map-actions {
+        display: contents;
+      }
+      html[data-device-profile="mobile-portrait"] .hud-tool {
+        min-width: 54px;
+        min-height: 28px;
+        padding: 4px 6px !important;
+        font-size: 9.5px !important;
+      }
+      html[data-device-profile="mobile-portrait"] #hud-center-top {
+        position: absolute;
+        top: calc(var(--safe-top) + 86px);
+        left: 108px;
+        right: 10px;
+        transform: none;
+        align-items: flex-end;
+        gap: 4px;
+      }
+      html[data-device-profile="mobile-portrait"] .storm-badge,
+      html[data-device-profile="mobile-portrait"] .alive-badge,
+      html[data-device-profile="mobile-portrait"] .weather-badge {
+        font-size: 9.5px;
+        padding: 3px 8px;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      html[data-device-profile="mobile-portrait"] .combat-stats {
+        top: var(--minimap-bottom, 214px);
+        left: var(--minimap-left, 10px);
+        flex-direction: row;
+        gap: 4px;
+      }
+      html[data-device-profile="mobile-portrait"] .combat-stat {
+        padding: 3px 6px;
+        font-size: 9px;
+      }
+      html[data-device-profile="mobile-portrait"] .waypoint-hud {
+        top: calc(var(--safe-top) + 148px);
+        left: auto;
+        right: 10px;
+        transform: none;
+        max-width: calc(100vw - 122px);
+        font-size: 10px;
+        padding: 4px 6px 4px 9px;
+      }
+      html[data-device-profile="mobile-portrait"] body[data-state="playing"] #toast-msg,
+      html[data-device-profile="mobile-portrait"] body[data-state="dropping"] #toast-msg {
+        top: calc(var(--safe-top) + 192px);
+        font-size: 11px;
+        padding: 6px 12px;
+      }
+      html[data-device-profile="mobile-portrait"] #kill-feed {
+        top: calc(var(--safe-top) + 188px);
+        left: auto;
+        right: 10px;
+        transform: none;
+        align-items: flex-end;
+        max-width: 58vw;
+      }
+      html[data-device-profile="mobile-portrait"] #kill-feed .kill-feed-item {
+        font-size: 9px;
+        padding: 3px 7px;
+      }
+      html[data-device-profile="mobile-portrait"] #inventory-hud {
+        bottom: calc(var(--safe-bottom) + 186px);
+        gap: 4px;
+      }
+      html[data-device-profile="mobile-portrait"] .inventory-slot {
+        width: 48px;
+        height: 46px;
+        border-radius: 9px;
+      }
+      html[data-device-profile="mobile-portrait"] .inventory-slot .slot-icon {
+        font-size: 16px;
+        line-height: 18px;
+      }
+      html[data-device-profile="mobile-portrait"] .inventory-slot .slot-name {
+        font-size: 6.5px;
+      }
+      html[data-device-profile="mobile-portrait"] .inventory-slot .slot-count {
+        font-size: 9.5px;
+      }
+      html[data-device-profile="mobile-portrait"] #item-details,
+      html[data-device-profile="mobile-portrait"] #item-channel {
+        bottom: calc(var(--safe-bottom) + 238px);
+      }
+      html[data-device-profile="mobile-portrait"] .currency-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      html[data-device-profile="mobile-portrait"] .wallet-group {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      html[data-device-profile="mobile-portrait"] .currency-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .hero-stage {
+        flex-direction: column;
+        gap: 12px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-brief {
+        padding: 16px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-brief h2 {
+        font-size: 22px;
+      }
+      html[data-device-profile="mobile-portrait"] .hero-display-card {
+        width: 100%;
+        max-width: 360px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-buttons-row {
+        width: 100%;
+        gap: 8px;
+      }
+      html[data-device-profile="mobile-portrait"] .btn-lobby-main {
+        width: 100%;
+        justify-content: center;
+      }
+      html[data-device-profile="mobile-portrait"] .shop-tabs {
+        flex-wrap: wrap;
+      }
+      html[data-device-profile="mobile-portrait"] .career-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      /* MOBILE LANDSCAPE PROFILE (e.g. 667x375, 844x390, 915x412) */
+      html[data-device-profile="mobile-landscape"] #hud-top {
+        padding: 8px max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
+        align-items: flex-start;
+      }
+      html[data-device-profile="mobile-landscape"] .hud-stats-card {
+        min-width: 138px;
+        max-width: 158px;
+        padding: 4px 7px;
+      }
+      html[data-device-profile="mobile-landscape"] .bar-label {
+        font-size: 9px;
+      }
+      html[data-device-profile="mobile-landscape"] .bar-track {
+        height: 5px;
+      }
+      html[data-device-profile="mobile-landscape"] #fps-counter {
+        display: none;
+      }
+      html[data-device-profile="mobile-landscape"] .hud-tools-col {
+        min-width: auto;
+        display: grid;
+        grid-template-columns: repeat(2, auto);
+        gap: 4px;
+      }
+      html[data-device-profile="mobile-landscape"] .hud-map-actions {
+        display: contents;
+      }
+      html[data-device-profile="mobile-landscape"] .hud-tool {
+        min-width: 52px;
+        min-height: 26px;
+        padding: 3px 6px !important;
+        font-size: 9px !important;
+      }
+      html[data-device-profile="mobile-landscape"] #hud-center-top {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 54vw;
+        gap: 4px;
+      }
+      html[data-device-profile="mobile-landscape"] .storm-badge,
+      html[data-device-profile="mobile-landscape"] .alive-badge,
+      html[data-device-profile="mobile-landscape"] .weather-badge {
+        font-size: 9.5px;
+        padding: 2px 8px;
+      }
+      html[data-device-profile="mobile-landscape"] .combat-stats {
+        display: none;
+      }
+      html[data-device-profile="mobile-landscape"] .waypoint-hud {
+        top: calc(var(--safe-top) + 56px);
+        font-size: 10px;
+        padding: 4px 6px 4px 10px;
+      }
+      html[data-device-profile="mobile-landscape"] body[data-state="playing"] #toast-msg,
+      html[data-device-profile="mobile-landscape"] body[data-state="dropping"] #toast-msg {
+        top: calc(var(--safe-top) + 92px);
+        font-size: 11px;
+        padding: 5px 12px;
+      }
+      html[data-device-profile="mobile-landscape"] #kill-feed {
+        top: calc(var(--safe-top) + 68px);
+        left: auto;
+        right: max(10px, env(safe-area-inset-right));
+        transform: none;
+        align-items: flex-end;
+        max-width: min(290px, 42vw);
+      }
+      html[data-device-profile="mobile-landscape"] #kill-feed .kill-feed-item {
+        font-size: 9px;
+        padding: 3px 7px;
+        max-width: 100%;
+        overflow: hidden;
+      }
+      html[data-device-profile="mobile-landscape"] #inventory-hud {
+        bottom: max(8px, env(safe-area-inset-bottom));
+        gap: 3px;
+      }
+      html[data-device-profile="mobile-landscape"] .inventory-slot {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        padding: 3px 2px 2px;
+      }
+      html[data-device-profile="mobile-landscape"] .inventory-slot .slot-icon {
+        font-size: 15px;
+        line-height: 17px;
+      }
+      html[data-device-profile="mobile-landscape"] .inventory-slot .slot-name {
+        font-size: 6.5px;
+      }
+      html[data-device-profile="mobile-landscape"] .inventory-slot .slot-count {
+        font-size: 9px;
+      }
+      html[data-device-profile="mobile-landscape"] #btn-inventory-info {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+      }
+      html[data-device-profile="mobile-landscape"] #item-details,
+      html[data-device-profile="mobile-landscape"] #item-channel {
+        bottom: calc(var(--safe-bottom) + 58px);
+      }
+      html[data-device-profile="mobile-landscape"] #lobby-screen .lobby-title-card {
+        display: none;
+      }
+      html[data-device-profile="mobile-landscape"] #lobby-screen .lobby-center {
+        gap: 8px;
+      }
+      html[data-device-profile="mobile-landscape"] #lobby-screen .hero-stage {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 12px;
+      }
+      html[data-device-profile="mobile-landscape"] .lobby-brief {
+        padding: 12px 14px;
+      }
+      html[data-device-profile="mobile-landscape"] .lobby-brief h2 {
+        font-size: 20px;
+      }
+      html[data-device-profile="mobile-landscape"] .lobby-brief > p {
+        font-size: 11px;
+        margin-top: 4px;
+      }
+      html[data-device-profile="mobile-landscape"] .feature-chips {
+        margin-top: 6px;
+      }
+      html[data-device-profile="mobile-landscape"] .lobby-record {
+        margin-top: 8px;
+      }
+      html[data-device-profile="mobile-landscape"] .hero-display-card {
+        width: min(40vw, 310px);
+        padding: 10px 12px;
+      }
+      html[data-device-profile="mobile-landscape"] .version-note {
+        display: none;
+      }
+
+      /* TABLET PROFILE */
+      html[data-device-profile="tablet"] #inventory-hud {
+        bottom: calc(var(--safe-bottom) + 18px);
+      }
+      html[data-device-profile="tablet"] #item-details,
+      html[data-device-profile="tablet"] #item-channel {
+        bottom: calc(var(--safe-bottom) + 86px);
+      }
+
+      /* DESKTOP PROFILE */
+      html[data-device-profile="desktop"][data-touch-controls="off"] #inventory-hud {
+        bottom: calc(var(--safe-bottom) + 18px);
+      }
+      html[data-device-profile="desktop"][data-touch-controls="off"] #item-details,
+      html[data-device-profile="desktop"][data-touch-controls="off"] #item-channel {
+        bottom: calc(var(--safe-bottom) + 90px);
       }
     </style>
   </head>
@@ -1893,7 +2329,7 @@
             <div id="weather-badge" class="weather-badge hidden" role="status" aria-live="polite"></div>
           </div>
 
-          <div style="min-width: 80px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+          <div class="hud-tools-col">
             <div id="fps-counter" style="font-size: 11px; font-weight: 700; color: #64748b;">60 FPS</div>
             <button type="button" id="btn-zoom-toggle" class="interactive hud-tool" onclick="toggleZoom()" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🔍 Zoom: Auto</button>
             <div class="hud-map-actions">
@@ -2051,6 +2487,7 @@
           </div>
           <div class="currency-actions">
             <button type="button" class="btn-lobby-sec" onclick="openShop('crystals')" style="padding: 4px 12px; font-size: 11px;">🔮 Vault</button>
+            <button type="button" id="btn-device-mode" class="btn-lobby-sec" onclick="cycleDeviceMode()" title="Cycle screen optimization mode (Auto / Mobile / Tablet / Desktop)" style="padding: 4px 12px; font-size: 11px;">📱 Display: Auto</button>
             <button type="button" id="btn-autoaim" class="btn-lobby-sec" onclick="toggleAutoAim()" style="padding: 4px 12px; font-size: 11px;">🎯 Auto-Aim: ON</button>
             <button type="button" id="btn-settings" class="btn-operator" onclick="openSettings()" title="Settings" aria-label="Open settings">⚙️</button>
             <button type="button" id="btn-operator" class="btn-operator" onclick="triggerOperatorAccess()" title="Open demo supplies" aria-label="Open demo supplies">✨</button>
@@ -2247,6 +2684,7 @@
             <span class="reward-title">Match Rewards Claimed</span>
             <div class="reward-values">
               <span id="rw-gold" style="color: #fbbf24;">+0 🪙</span>
+              <span id="rw-crystals" style="color: #c084fc; display: none;">+0 🔮</span>
               <span id="rw-gems" style="color: #38bdf8;">+0 💎</span>
               <span id="rw-xp" style="color: #fde047;">+0 ⚡ XP</span>
             </div>
@@ -2254,6 +2692,11 @@
               <span id="rw-breakdown-placement">Placement: #1</span>
               <span id="rw-breakdown-kills">Kills: 0</span>
             </div>
+          </div>
+
+          <div id="milestone-banner" class="milestone-banner hidden" role="status" aria-live="polite">
+            <span id="milestone-banner-title" class="milestone-title">🏆 LEVEL MILESTONE UNLOCKED!</span>
+            <span id="milestone-banner-text" class="milestone-rewards-text">+250 🪙 · +150 🔮</span>
           </div>
 
           <div class="go-stats">
@@ -2343,6 +2786,41 @@
           <div class="settings-row">
             <label class="settings-label" for="toggle-motion">Reduce Motion &amp; Flashes</label>
             <input type="checkbox" id="toggle-motion" style="width: 18px; height: 18px; accent-color: #a855f7; cursor: pointer;" onchange="onReducedMotionToggle(this.checked)">
+          </div>
+
+          <div class="settings-divider"></div>
+          <div class="settings-section-label">Screen &amp; Device Optimization</div>
+
+          <div class="settings-device-banner" role="status" aria-live="polite">
+            <span id="settings-device-status">Active: Auto</span>
+            <span id="settings-viewport-size" style="color: #7dd3fc; font-variant-numeric: tabular-nums;">--</span>
+          </div>
+
+          <div class="settings-row">
+            <span class="settings-label">Screen Mode</span>
+            <div class="settings-quality-group" role="group" aria-label="Screen optimization mode">
+              <button type="button" id="mode-btn-auto" class="quality-btn" onclick="setDeviceMode('auto')">Auto</button>
+              <button type="button" id="mode-btn-mobile" class="quality-btn" onclick="setDeviceMode('mobile')">Mobile</button>
+              <button type="button" id="mode-btn-tablet" class="quality-btn" onclick="setDeviceMode('tablet')">Tablet</button>
+              <button type="button" id="mode-btn-desktop" class="quality-btn" onclick="setDeviceMode('desktop')">Desktop</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <span class="settings-label">Touch Controls</span>
+            <div class="settings-quality-group" role="group" aria-label="Touch controls visibility">
+              <button type="button" id="touch-btn-auto" class="quality-btn" onclick="setTouchControlsMode('auto')">Auto</button>
+              <button type="button" id="touch-btn-on" class="quality-btn" onclick="setTouchControlsMode('on')">Show</button>
+              <button type="button" id="touch-btn-off" class="quality-btn" onclick="setTouchControlsMode('off')">Hide</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <label class="settings-label" for="slider-control-scale">Controls &amp; HUD Scale</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="range" min="0.75" max="1.25" step="0.05" id="slider-control-scale" class="settings-slider" style="width: 112px;" oninput="onControlScaleChange(this.value)">
+              <span id="control-scale-val" class="settings-scale-value">100%</span>
+            </div>
           </div>
 
           <div class="settings-row">
@@ -2511,7 +2989,8 @@
         'totalXpEarned', 'totalSurvivalTime', 'bestSurvivalTime', 'totalDamageDealt',
         'statUpgrades', 'selectedFighter', 'unlockedFighters',
         'totalMatches', 'totalWins', 'totalKills',
-        'musicVolume', 'sfxVolume', 'voiceVolume', 'haptics', 'reducedMotion', 'graphicsQuality', 'tutorialSeen'
+        'musicVolume', 'sfxVolume', 'voiceVolume', 'haptics', 'reducedMotion', 'graphicsQuality',
+        'deviceMode', 'touchControlsMode', 'controlScale', 'tutorialSeen'
       ];
       const STAT_UPGRADE_DEFS = Object.freeze({
         maxHealth: Object.freeze({
@@ -2598,6 +3077,125 @@
         return { survivalXp, combatXp, placementXp, totalXp: survivalXp + combatXp + placementXp };
       }
 
+      const MAX_PLAYER_LEVEL = 100;
+      const DEATH_ANIM_DURATION = 0.85;
+      const DEATH_PHASE1_DURATION = 0.15;
+
+      function getXpRequiredForLevel(level) {
+        const lv = Math.max(1, Math.min(MAX_PLAYER_LEVEL, Math.floor(Number(level) || 1)));
+        return 100 + (lv - 1) * 35 + Math.floor(Math.pow(lv - 1, 1.6) * 5);
+      }
+
+      function getMilestoneRewardForLevel(level) {
+        const lv = Math.floor(Number(level) || 0);
+        if (lv <= 0 || lv > MAX_PLAYER_LEVEL) return null;
+        if (lv === MAX_PLAYER_LEVEL) return { level: 100, tier: 'MAX', coins: 2500, crystals: 1500, gems: 15 };
+        if (lv % 10 === 0) return { level: lv, tier: 'MAJOR', coins: 500, crystals: 300, gems: 3 };
+        if (lv % 5 === 0) return { level: lv, tier: 'MINOR', coins: 250, crystals: 150, gems: 0 };
+        return null;
+      }
+
+      function applyPlayerLevelProgression(startLevel, startXp, earnedXp) {
+        let level = Math.max(1, Math.min(MAX_PLAYER_LEVEL, Math.floor(Number(startLevel) || 1)));
+        let xp = Math.max(0, Math.floor(Number(startXp) || 0));
+        const gain = Math.max(0, Math.floor(Number(earnedXp) || 0));
+        const levelsGained = [];
+        const milestones = [];
+        let bonusCoins = 0;
+        let bonusCrystals = 0;
+        let bonusGems = 0;
+
+        if (level >= MAX_PLAYER_LEVEL) {
+          const capXp = getXpRequiredForLevel(MAX_PLAYER_LEVEL);
+          return { level: MAX_PLAYER_LEVEL, xp: capXp, xpNeeded: capXp, isMaxLevel: true, levelsGained, bonusCoins, bonusCrystals, bonusGems, milestones };
+        }
+
+        xp += gain;
+        while (level < MAX_PLAYER_LEVEL) {
+          const needed = getXpRequiredForLevel(level);
+          if (xp < needed) break;
+          xp -= needed;
+          level += 1;
+          levelsGained.push(level);
+          const ms = getMilestoneRewardForLevel(level);
+          if (ms) {
+            milestones.push(ms);
+            bonusCoins += ms.coins;
+            bonusCrystals += ms.crystals;
+            bonusGems += ms.gems;
+          } else {
+            bonusCoins += 50;
+          }
+          if (level >= MAX_PLAYER_LEVEL) {
+            level = MAX_PLAYER_LEVEL;
+            xp = getXpRequiredForLevel(MAX_PLAYER_LEVEL);
+            break;
+          }
+        }
+
+        const isMaxLevel = level >= MAX_PLAYER_LEVEL;
+        const xpNeeded = getXpRequiredForLevel(level);
+        if (isMaxLevel) xp = xpNeeded;
+        return { level, xp, xpNeeded, isMaxLevel, levelsGained, bonusCoins, bonusCrystals, bonusGems, milestones };
+      }
+
+      const BOT_NAME_POOL = Object.freeze([
+        'ShadowVex', 'RiftWalker', 'Kaelen', 'Blaze_99', 'NyxArcana', 'FrostByte', 'ZephyrX', 'AetherKing',
+        'Valkyrie_07', 'DravenSoul', 'Solstice', 'Kryos', 'Ashborn', 'Vortexia', 'Ironclad', 'Lunaris',
+        'ZeroPing', 'HexWeaver', 'Pyroclast', 'SilentFang', 'Cinderfall', 'TideBreaker', 'AstralKite', 'Vespera',
+        'Maelstrom7', 'OnyxBlade', 'StarForge', 'GrimPulse', 'NovaDrift', 'SableWraith', 'EmberVow', 'GlacierX',
+        'RunicFox', 'Kestrel_21', 'ObsidianQ', 'Tempestia', 'DuskReaver', 'ArcaneFlux', 'Valkor', 'SirenWave',
+        'Blightborn', 'SolarFlare', 'NightShift', 'CobaltEdge', 'Thorne_88', 'EchoStrike', 'MistWalker', 'IgnisRex',
+        'VoidStrider', 'Riptide_42', 'AegisPrime', 'ShatterHex', 'CrimsonVex', 'LumenArc', 'StormCrowned', 'FangZero',
+        'WraithSong', 'QuasarBit', 'FrostVeil', 'PyreKnight', 'VenomSpire', 'SkyShatter', 'KuroKage', 'Aurelia_X',
+        'FluxHunter', 'CinderKin', 'AbyssalFin', 'GaleRunner', 'RuneSmith', 'Nocturne9', 'BlazeCore', 'PolarisV',
+        'ShadowMire', 'TidalFury', 'Vexillum', 'Crystalline', 'NetherSpark', 'OmenCast', 'Driftwood7', 'HazeBlade',
+        'Solarix', 'Krait_04', 'ArcLight', 'Brimstone', 'Zephyrus', 'MirageHex', 'TalonStrike', 'Sundered',
+        'Valen_55', 'Icebound', 'PhantomJ', 'Eclipsed', 'RiftSlinger', 'MagmaPulse', 'CoralWitch', 'DreadNova'
+      ]);
+
+      const CHAMPION_ICONS = Object.freeze({
+        BERSERKER: '🔥',
+        TIDECALLER: '🌊',
+        SHADOW: '🌙'
+      });
+
+      function pickUniqueBotNames(count) {
+        const copy = [...BOT_NAME_POOL];
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const tmp = copy[i];
+          copy[i] = copy[j];
+          copy[j] = tmp;
+        }
+        return copy.slice(0, Math.min(count, copy.length));
+      }
+
+      function computeBotScaling(botLevel) {
+        const level = Math.max(1, Math.min(MAX_PLAYER_LEVEL, Math.floor(Number(botLevel) || 1)));
+        const t = (level - 1) / (MAX_PLAYER_LEVEL - 1);
+        const statMultiplier = 0.95 + t * 0.40;
+        const reactionDelay = 0.38 - t * 0.23;
+        const aimSpreadDeg = 9.0 - t * 7.5;
+        const aimSpreadRad = aimSpreadDeg * (Math.PI / 180);
+        const shotLeadingEnabled = level > 15;
+        const shotLeadFactor = shotLeadingEnabled
+          ? Math.min(1, 0.35 + ((level - 15) / (MAX_PLAYER_LEVEL - 15)) * 0.65)
+          : 0;
+        const artComboEnabled = level >= 25;
+        const dodgeChance = 0.28 + t * 0.44;
+        const aggression = 0.62 + t * 0.28;
+        return { level, t, statMultiplier, reactionDelay, aimSpreadDeg, aimSpreadRad, shotLeadingEnabled, shotLeadFactor, artComboEnabled, dodgeChance, aggression };
+      }
+
+      function isEntityInCameraView(entity, margin = 120) {
+        if (!entity) return false;
+        const zoom = Camera.getZoom();
+        const halfW = (window.innerWidth / 2) / zoom + margin;
+        const halfH = (window.innerHeight / 2) / (zoom * CAMERA_PITCH) + margin;
+        return Math.abs(entity.x - Camera.x) <= halfW && Math.abs(entity.y - Camera.y) <= halfH;
+      }
+
       const PlayerData = {
         playerName: "Player",
         autoAimEnabled: true,
@@ -2625,6 +3223,9 @@
         haptics: true,
         reducedMotion: false,
         graphicsQuality: 'high',
+        deviceMode: 'auto',
+        touchControlsMode: 'auto',
+        controlScale: 1.0,
         tutorialSeen: false,
 
         load() {
@@ -2661,7 +3262,7 @@
           this.gems = integer(source.gems, 50);
           this.astralCrystals = integer(source.astralCrystals, 500);
           this.xp = integer(source.xp, 0);
-          this.level = integer(source.level, 1, 1, 10000);
+          this.level = integer(source.level, 1, 1, MAX_PLAYER_LEVEL);
           this.spendableXp = integer(source.spendableXp, 0);
           this.totalXpEarned = integer(source.totalXpEarned, 0);
           this.totalSurvivalTime = integer(source.totalSurvivalTime, 0);
@@ -2679,6 +3280,9 @@
           this.reducedMotion = typeof source.reducedMotion === 'boolean' ? source.reducedMotion : systemReducedMotion;
           document.documentElement.classList.toggle('reduce-motion', this.reducedMotion);
           this.graphicsQuality = ['low', 'medium', 'high'].includes(source.graphicsQuality) ? source.graphicsQuality : 'high';
+          this.deviceMode = ['auto', 'mobile', 'tablet', 'desktop'].includes(source.deviceMode) ? source.deviceMode : 'auto';
+          this.touchControlsMode = ['auto', 'on', 'off'].includes(source.touchControlsMode) ? source.touchControlsMode : 'auto';
+          this.controlScale = Math.round(finite(source.controlScale, 1.0, 0.75, 1.25) * 100) / 100;
           this.tutorialSeen = typeof source.tutorialSeen === 'boolean' ? source.tutorialSeen : false;
 
           const unlockedFighters = Array.isArray(source.unlockedFighters) ? source.unlockedFighters : ['BERSERKER'];
@@ -2693,10 +3297,21 @@
           this.selectedDropSkin = skinKeys.includes(source.selectedDropSkin) && this.unlockedDropSkins.includes(source.selectedDropSkin)
             ? source.selectedDropSkin : 'RIFT';
 
-          // Normalize XP in case an older or manually edited save contains multiple levels.
-          while (this.xp >= this.level * 100 && this.level < 10000) {
-            this.xp -= this.level * 100;
-            this.level++;
+          // Normalize XP against Level 100 progression curve while preserving existing saves.
+          if (this.level >= MAX_PLAYER_LEVEL) {
+            this.level = MAX_PLAYER_LEVEL;
+            this.xp = getXpRequiredForLevel(MAX_PLAYER_LEVEL);
+          } else {
+            while (this.level < MAX_PLAYER_LEVEL) {
+              const req = getXpRequiredForLevel(this.level);
+              if (this.xp < req) break;
+              this.xp -= req;
+              this.level++;
+            }
+            if (this.level >= MAX_PLAYER_LEVEL) {
+              this.level = MAX_PLAYER_LEVEL;
+              this.xp = getXpRequiredForLevel(MAX_PLAYER_LEVEL);
+            }
           }
           this.save();
         },
@@ -2771,20 +3386,189 @@
       const MINIMAP_VIEW = { x: 0, y: 0, size: 0, scale: 0 };
       let activePing = null;
 
+      // ==========================================
+      // AUTO DEVICE SCREEN OPTIMIZER + MANUAL MODE
+      // ==========================================
+      const DeviceOptimizer = {
+        current: {
+          profile: 'desktop',
+          detectedProfile: 'desktop',
+          modePref: 'auto',
+          orientation: 'landscape',
+          isCompact: false,
+          showTouchControls: false,
+          controlScale: 1,
+          hudScale: 1,
+          dprCap: 2,
+          targetCombatSpan: 620,
+          minimapSize: 120,
+          minimapX: 14,
+          minimapY: 96
+        },
+
+        detectProfile(width, height, hasCoarsePointer, maxTouchPoints) {
+          const w = Math.max(240, Math.floor(Number(width) || 1280));
+          const h = Math.max(240, Math.floor(Number(height) || 720));
+          const minDim = Math.min(w, h);
+          const maxDim = Math.max(w, h);
+          const isPortrait = h > w;
+          const isTouch = Boolean(hasCoarsePointer || (maxTouchPoints || 0) > 0);
+
+          if (minDim <= 540 || (isPortrait && w <= 600) || (isTouch && minDim <= 560 && maxDim <= 960)) {
+            return isPortrait ? 'mobile-portrait' : 'mobile-landscape';
+          }
+          if ((isTouch && maxDim <= 1366) || (!isTouch && w < 1024)) {
+            return 'tablet';
+          }
+          return 'desktop';
+        },
+
+        getViewportSize() {
+          const vv = window.visualViewport;
+          const width = Math.max(240, Math.round((vv && vv.width) || window.innerWidth || 1280));
+          const height = Math.max(240, Math.round((vv && vv.height) || window.innerHeight || 720));
+          return { width, height };
+        },
+
+        resolve() {
+          const { width, height } = this.getViewportSize();
+          const hasCoarsePointer = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+          const maxTouchPoints = navigator.maxTouchPoints || 0;
+          const orientation = height > width ? 'portrait' : 'landscape';
+          const modePref = ['auto', 'mobile', 'tablet', 'desktop'].includes(PlayerData.deviceMode) ? PlayerData.deviceMode : 'auto';
+          const touchPref = ['auto', 'on', 'off'].includes(PlayerData.touchControlsMode) ? PlayerData.touchControlsMode : 'auto';
+          const quality = ['low', 'medium', 'high'].includes(PlayerData.graphicsQuality) ? PlayerData.graphicsQuality : 'high';
+          const detectedProfile = this.detectProfile(width, height, hasCoarsePointer, maxTouchPoints);
+
+          let profile = detectedProfile;
+          if (modePref === 'mobile') {
+            profile = orientation === 'portrait' ? 'mobile-portrait' : 'mobile-landscape';
+          } else if (modePref === 'tablet' || modePref === 'desktop') {
+            profile = modePref;
+          }
+
+          const isTouchDevice = Boolean(hasCoarsePointer || maxTouchPoints > 0);
+          const showTouchControls = touchPref === 'on'
+            ? true
+            : touchPref === 'off'
+              ? false
+              : (profile !== 'desktop' || isTouchDevice);
+
+          const rawScale = Number(PlayerData.controlScale);
+          const userScale = Number.isFinite(rawScale) ? Math.max(0.75, Math.min(1.25, rawScale)) : 1;
+          let autoControlFit = 1;
+          if (profile === 'mobile-landscape') {
+            autoControlFit = Math.min(0.76, Math.max(0.58, Math.min(width / 960, height / 490)));
+          } else if (profile === 'mobile-portrait') {
+            autoControlFit = Math.min(0.84, Math.max(0.66, width / 470));
+          } else if (profile === 'tablet') {
+            autoControlFit = 0.92;
+          }
+          const controlScale = Math.round(Math.max(0.54, Math.min(1.25, autoControlFit * userScale)) * 100) / 100;
+          const hudScale = profile === 'mobile-landscape'
+            ? Math.round(Math.max(0.8, Math.min(1.05, 0.88 * userScale)) * 100) / 100
+            : profile === 'mobile-portrait'
+              ? Math.round(Math.max(0.82, Math.min(1.08, 0.92 * userScale)) * 100) / 100
+              : Math.round(Math.max(0.85, Math.min(1.15, userScale)) * 100) / 100;
+
+          let dprCap = 2;
+          if (quality === 'low') dprCap = 1;
+          else if (quality === 'medium') dprCap = profile === 'desktop' ? 1.5 : 1.25;
+          else dprCap = profile === 'desktop' ? 2 : (profile === 'tablet' ? 1.75 : 1.5);
+
+          const targetCombatSpan = profile === 'mobile-portrait'
+            ? 540
+            : profile === 'mobile-landscape'
+              ? 560
+              : profile === 'tablet'
+                ? 600
+                : 620;
+
+          let minimapSize, minimapX, minimapY;
+          if (profile === 'mobile-landscape') {
+            minimapSize = Math.round(Math.max(66, Math.min(92, height * 0.21)));
+            minimapX = 10;
+            minimapY = Math.round(Math.max(82, Math.min(92, height - minimapSize - 118)));
+          } else if (profile === 'mobile-portrait') {
+            minimapSize = Math.round(Math.max(74, Math.min(96, width * 0.22)));
+            minimapX = 10;
+            minimapY = 104;
+          } else if (profile === 'tablet') {
+            minimapSize = Math.round(Math.max(94, Math.min(118, Math.min(width, height) * 0.16)));
+            minimapX = 14;
+            minimapY = 118;
+          } else {
+            minimapSize = Math.round(Math.max(96, Math.min(128, Math.min(width, height) * 0.18)));
+            minimapX = 14;
+            minimapY = Math.round(Math.max(12, Math.min(122, height - minimapSize - 12)));
+          }
+
+          this.current = {
+            profile,
+            detectedProfile,
+            modePref,
+            orientation,
+            isCompact: profile === 'mobile-portrait' || profile === 'mobile-landscape',
+            showTouchControls,
+            controlScale,
+            hudScale,
+            dprCap,
+            targetCombatSpan,
+            minimapSize,
+            minimapX,
+            minimapY,
+            width,
+            height
+          };
+          return this.current;
+        },
+
+        formatProfileLabel(profile) {
+          if (profile === 'mobile-portrait') return 'Mobile Portrait';
+          if (profile === 'mobile-landscape') return 'Mobile Landscape';
+          if (profile === 'tablet') return 'Tablet';
+          return 'Desktop';
+        },
+
+        apply(shouldResizeCanvas = true) {
+          const cfg = this.resolve();
+          const root = document.documentElement;
+          root.dataset.deviceProfile = cfg.profile;
+          root.dataset.deviceMode = cfg.modePref;
+          root.dataset.touchControls = cfg.showTouchControls ? 'on' : 'off';
+          root.style.setProperty('--control-scale', String(cfg.controlScale));
+          root.style.setProperty('--hud-scale', String(cfg.hudScale));
+
+          if (shouldResizeCanvas && typeof resizeCanvas === 'function') {
+            resizeCanvas();
+          }
+          getMinimapLayout();
+          if (typeof updateDeviceModeUI === 'function') {
+            updateDeviceModeUI();
+          }
+          return cfg;
+        }
+      };
+
       function getMinimapLayout() {
         let size;
         let x;
         let y;
         if (isMapExpanded) {
-          const top = Math.min(92, Math.max(70, window.innerHeight * 0.12));
+          const top = Math.min(92, Math.max(64, window.innerHeight * 0.12));
           const bottom = 28;
           size = Math.max(0, Math.min(window.innerWidth - 24, window.innerHeight - top - bottom, 720));
           x = (window.innerWidth - size) / 2;
           y = top + (window.innerHeight - top - bottom - size) / 2;
         } else {
-          size = Math.max(88, Math.min(128, Math.min(window.innerWidth, window.innerHeight) * 0.2));
-          x = 14;
-          y = Math.max(12, Math.min(90, window.innerHeight - size - 12));
+          const cfg = DeviceOptimizer.current;
+          size = cfg.minimapSize || Math.max(88, Math.min(128, Math.min(window.innerWidth, window.innerHeight) * 0.18));
+          x = cfg.minimapX || 14;
+          y = cfg.minimapY || Math.max(12, Math.min(122, window.innerHeight - size - 12));
+          if (typeof document !== 'undefined' && document.documentElement) {
+            document.documentElement.style.setProperty('--minimap-bottom', Math.round(y + size + 24) + 'px');
+            document.documentElement.style.setProperty('--minimap-left', Math.round(x) + 'px');
+          }
         }
         MINIMAP_VIEW.x = x;
         MINIMAP_VIEW.y = y;
@@ -3423,6 +4207,7 @@
       function haptic(pattern) {
         if (!PlayerData.haptics) return;
         if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+          if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
           try { navigator.vibrate(pattern); } catch(e) {}
         }
       }
@@ -3596,16 +4381,28 @@
       const ARENA_HEIGHT = 20000;
 
       function resizeCanvas() {
-        const qualityCap = PlayerData.graphicsQuality === 'low' ? 1 : (PlayerData.graphicsQuality === 'medium' ? 1.5 : 2);
-        const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, qualityCap));
-        CANVAS.width = Math.round(window.innerWidth * dpr);
-        CANVAS.height = Math.round(window.innerHeight * dpr);
-        CANVAS.style.width = window.innerWidth + 'px';
-        CANVAS.style.height = window.innerHeight + 'px';
+        const dprCap = (typeof DeviceOptimizer !== 'undefined' && DeviceOptimizer.current && DeviceOptimizer.current.dprCap)
+          ? DeviceOptimizer.current.dprCap
+          : (PlayerData.graphicsQuality === 'low' ? 1 : (PlayerData.graphicsQuality === 'medium' ? 1.5 : 2));
+        const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, dprCap));
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        CANVAS.width = Math.round(width * dpr);
+        CANVAS.height = Math.round(height * dpr);
+        CANVAS.style.width = width + 'px';
+        CANVAS.style.height = height + 'px';
         CTX.setTransform(1, 0, 0, 1, 0, 0);
         CTX.scale(dpr, dpr);
       }
-      window.addEventListener('resize', resizeCanvas);
+      function handleViewportResize() {
+        if (typeof DeviceOptimizer !== 'undefined') DeviceOptimizer.apply(true);
+        else resizeCanvas();
+      }
+      window.addEventListener('resize', handleViewportResize);
+      window.addEventListener('orientationchange', () => setTimeout(handleViewportResize, 80));
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportResize);
+      }
       resizeCanvas();
       window.addEventListener('contextmenu', event => {
         const target = event.target;
@@ -4192,28 +4989,67 @@
         }
       }
 
-      const MAX_LOOT = 500;
+      const MAX_LOOT = 560;
       const lootPool = [];
-      for (let i = 0; i < MAX_LOOT; i++) lootPool.push({ active: false, x: 0, y: 0, type: 'GOLD', radius: 15 });
+      for (let i = 0; i < MAX_LOOT; i++) {
+        lootPool.push({ active: false, x: 0, y: 0, vx: 0, vy: 0, z: 0, vz: 0, bounceCount: 0, type: 'GOLD', radius: 15 });
+      }
 
-      function spawnLoot(x, y, type) {
+      function spawnLoot(x, y, type, vx = 0, vy = 0, z = 0, vz = 0) {
         for (let i = 0; i < MAX_LOOT; i++) {
           if (!lootPool[i].active) {
-            lootPool[i].active = true; lootPool[i].x = x; lootPool[i].y = y; lootPool[i].type = type; break;
+            const l = lootPool[i];
+            l.active = true;
+            l.x = Math.max(40, Math.min(ARENA_WIDTH - 40, x));
+            l.y = Math.max(40, Math.min(ARENA_HEIGHT - 40, y));
+            l.vx = vx;
+            l.vy = vy;
+            l.z = z;
+            l.vz = vz;
+            l.bounceCount = 0;
+            l.type = type;
+            break;
           }
         }
       }
 
-            // ==========================================
+      function scatterEntityLoot(entity) {
+        const drops = [];
+        // Always scatter a Coin orb and XP orb plus carried consumables
+        drops.push('GOLD');
+        drops.push('XP');
+        if (entity.inventory) {
+          for (const key of INVENTORY_ORDER) {
+            const qty = Math.min(2, entity.inventory[key] || 0);
+            for (let k = 0; k < qty; k++) drops.push(key);
+          }
+        }
+        if (drops.length < 3) {
+          const fallbackPool = ['MEDKIT', 'SHIELD', 'MANA', 'HASTE', 'BOMB'];
+          drops.push(fallbackPool[Math.floor(Math.random() * fallbackPool.length)]);
+        }
+        const capped = drops.slice(0, 6);
+        const baseAngle = Math.random() * Math.PI * 2;
+        for (let i = 0; i < capped.length; i++) {
+          const angle = baseAngle + (i / capped.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.45;
+          const spd = 2.6 + Math.random() * 1.8;
+          const vz = 165 + Math.random() * 65;
+          spawnLoot(entity.x, entity.y, capped[i], Math.cos(angle) * spd, Math.sin(angle) * spd, 12, vz);
+        }
+      }
+
+      // ==========================================
       // KILL FEED SYSTEM
       // ==========================================
-      function addKillFeed(killerName, killerChar, victimName, victimChar) {
+      function addKillFeed(killerName, killerCharKey, victimName, victimCharKey) {
         const feed = UI_ELEMENTS.killFeed || document.getElementById('kill-feed');
         if (!feed) return;
         const item = document.createElement('div');
         item.className = 'kill-feed-item';
-        const killerLabel = killerChar ? `${killerChar} (${killerName})` : String(killerName);
-        const victimLabel = victimChar ? `${victimChar} (${victimName})` : String(victimName);
+        const kIcon = CHAMPION_ICONS[killerCharKey] ? `${CHAMPION_ICONS[killerCharKey]} ` : '';
+        const vIcon = CHAMPION_ICONS[victimCharKey] ? `${CHAMPION_ICONS[victimCharKey]} ` : '';
+        const killerLabel = `${kIcon}${String(killerName)}`;
+        const victimLabel = `${vIcon}${String(victimName)}`;
         const addLabel = (className, value) => {
           const span = document.createElement('span');
           span.className = className;
@@ -4222,11 +5058,11 @@
         };
 
         if (killerName === 'The Storm') {
-          addLabel('kf-storm', 'The Storm');
-          item.appendChild(document.createTextNode(' ⚡ '));
+          addLabel('kf-storm', '⚡ The Storm');
+          item.appendChild(document.createTextNode(' eliminated '));
         } else {
           addLabel('kf-killer', killerLabel);
-          item.appendChild(document.createTextNode(' ⚔️ '));
+          item.appendChild(document.createTextNode(' eliminated '));
         }
         addLabel('kf-victim', victimLabel);
         feed.appendChild(item);
@@ -4263,8 +5099,34 @@
         }
       }
 
+      function spawnElementalSoulParticles(x, y, charKey) {
+        const palettes = {
+          BERSERKER: ['#fb923c', '#f97316', '#fde047'],
+          TIDECALLER: ['#38bdf8', '#7dd3fc', '#e0f2fe'],
+          SHADOW: ['#a855f7', '#c084fc', '#818cf8']
+        };
+        const colors = palettes[charKey] || palettes.SHADOW;
+        const desired = PlayerData.graphicsQuality === 'low' ? 14 : 16;
+        let spawned = 0;
+        for (let i = 0; i < particlePool.length && spawned < desired; i++) {
+          const pt = particlePool[i];
+          if (!pt.active) {
+            pt.active = true;
+            pt.x = x + (Math.random() * 28 - 14);
+            pt.y = y + (Math.random() * 14 - 7);
+            pt.vx = (Math.random() - 0.5) * 1.45;
+            pt.vy = -(1.75 + Math.random() * 2.25); // Rise upward like elemental soul wisps
+            pt.radius = 3.2 + Math.random() * 3.0;
+            pt.color = colors[spawned % colors.length];
+            pt.alpha = 0.98;
+            pt.decay = 0.018 + Math.random() * 0.008;
+            spawned++;
+          }
+        }
+      }
+
       // Damage Numbers Pool
-      const MAX_TEXTS = 30;
+      const MAX_TEXTS = 36;
       const damageTextPool = [];
       for (let i = 0; i < MAX_TEXTS; i++) {
         damageTextPool.push({
@@ -4273,21 +5135,23 @@
           text: '',
           color: '#ffffff',
           alpha: 1.0,
-          vy: -1.2
+          vy: -1.2,
+          callout: false
         });
       }
 
-      function spawnDamageText(x, y, text, color = '#ffedd5') {
+      function spawnDamageText(x, y, text, color = '#ffedd5', callout = false) {
         for (let i = 0; i < damageTextPool.length; i++) {
           const dt = damageTextPool[i];
           if (!dt.active) {
             dt.active = true;
-            dt.x = x + (Math.random() * 20 - 10);
+            dt.x = callout ? x : x + (Math.random() * 20 - 10);
             dt.y = y - 10;
             dt.text = text;
             dt.color = color;
             dt.alpha = 1.0;
-            dt.vy = -1.4;
+            dt.vy = callout ? -0.95 : -1.4;
+            dt.callout = callout;
             return;
           }
         }
@@ -4621,9 +5485,11 @@
           else if (this.zoomMode === '1.0') base = 1.0;
           else {
             const minDim = Math.min(window.innerWidth, window.innerHeight);
-            const targetCombatSpan = 620;
+            const targetCombatSpan = (typeof DeviceOptimizer !== 'undefined' && DeviceOptimizer.current)
+              ? DeviceOptimizer.current.targetCombatSpan
+              : 620;
             const z = minDim / targetCombatSpan;
-            base = Math.max(0.48, Math.min(1.0, z));
+            base = Math.max(0.5, Math.min(1.05, z));
           }
           return base * (1 + (this.zoomPunch || 0));
         },
@@ -5121,10 +5987,24 @@
       let lastFullLootToast = -99;
       function collectLoot(entity, loot) {
         if (!entity || !entity.isAlive || !loot.active) return false;
-        if (loot.type === 'GOLD' || loot.type === 'GEMS') {
+        if (loot.type === 'GOLD' || loot.type === 'GEMS' || loot.type === 'XP') {
           if (!entity.isPlayer) return false;
-          if (loot.type === 'GOLD') { PlayerData.gold += 10; showToast('+10 Gold', '#fbbf24'); }
-          else { PlayerData.gems += 1; showToast('+1 Gem!', '#38bdf8'); }
+          if (loot.type === 'GOLD') {
+            PlayerData.gold += 10;
+            spawnDamageText(entity.x, entity.y, '+10 🪙', '#fbbf24');
+            showToast('+10 Gold', '#fbbf24');
+          } else if (loot.type === 'GEMS') {
+            PlayerData.gems += 1;
+            spawnDamageText(entity.x, entity.y, '+1 💎', '#38bdf8');
+            showToast('+1 Gem!', '#38bdf8');
+          } else {
+            const xpOrb = 12;
+            PlayerData.spendableXp = Math.min(999999999, (PlayerData.spendableXp || 0) + xpOrb);
+            PlayerData.totalXpEarned = Math.min(999999999, (PlayerData.totalXpEarned || 0) + xpOrb);
+            Game.bonusLootXp = (Game.bonusLootXp || 0) + xpOrb;
+            spawnDamageText(entity.x, entity.y, `+${xpOrb} XP`, '#fde047');
+            showToast(`+${xpOrb} XP Orb`, '#fde047');
+          }
           schedulePlayerSave();
         } else {
           const def = ITEM_DEFS[loot.type];
@@ -5212,25 +6092,39 @@
       // ENTITY CLASS
       // ==========================================
       class Entity {
-        constructor(x, y, isPlayer, charKey) {
+        constructor(x, y, isPlayer, charKey, options = null) {
           this.x = x;
           this.y = y;
           this.radius = 20;
           this.isPlayer = isPlayer;
           this.isAlive = true;
+          this.isDying = false;
+          this.despawned = false;
           this.charKey = charKey;
           this.data = CHARACTER_DATA[charKey];
+          this.name = isPlayer
+            ? (PlayerData.playerName || 'Player')
+            : (options && options.name ? options.name : this.data.name);
+          this.level = isPlayer
+            ? Math.max(1, Math.min(MAX_PLAYER_LEVEL, PlayerData.level || 1))
+            : Math.max(1, Math.min(MAX_PLAYER_LEVEL, (options && options.level) || 1));
+          this.aiProfile = isPlayer ? null : computeBotScaling(this.level);
+          this.statMultiplier = isPlayer ? 1.0 : this.aiProfile.statMultiplier;
+
           this.stats = computeDerivedStats(this.data, isPlayer ? PlayerData.statUpgrades : null);
 
-          this.maxHp = this.stats.maxHp;
+          this.maxHp = Math.round(this.stats.maxHp * this.statMultiplier);
           this.hp = this.maxHp;
           this.displayHp = this.hp;
+          this.damageTrailHp = this.hp;
+          this.damageTrailDelay = 0;
           this.maxMana = this.stats.maxMana;
           this.mana = this.maxMana;
           this.manaRegen = this.stats.manaRegen;
           this.speed = this.stats.speed;
-          this.swordDamage = this.stats.swordDamage;
-          this.spellDamage = this.stats.spellDamage;
+          this.swordDamage = this.stats.swordDamage * this.statMultiplier;
+          this.spellDamage = this.stats.spellDamage * this.statMultiplier;
+          this.manaBulletDamage = COMBAT_BALANCE.manaBullet.damage * this.statMultiplier;
           this.color = this.data.color;
 
           this.facingAngle = Math.random() * Math.PI * 2;
@@ -5240,16 +6134,21 @@
           this.dashTimer = 0;
           this.dashVx = 0;
           this.dashVy = 0;
-          this.nextDashTry = Math.random() * 2;
-          this.nextArtTry = Math.random() * 3;
+          this.nextDashTry = Math.random() * 1.2;
+          this.nextArtTry = Math.random() * 2.0;
 
           this.animTimer = 0;
           this.animFrame = 0;
           this.animState = 'idle';
           this.attackAnimTimer = 0;
           this.deathAnimTimer = 0;
+          this.deathElapsed = 0;
+          this.deathKnockbackAngle = 0;
+          this.deathSoulBurstDone = false;
           this.prevX = x;
           this.prevY = y;
+          this.vx = 0;
+          this.vy = 0;
           this.z = 0;
           this.vz = 0;
           this.zHeight = 32;
@@ -5263,8 +6162,8 @@
           this.dashCdTime = 0;
           this.artCdTime = 0;
 
-          // Match-only inventory and effects; a fresh Entity means a fresh match.
-          this.inventory = { MEDKIT: 0, MANA: 0, SHIELD: 0, HASTE: 0, BOMB: 0 };
+          // Match-only inventory and effects; bots carry 1 starting Medkit so tactical disengage-and-heal works reliably.
+          this.inventory = { MEDKIT: isPlayer ? 0 : 1, MANA: 0, SHIELD: 0, HASTE: 0, BOMB: 0 };
           this.itemCooldowns = { MEDKIT: 0, MANA: 0, SHIELD: 0, HASTE: 0, BOMB: 0 };
           this.globalItemReady = 0;
           this.itemChannel = null;
@@ -5303,6 +6202,10 @@
           this.aiCommitTimer = 0;
           this.aiRetreatTimer = 0;
           this.aiStormRetreatTimer = 0;
+          this.disengageHealTimer = 0;
+          this.lastAttacker = null;
+          this.strafeDir = Math.random() < 0.5 ? -1 : 1;
+          this.strafeTimer = 0.8 + Math.random() * 1.1;
           this.aiLootTarget = null;
           this.damageDealt = 0;
           this.killStreak = 0;
@@ -5318,9 +6221,17 @@
             if (this.squashTimer <= 0) this.squashAmount = 0;
           }
 
-          // Movement delta & state machine (Part C)
-          const frameTravel = Math.hypot(this.x - this.prevX, this.y - this.prevY);
+          // Movement delta & smoothed velocity for shot-leading
+          const dxFrame = this.x - this.prevX;
+          const dyFrame = this.y - this.prevY;
+          const frameTravel = Math.hypot(dxFrame, dyFrame);
           const moved = frameTravel > 0.4;
+          if (deltaTime > 0.0001) {
+            const instVx = dxFrame / deltaTime;
+            const instVy = dyFrame / deltaTime;
+            this.vx = this.vx * 0.65 + instVx * 0.35;
+            this.vy = this.vy * 0.65 + instVy * 0.35;
+          }
           this.prevX = this.x;
           this.prevY = this.y;
 
@@ -5341,8 +6252,15 @@
             this.animTimer = 0;
           }
 
-          // 120Hz Framerate-independent HP Lerp
+          // 120Hz Framerate-independent HP Lerp + white trailing damage bar
           this.displayHp += (this.hp - this.displayHp) * (1 - Math.pow(0.85, deltaTime * 60));
+          if (this.damageTrailHp < this.hp) {
+            this.damageTrailHp = this.hp;
+          } else if (this.damageTrailDelay > 0) {
+            this.damageTrailDelay = Math.max(0, this.damageTrailDelay - deltaTime);
+          } else if (this.damageTrailHp > this.hp) {
+            this.damageTrailHp = Math.max(this.hp, this.damageTrailHp - this.maxHp * 0.9 * deltaTime);
+          }
 
           if (this.invulnerableTimer > 0) this.invulnerableTimer -= deltaTime;
 
@@ -5512,8 +6430,22 @@
           if (!this.isAlive || this.invulnerableTimer > 0) return false;
           if (this.itemChannel) cancelItemChannel(this, 'Damage interrupted the item.', true);
 
+          // Match Pacing & Anti-Early-Wipe: reduce off-screen bot-vs-bot damage in Phase 1 (0.35x) and Phase 2 (0.60x)
+          const isBotVsBot = !this.isPlayer && !!source && !source.isPlayer;
+          const onScreen = this.isPlayer || (source && source.isPlayer) || isEntityInCameraView(this, 100) || (source && isEntityInCameraView(source, 100));
+          let pacingScale = 1.0;
+          if (isBotVsBot && !onScreen) {
+            if (Game.storm.phase <= 1) pacingScale = 0.35;
+            else if (Game.storm.phase === 2) pacingScale = 0.60;
+            // Preserve healthy mid/late lobby population (22-28 entering Phase 2, 10-14 endgame)
+            if (Game.storm.phase <= 1 && Game.aliveCount <= 26) pacingScale *= 0.45;
+            else if (Game.storm.phase <= 3 && Game.aliveCount <= 14) pacingScale *= 0.55;
+          }
+
+          const incoming = Math.max(0, amount * pacingScale);
+
           if (hitMeta) {
-            this.lastDamageMeta = hitMeta;
+            this.lastDamageMeta = Object.assign({}, hitMeta, { damage: incoming });
           } else {
             this.lastDamageMeta = {
               kind: source ? 'MELEE' : 'STORM',
@@ -5523,26 +6455,30 @@
               originY: source ? source.y : Game.storm.currentCenterY,
               hitX: this.x,
               hitY: this.y,
-              damage: amount
+              damage: incoming
             };
           }
 
-          const incoming = Math.max(0, amount);
+          if (source) this.lastAttacker = source;
+
           const absorbed = Math.min(this.shield, incoming);
           this.shield -= absorbed;
           const hpDamage = incoming - absorbed;
           this.hp -= hpDamage;
           this.hitFlashTimer = 0.1;
-          spawnParticles(this.x, this.y, 6, absorbed > 0 ? '#22d3ee' : '#ef4444', 4);
-          if (absorbed > 0) spawnDamageText(this.x, this.y - 12, `⬡ ${Math.round(absorbed)}`, '#67e8f9');
+          if (hpDamage > 0) this.damageTrailDelay = 0.18;
+          if (onScreen) {
+            spawnParticles(this.x, this.y, 6, absorbed > 0 ? '#22d3ee' : '#ef4444', 4);
+            if (absorbed > 0) spawnDamageText(this.x, this.y - 12, `⬡ ${Math.round(absorbed)}`, '#67e8f9');
+          }
 
           // Parabolic knockback arc on heavy hits
           if (incoming >= 25 && this.isGrounded) {
             this.vz = Math.min(340, Math.max(140, incoming * 4.5));
             this.isGrounded = false;
           }
-          if (incoming > 25) Game.hitStopTimer = 0.05;
-          if (incoming >= 40) Camera.zoomPunch = 0.05;
+          if (onScreen && incoming > 25 && (this.isPlayer || (source && source.isPlayer))) Game.hitStopTimer = 0.05;
+          if (onScreen && incoming >= 40 && (this.isPlayer || (source && source.isPlayer))) Camera.zoomPunch = 0.05;
 
           if (this.isPlayer && triggerShake) {
             Camera.shakeAmount = shakeMagnitude;
@@ -5555,11 +6491,23 @@
             this.knockbackVy = 0;
             spawnDamageText(this.x, this.y, `💥 ${Math.round(incoming)}`, '#fef08a');
             AudioEngine.sfxHit();
-          } else if (hpDamage > 0) {
+          } else if (onScreen && hpDamage > 0) {
             spawnDamageText(this.x, this.y, Math.round(hpDamage).toString(), '#fca5a5');
           }
 
           if (source) source.damageDealt += incoming;
+
+          // Force off-screen bots below 35% HP into Disengage & Heal for 3 seconds instead of early wipe
+          if (!this.isPlayer && this.hp > 0 && !onScreen && (this.hp / this.maxHp) < 0.35 && this.disengageHealTimer <= 0) {
+            this.disengageHealTimer = 3.0;
+            this.state = 'DISENGAGE_HEAL';
+            this.aiCommitTimer = 3.0;
+            if (source && this.mana >= COMBAT_BALANCE.dash.mana) {
+              const awayAngle = Math.atan2(this.y - source.y, this.x - source.x);
+              this.useDash(Game.time, awayAngle);
+            }
+          }
+
           if (this.hp <= 0) this.die(source);
           return true;
         }
@@ -5568,21 +6516,52 @@
           if (!this.isAlive) return;
           cancelItemChannel(this, '', false);
           this.isAlive = false;
+          this.isDying = true;
+          this.despawned = false;
           this.hp = 0;
           this.sprintActive = false;
           this.superSprintActive = false;
+          this.swordActive = false;
+          this.isDashing = false;
           if (this.isPlayer) Input.isSuperSprintHeld = false;
-          this.state = "DEAD";
-          this.deathAnimTimer = 0.5;
-          spawnParticles(this.x, this.y, 35, this.color, 6.5);
+          this.state = "DYING";
+          this.deathAnimTimer = DEATH_ANIM_DURATION;
+          this.deathElapsed = 0;
+          this.deathSoulBurstDone = false;
+          this.hitFlashTimer = DEATH_PHASE1_DURATION;
+
+          // Phase 1 directional knockback impulse away from killing blow
+          const meta = this.lastDamageMeta || {};
+          const originX = Number.isFinite(meta.originX) ? meta.originX : (killer ? killer.x : this.x - Math.cos(this.facingAngle) * 60);
+          const originY = Number.isFinite(meta.originY) ? meta.originY : (killer ? killer.y : this.y - Math.sin(this.facingAngle) * 60);
+          const kbAngle = Math.atan2(this.y - originY, this.x - originX);
+          this.deathKnockbackAngle = Number.isFinite(kbAngle) ? kbAngle : (this.facingAngle + Math.PI);
+          this.knockbackVx = Math.cos(this.deathKnockbackAngle) * 7.5;
+          this.knockbackVy = Math.sin(this.deathKnockbackAngle) * 7.5;
+          this.vz = 155;
+          this.isGrounded = false;
+
+          const visible = this.isPlayer || (killer && killer.isPlayer) || isEntityInCameraView(this, 160);
+          if (visible) {
+            spawnParticles(this.x, this.y, 10, '#ffffff', 5.2, 0.055);
+            if (killer && killer.isPlayer) {
+              spawnDamageText(this.x, this.y - 30, `ELIMINATED ${this.name}`, '#fbbf24', true);
+            } else {
+              spawnDamageText(this.x, this.y - 26, 'ELIMINATED', '#f8fafc', true);
+            }
+          }
+
+          // Pop loot + Coin/XP orbs radially with bounce
+          scatterEntityLoot(this);
+
           Game.aliveCount--;
 
           if (this.isPlayer) {
             Game.lastKillerPos = killer ? { x: killer.x, y: killer.y } : null;
-            const meta = this.lastDamageMeta || {};
-            const killerName = killer ? (killer.data && killer.data.name ? killer.data.name : 'Rival') : 'The Storm';
-            const originX = Number.isFinite(meta.originX) ? meta.originX : (killer ? killer.x : this.x - 120);
-            const originY = Number.isFinite(meta.originY) ? meta.originY : (killer ? killer.y : this.y - 80);
+            const kIcon = killer && CHAMPION_ICONS[killer.charKey] ? `${CHAMPION_ICONS[killer.charKey]} ` : '';
+            const killerDisplay = killer
+              ? `${kIcon}${killer.name} (LVL ${killer.level || 1} · ${killer.data ? killer.data.name : 'Rival'})`
+              : '⚡ The Storm';
             const pts = Array.isArray(meta.points) && meta.points.length >= 2
               ? meta.points.map(pt => ({ x: pt.x, y: pt.y }))
               : [{ x: originX, y: originY }, { x: this.x, y: this.y }];
@@ -5591,7 +6570,10 @@
               kind: meta.kind || (killer ? 'MELEE' : 'STORM'),
               projectileType: meta.projectileType || 'EMBER',
               color: meta.color || (killer ? killer.color : '#a855f7'),
-              attackerName: killerName,
+              attackerName: killerDisplay,
+              killerShortName: killer ? killer.name : 'The Storm',
+              killerCharKey: killer ? killer.charKey : '',
+              killerLevel: killer ? (killer.level || 1) : 0,
               damage: Math.round(meta.damage || 0),
               distance: Math.round(dist),
               originPos: { x: originX, y: originY },
@@ -5639,19 +6621,18 @@
             this.killStreak = 0;
           }
 
-          // PART 1: Kill Feed Notification (Section 1: PlayerData.playerName, Section 9: Silent catch)
+          // Elimination Feed with exact unique bot names and champion icons
           try {
             const playerName = PlayerData.playerName || "Player";
-            const kName = killer ? (killer.isPlayer ? playerName : (killer.data && killer.data.name ? killer.data.name : "Bot")) : "The Storm";
-            const kChar = killer ? ((killer.data && killer.data.name) ? killer.data.name.replace(/^The\s+/, '') : (killer.isPlayer ? playerName : "")) : "";
-            const vName = this.isPlayer ? playerName : (this.data && this.data.name ? this.data.name : "Bot");
-            const vChar = (this.data && this.data.name) ? this.data.name.replace(/^The\s+/, '') : (this.isPlayer ? playerName : "");
-            addKillFeed(kName, kChar, vName, vChar);
+            const kName = killer ? (killer.isPlayer ? playerName : killer.name) : "The Storm";
+            const kCharKey = killer ? killer.charKey : "";
+            const vName = this.isPlayer ? playerName : this.name;
+            const vCharKey = this.charKey || "";
+            addKillFeed(kName, kCharKey, vName, vCharKey);
           } catch (e) {
             // Silent catch
           }
 
-          // FIX #2: Immediate death processing without race conditions
           if (this.isPlayer) {
             AudioEngine.sfxDefeat();
             Game.handlePlayerDeath();
@@ -5726,7 +6707,7 @@
           this.attackAnimTimer = 0.10;
           const sx = this.x + Math.cos(this.facingAngle) * (this.radius + 10);
           const sy = this.y + Math.sin(this.facingAngle) * (this.radius + 10);
-          spawnProjectile(sx, sy, this.facingAngle, 16, balance.damage, this, 'MANA', 0, balance.range);
+          spawnProjectile(sx, sy, this.facingAngle, 16, this.manaBulletDamage || balance.damage, this, 'MANA', 0, balance.range);
           if (this.isPlayer) AudioEngine.playTone(760, 'sine', 0.07, 0.12, 420);
           return true;
         }
@@ -5787,6 +6768,7 @@
             triggerWhiteFlash(0.35, 250);
           }
 
+          const dmgMult = this.statMultiplier || 1.0;
           if (this.charKey === 'BERSERKER') {
             const cleaveRadius = 150;
             for (let i = 0; i < Game.entities.length; i++) {
@@ -5802,7 +6784,7 @@
                 while (diff < -Math.PI) diff += Math.PI * 2;
 
                 if (Math.abs(diff) <= Math.PI / 2) {
-                  other.takeDamage(40, this);
+                  other.takeDamage(40 * dmgMult, this);
                   other.knockbackVx = Math.cos(angleToEnemy) * 16;
                   other.knockbackVy = Math.sin(angleToEnemy) * 16;
                   spawnParticles(other.x, other.y, 12, '#f97316', 6);
@@ -5813,7 +6795,7 @@
           } else if (this.charKey === 'TIDECALLER') {
             const sx = this.x + Math.cos(this.facingAngle) * 25;
             const sy = this.y + Math.sin(this.facingAngle) * 25;
-            spawnProjectile(sx, sy, this.facingAngle, 8, 35, this, 'TIDAL', 3, 400, true);
+            spawnProjectile(sx, sy, this.facingAngle, 8, 35 * dmgMult, this, 'TIDAL', 3, 400, true);
             spawnParticles(sx, sy, 15, '#38bdf8', 5);
           } else if (this.charKey === 'SHADOW') {
             const startX = this.x;
@@ -5825,7 +6807,7 @@
               const other = Game.entities[i];
               if (other === this || !other.isAlive) continue;
               if (distToSegment(other.x, other.y, startX, startY, endX, endY) <= other.radius + 15) {
-                other.takeDamage(25, this);
+                other.takeDamage(25 * dmgMult, this);
                 spawnParticles(other.x, other.y, 10, '#c084fc', 5);
               }
             }
@@ -5872,28 +6854,33 @@
           }
         }
 
-        // Human-like, bounded-decision bot AI: imperfect aim, tactical retreats,
-        // loot use, and clutch fights instead of endless fleeing or target fixation.
+        // Challenging Level-Scaled Bot AI (Levels 1-100) with smooth strafing,
+        // velocity shot-leading, defensive dashing, weather fairness, and off-screen pacing.
         updateBotAI(deltaTime, gameTime) {
-          const profiles = {
-            NOOB:    { reaction: 0.62, error: 0.34, aggression: 0.42, dodge: 0.01 },
-            ROOKIE:  { reaction: 0.48, error: 0.25, aggression: 0.50, dodge: 0.05 },
-            AVERAGE: { reaction: 0.36, error: 0.18, aggression: 0.58, dodge: 0.13 },
-            SKILLED: { reaction: 0.27, error: 0.12, aggression: 0.66, dodge: 0.23 },
-            VETERAN: { reaction: 0.21, error: 0.08, aggression: 0.73, dodge: 0.33 },
-            ELITE:   { reaction: 0.16, error: 0.055, aggression: 0.80, dodge: 0.43 },
-            PRO:     { reaction: 0.12, error: 0.035, aggression: 0.86, dodge: 0.54 }
-          };
-          const profile = profiles[this.skill] || profiles.AVERAGE;
+          const profile = this.aiProfile || computeBotScaling(this.level || 1);
           this.aiDecisionTimer -= deltaTime;
           this.aiCommitTimer = Math.max(0, this.aiCommitTimer - deltaTime);
           this.aiRetreatTimer = Math.max(0, this.aiRetreatTimer - deltaTime);
           this.aiStormRetreatTimer = Math.max(0, this.aiStormRetreatTimer - deltaTime);
+          this.disengageHealTimer = Math.max(0, (this.disengageHealTimer || 0) - deltaTime);
           this.aiAimLock = Math.max(0, (this.aiAimLock || 0) - deltaTime);
+          this.strafeTimer = (this.strafeTimer || 0) - deltaTime;
+          if (this.strafeTimer <= 0) {
+            this.strafeDir = (this.strafeDir || 1) * -1;
+            this.strafeTimer = 0.85 + Math.random() * 1.05;
+          }
           this.stateTimer += deltaTime;
           this.wanderTimer += deltaTime;
           this.boredomTimer += deltaTime;
           this.aiSuperSprint = false;
+
+          // Environmental fairness: Snow Blizzard cuts bot vision & aggro range by 45%
+          const weatherMods = WeatherSystem.getModifiersAt(this.x, this.y, gameTime);
+          const inBlizzard = !!(weatherMods.activeEvent && weatherMods.activeEvent.kind === 'SNOWSTORM');
+          const visionScale = inBlizzard ? 0.55 : 1.0;
+          const maxVisionRange = 900 * visionScale;
+          const engageRange = 540 * visionScale;
+          const chaseRange = 740 * visionScale;
 
           let closestEnemy = null;
           let closestDist = Infinity;
@@ -5901,25 +6888,28 @@
             const enemy = Game.entities[i];
             if (enemy === this || !enemy.isAlive) continue;
             const distance = Math.hypot(enemy.x - this.x, enemy.y - this.y);
-            if (distance < closestDist) { closestDist = distance; closestEnemy = enemy; }
+            if (distance <= maxVisionRange && distance < closestDist) {
+              closestDist = distance;
+              closestEnemy = enemy;
+            }
           }
           this.target = closestEnemy;
 
           const hpRatio = this.hp / this.maxHp;
           const manaRatio = this.mana / this.maxMana;
           const enemyHpRatio = closestEnemy ? closestEnemy.hp / closestEnemy.maxHp : 1;
-          const canSecureKill = !!closestEnemy && (closestEnemy.hp <= Math.max(this.swordDamage * 1.5, this.spellDamage + COMBAT_BALANCE.manaBullet.damage) || enemyHpRatio < 0.18);
-          const cornered = !!closestEnemy && closestDist < (hpRatio < 0.35 ? 135 : 75);
+          const canSecureKill = !!closestEnemy && (closestEnemy.hp <= Math.max(this.swordDamage * 1.6, this.spellDamage + (this.manaBulletDamage || COMBAT_BALANCE.manaBullet.damage)) || enemyHpRatio < 0.22);
+          const cornered = !!closestEnemy && closestDist < (hpRatio < 0.35 ? 115 : 70);
           const stormDistance = Math.hypot(this.x - Game.storm.currentCenterX, this.y - Game.storm.currentCenterY);
           const outsideStorm = stormDistance > Game.storm.currentRadius - 20;
+          const centerAngle = Math.atan2(Game.storm.currentCenterY - this.y, Game.storm.currentCenterX - this.x);
 
-          // A channel is a real commitment. If cornered, cancel and fight rather
-          // than standing still forever; otherwise finish without moving.
+          // Channeling an item: cancel only if immediately cornered or can finish target
           if (this.itemChannel) {
             if (cornered || canSecureKill) {
               cancelItemChannel(this, '', false);
               this.state = 'ATTACK';
-              this.aiCommitTimer = 1.4;
+              this.aiCommitTimer = 1.2;
             } else {
               this.aiMoveX = 0;
               this.aiMoveY = 0;
@@ -5927,12 +6917,44 @@
             }
           }
 
-          // Immediate defensive item use. Medkits and mana potions only channel
-          // at a sensible distance, and are never consumed directly from loot.
-          if (closestEnemy && closestDist < 390 && this.inventory.SHIELD > 0 && this.shield < 25) {
+          // Mandatory Disengage & Heal state for off-screen bots below 35% HP (3s sprint + heal)
+          if (this.disengageHealTimer > 0) {
+            this.state = 'DISENGAGE_HEAL';
+            const threat = (this.lastAttacker && this.lastAttacker.isAlive) ? this.lastAttacker : closestEnemy;
+            const threatDist = threat ? Math.hypot(threat.x - this.x, threat.y - this.y) : 9999;
+            if (hpRatio < 0.72 && threatDist > 165) {
+              if (this.inventory.MEDKIT > 0 && useInventoryItem('MEDKIT', this)) {
+                this.aiMoveX = 0;
+                this.aiMoveY = 0;
+                return;
+              }
+              if (!isEntityInCameraView(this, 100)) {
+                // Off-screen field recovery prevents early-phase meatgrinder wipes
+                this.hp = Math.min(this.maxHp, this.hp + this.maxHp * 0.14 * deltaTime);
+              }
+            }
+            const awayAngle = threat ? Math.atan2(this.y - threat.y, this.x - threat.x) : centerAngle;
+            const safeWeight = outsideStorm ? 0.65 : 0.22;
+            let sx = Math.cos(awayAngle) * (1 - safeWeight) + Math.cos(centerAngle) * safeWeight;
+            let sy = Math.sin(awayAngle) * (1 - safeWeight) + Math.sin(centerAngle) * safeWeight;
+            const slen = Math.hypot(sx, sy) || 1;
+            this.aiMoveX = sx / slen;
+            this.aiMoveY = sy / slen;
+            this.aiSuperSprint = this.stamina > 12;
+            if (this.inventory.SHIELD > 0 && this.shield < 20) useInventoryItem('SHIELD', this);
+            if (this.inventory.HASTE > 0 && this.hasteTimer <= 0) useInventoryItem('HASTE', this);
+            if (threat && threatDist < 170 && this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry) {
+              this.nextDashTry = gameTime + 1.3;
+              this.useDash(gameTime, Math.atan2(this.aiMoveY, this.aiMoveX));
+            }
+            return;
+          }
+
+          // Defensive consumables: Shield before duels, Medkit below 55% HP out of immediate melee
+          if (closestEnemy && closestDist < 420 && this.inventory.SHIELD > 0 && this.shield < 25) {
             useInventoryItem('SHIELD', this);
           }
-          if (hpRatio < 0.68 && this.inventory.MEDKIT > 0 && !canSecureKill && !cornered && (!closestEnemy || closestDist > 230)) {
+          if (hpRatio < 0.55 && this.inventory.MEDKIT > 0 && !canSecureKill && (!closestEnemy || closestDist > 180)) {
             if (useInventoryItem('MEDKIT', this)) {
               this.state = 'HEAL';
               this.aiMoveX = 0;
@@ -5940,7 +6962,7 @@
               return;
             }
           }
-          if (manaRatio < 0.28 && this.inventory.MANA > 0 && (!closestEnemy || closestDist > 210)) {
+          if (manaRatio < 0.30 && this.inventory.MANA > 0 && (!closestEnemy || closestDist > 190)) {
             if (useInventoryItem('MANA', this)) {
               this.state = 'RESTORE';
               this.aiMoveX = 0;
@@ -5949,38 +6971,42 @@
             }
           }
 
-          // Seek only useful, non-full stacks. Low health/mana determines priority;
-          // occasional ignored loot is an intentional human-like mistake.
-          let desiredLoot = null;
-          if (hpRatio < 0.58 && this.inventory.MEDKIT < ITEM_DEFS.MEDKIT.cap) desiredLoot = 'MEDKIT';
-          else if (manaRatio < 0.32 && this.inventory.MANA < ITEM_DEFS.MANA.cap) desiredLoot = 'MANA';
+          // Active loot pickup prioritizing higher-tier items (Medkit when hurt, Shield, Bomb, Haste, Mana)
+          const lootTierPriority = { MEDKIT: hpRatio < 0.72 ? 5 : 3, SHIELD: 4, BOMB: 3.5, HASTE: 3, MANA: manaRatio < 0.5 ? 4 : 2 };
           let bestLoot = null;
-          let bestLootDistance = desiredLoot ? 700 : 360;
-          if (!(this.skill === 'NOOB' && Math.random() < 0.35)) {
-            for (let i = 0; i < MAX_LOOT; i++) {
-              const loot = lootPool[i];
-              if (!loot.active || !ITEM_DEFS[loot.type] || this.inventory[loot.type] >= ITEM_DEFS[loot.type].cap) continue;
-              if (desiredLoot && loot.type !== desiredLoot) continue;
-              const distance = Math.hypot(loot.x - this.x, loot.y - this.y);
-              if (distance < bestLootDistance) { bestLoot = loot; bestLootDistance = distance; }
+          let bestLootScore = -Infinity;
+          let bestLootDistance = Infinity;
+          const lootScanRadius = (hpRatio < 0.58 ? 720 : 420) * visionScale;
+          for (let i = 0; i < MAX_LOOT; i++) {
+            const loot = lootPool[i];
+            if (!loot.active || !ITEM_DEFS[loot.type] || this.inventory[loot.type] >= ITEM_DEFS[loot.type].cap) continue;
+            const distance = Math.hypot(loot.x - this.x, loot.y - this.y);
+            if (distance < lootScanRadius) {
+              const priority = lootTierPriority[loot.type] || 1;
+              const score = priority * 180 - distance;
+              if (score > bestLootScore) {
+                bestLootScore = score;
+                bestLoot = loot;
+                bestLootDistance = distance;
+              }
             }
           }
-          if (bestLoot && (!closestEnemy || closestDist > 150 || canSecureKill === false && bestLootDistance < 180)) {
+          if (bestLoot && (!closestEnemy || closestDist > 185 || (!canSecureKill && bestLootDistance < 140))) {
             const angle = Math.atan2(bestLoot.y - this.y, bestLoot.x - this.x);
             this.aiLootTarget = bestLoot;
             this.state = 'LOOT';
             this.aiMoveX = Math.cos(angle);
             this.aiMoveY = Math.sin(angle);
-            this.aiSuperSprint = bestLootDistance > 300 && this.stamina > 35;
+            this.aiSuperSprint = bestLootDistance > 260 && this.stamina > 30;
             return;
           }
           this.aiLootTarget = null;
 
-          // Quick-ping investigation: bots highlighted by a minimap quick-ping move to contest it
+          // Quick-ping investigation
           if (this.pingTarget) {
             if (gameTime >= this.pingTarget.expiresAt) {
               this.pingTarget = null;
-            } else if (!outsideStorm && hpRatio > 0.42 && (!closestEnemy || closestDist > 420)) {
+            } else if (!outsideStorm && hpRatio > 0.45 && (!closestEnemy || closestDist > 420)) {
               const pDist = Math.hypot(this.pingTarget.x - this.x, this.pingTarget.y - this.y);
               if (pDist > 120) {
                 const pAngle = Math.atan2(this.pingTarget.y - this.y, this.pingTarget.x - this.x);
@@ -5998,173 +7024,217 @@
           if (!closestEnemy) {
             this.state = 'WANDER';
             if (this.wanderTimer > 2.0) {
-              this.wanderAngle += (Math.random() - 0.5) * 1.5;
+              this.wanderAngle += (Math.random() - 0.5) * 1.4;
               this.wanderTimer = 0;
             }
-            const centerAngle = Math.atan2(Game.storm.currentCenterY - this.y, Game.storm.currentCenterX - this.x);
-            const x = Math.cos(centerAngle) * 0.65 + Math.cos(this.wanderAngle) * 0.35;
-            const y = Math.sin(centerAngle) * 0.65 + Math.sin(this.wanderAngle) * 0.35;
-            const length = Math.hypot(x, y) || 1;
-            this.aiMoveX = x / length;
-            this.aiMoveY = y / length;
+            const safeBias = outsideStorm ? 0.85 : (Game.storm.phase >= 2 ? 0.62 : 0.45);
+            const wx = Math.cos(centerAngle) * safeBias + Math.cos(this.wanderAngle) * (1 - safeBias);
+            const wy = Math.sin(centerAngle) * safeBias + Math.sin(this.wanderAngle) * (1 - safeBias);
+            const wlen = Math.hypot(wx, wy) || 1;
+            this.aiMoveX = wx / wlen;
+            this.aiMoveY = wy / wlen;
+            this.aiSuperSprint = outsideStorm && this.stamina > 20;
             return;
           }
 
-          // Re-evaluate at human reaction intervals rather than making a perfect
-          // new decision every frame. Kill opportunities and cornering override it.
+          // Level-scaled reaction & target acquisition interval (0.38s at Lv1 down to 0.15s at Lv100)
           if (this.aiDecisionTimer <= 0) {
-            this.aiDecisionTimer = profile.reaction * (0.8 + Math.random() * 0.55);
-            this.aiAimError = (Math.random() * 2 - 1) * profile.error;
-            if (Math.random() < profile.error * 0.22) this.aiAimError *= 2.5;
+            this.aiDecisionTimer = profile.reactionDelay * (0.85 + Math.random() * 0.30);
+            this.aiAimError = (Math.random() * 2 - 1) * profile.aimSpreadRad;
 
-            // Sometimes a weak bot deliberately disengages through the storm for
-            // a short, bounded period to heal or break pursuit. It is not forbidden.
-            if (hpRatio < 0.48 && closestDist < 380 && !canSecureKill && this.aiStormRetreatTimer <= 0 && Math.random() < 0.24) {
-              this.state = 'STORM_RETREAT';
-              this.aiStormRetreatTimer = 1.1 + Math.random() * 1.5;
-              this.aiCommitTimer = this.aiStormRetreatTimer;
-            } else if (canSecureKill || cornered || this.boredomTimer > 9 + Math.random() * 4) {
+            if (canSecureKill || cornered || this.boredomTimer > 8 + Math.random() * 3) {
               this.state = 'ATTACK';
-              this.aiCommitTimer = 1.8 + Math.random() * 1.2;
+              this.aiCommitTimer = 1.5 + Math.random() * 1.0;
               this.boredomTimer = 0;
             } else if (this.aiCommitTimer <= 0) {
-              if (hpRatio < (this.charKey === 'BERSERKER' ? 0.28 : 0.40) && closestDist < 430) {
+              if (hpRatio < 0.36 && closestDist < 420 && this.inventory.MEDKIT > 0) {
                 this.state = 'FLEE';
-                this.aiRetreatTimer = 2.0 + Math.random() * 1.8;
+                this.aiRetreatTimer = 1.8 + Math.random() * 1.2;
                 this.aiCommitTimer = this.aiRetreatTimer;
               } else if (outsideStorm) {
                 this.state = 'FLEE';
                 this.aiCommitTimer = 1.0;
-              } else if (closestDist < 165 || Math.random() < profile.aggression && closestDist < 520) {
+              } else if (closestDist < engageRange) {
                 this.state = 'ATTACK';
-                this.aiCommitTimer = 0.8 + Math.random() * 0.8;
+                this.aiCommitTimer = 0.8 + Math.random() * 0.7;
                 this.boredomTimer = 0;
-              } else if (closestDist < 700) {
+              } else if (closestDist < chaseRange) {
                 this.state = 'CHASE';
-                this.aiCommitTimer = 1.4;
+                this.aiCommitTimer = 1.2;
               } else {
-                this.state = Math.random() < 0.16 ? 'IDLE' : 'WANDER';
+                this.state = 'WANDER';
               }
             }
           }
 
-          // A retreat has a hard upper bound. Once it expires, the bot must clutch
-          // or re-engage instead of ratting around the arena indefinitely.
-          if ((this.state === 'FLEE' || this.state === 'STORM_RETREAT') && this.aiRetreatTimer <= 0 && this.aiStormRetreatTimer <= 0 && (this.boredomTimer > 5 || cornered)) {
+          if (this.state === 'FLEE' && this.aiRetreatTimer <= 0 && (this.boredomTimer > 4 || cornered)) {
             this.state = 'ATTACK';
-            this.aiCommitTimer = 2;
+            this.aiCommitTimer = 1.8;
             this.boredomTimer = 0;
           }
-          if (this.state === 'STORM_RETREAT' && this.aiStormRetreatTimer <= 0) {
-            this.state = outsideStorm ? 'FLEE' : 'ATTACK';
-            this.aiRetreatTimer = outsideStorm ? 1.2 : 0;
-          }
+
+          // Velocity-based shot-leading for bots above Level 15
+          const computeAimAngle = (projSpeed) => {
+            let tx = closestEnemy.x;
+            let ty = closestEnemy.y;
+            if (profile.shotLeadingEnabled && projSpeed > 0) {
+              const travelTime = Math.min(0.85, closestDist / (projSpeed * 60));
+              tx += (closestEnemy.vx || 0) * travelTime * profile.shotLeadFactor;
+              ty += (closestEnemy.vy || 0) * travelTime * profile.shotLeadFactor;
+            }
+            return Math.atan2(ty - this.y, tx - this.x) + (this.aiAimError || 0);
+          };
 
           let steerX = 0;
           let steerY = 0;
-          const angle = Math.atan2(closestEnemy.y - this.y, closestEnemy.x - this.x);
-          const aimAngle = angle + (this.aiAimError || 0);
-          const centerAngle = Math.atan2(Game.storm.currentCenterY - this.y, Game.storm.currentCenterX - this.x);
+          const directAngle = Math.atan2(closestEnemy.y - this.y, closestEnemy.x - this.x);
+          const spellAimAngle = computeAimAngle(this.data.spellSpeed || 12);
+          const bulletAimAngle = computeAimAngle(16);
 
-          if (this.state === 'IDLE') {
-            if (this.stateTimer > 0.8 + profile.reaction * 2) { this.state = 'WANDER'; this.stateTimer = 0; }
-          } else if (this.state === 'WANDER') {
-            if (this.wanderTimer > 2.2) {
-              this.wanderAngle += (Math.random() - 0.5) * 1.6;
+          if (this.state === 'IDLE' || this.state === 'WANDER') {
+            if (this.wanderTimer > 2.0) {
+              this.wanderAngle += (Math.random() - 0.5) * 1.4;
               this.wanderTimer = 0;
             }
             steerX = Math.cos(this.wanderAngle) * 0.55 + Math.cos(centerAngle) * 0.45;
             steerY = Math.sin(this.wanderAngle) * 0.55 + Math.sin(centerAngle) * 0.45;
           } else if (this.state === 'CHASE') {
-            steerX = Math.cos(angle);
-            steerY = Math.sin(angle);
-            this.aiSuperSprint = closestDist > 260 && this.stamina > 24;
-            if (this.inventory.HASTE > 0 && closestDist > 330 && this.hasteTimer <= 0) useInventoryItem('HASTE', this);
-            if (this.charKey === 'SHADOW' && closestDist > 230 && this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry) {
-              this.nextDashTry = gameTime + 1.5 + Math.random() * 1.8;
-              this.useDash(gameTime, aimAngle);
+            // Diagonal strafe approach rather than predictable straight line
+            const approachAngle = directAngle + this.strafeDir * 0.28;
+            steerX = Math.cos(approachAngle);
+            steerY = Math.sin(approachAngle);
+            this.aiSuperSprint = closestDist > 240 && this.stamina > 24;
+            if (this.inventory.HASTE > 0 && closestDist > 300 && this.hasteTimer <= 0) useInventoryItem('HASTE', this);
+            if (this.charKey === 'SHADOW' && closestDist > 210 && this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry) {
+              this.nextDashTry = gameTime + 1.5 + Math.random() * 1.4;
+              this.useDash(gameTime, spellAimAngle);
             }
-          } else if (this.state === 'FLEE' || this.state === 'STORM_RETREAT') {
-            const awayAngle = angle + Math.PI;
-            if (this.state === 'STORM_RETREAT') {
-              // Do not clamp this vector to the safe zone: this is the intentional
-              // tactical storm-retreat path.
-              steerX = Math.cos(awayAngle);
-              steerY = Math.sin(awayAngle);
-            } else {
-              const safeWeight = outsideStorm ? 0.78 : 0.24;
-              steerX = Math.cos(awayAngle) * (1 - safeWeight) + Math.cos(centerAngle) * safeWeight;
-              steerY = Math.sin(awayAngle) * (1 - safeWeight) + Math.sin(centerAngle) * safeWeight;
-            }
-            this.aiSuperSprint = this.stamina > 18;
+          } else if (this.state === 'FLEE') {
+            const awayAngle = directAngle + Math.PI;
+            const safeWeight = outsideStorm ? 0.78 : 0.25;
+            steerX = Math.cos(awayAngle) * (1 - safeWeight) + Math.cos(centerAngle) * safeWeight;
+            steerY = Math.sin(awayAngle) * (1 - safeWeight) + Math.sin(centerAngle) * safeWeight;
+            this.aiSuperSprint = this.stamina > 16;
             if (this.inventory.HASTE > 0 && this.hasteTimer <= 0) useInventoryItem('HASTE', this);
-            if (this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry && closestDist < 190 && Math.random() < 0.08 + profile.dodge * 0.1) {
-              this.nextDashTry = gameTime + 1.6 + Math.random() * 1.8;
+            if (this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry && closestDist < 195) {
+              this.nextDashTry = gameTime + 1.4 + Math.random() * 1.2;
               this.useDash(gameTime, Math.atan2(steerY, steerX));
             }
           } else {
             this.state = 'ATTACK';
             this.boredomTimer = 0;
-            this.facingAngle = aimAngle;
-            this.aiAimLock = Math.max(this.aiAimLock, 0.12);
+            this.facingAngle = spellAimAngle;
+            this.aiAimLock = Math.max(this.aiAimLock, 0.14);
 
-            if (closestDist > 105) {
-              steerX = Math.cos(angle);
-              steerY = Math.sin(angle);
-            } else if (this.charKey === 'TIDECALLER' && closestDist < 65 && !canSecureKill) {
-              steerX = -Math.cos(angle) * 0.65;
-              steerY = -Math.sin(angle) * 0.65;
+            // Preferred combat range per class + active perpendicular strafing while on cooldown
+            const idealMin = this.charKey === 'BERSERKER' ? 58 : (this.charKey === 'SHADOW' ? 88 : 165);
+            const idealMax = this.charKey === 'BERSERKER' ? 120 : (this.charKey === 'SHADOW' ? 195 : 310);
+            const perpAngle = directAngle + (Math.PI / 2) * this.strafeDir;
+
+            if (closestDist > idealMax) {
+              steerX = Math.cos(directAngle) * 0.78 + Math.cos(perpAngle) * 0.42;
+              steerY = Math.sin(directAngle) * 0.78 + Math.sin(perpAngle) * 0.42;
+            } else if (closestDist < idealMin && !canSecureKill) {
+              steerX = -Math.cos(directAngle) * 0.65 + Math.cos(perpAngle) * 0.68;
+              steerY = -Math.sin(directAngle) * 0.65 + Math.sin(perpAngle) * 0.68;
+              // Defensive Dash to escape melee range for ranged/hurt bots
+              if ((this.charKey === 'TIDECALLER' || hpRatio < 0.55) && closestDist < 78 && this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry && Math.random() < profile.dodgeChance) {
+                this.nextDashTry = gameTime + 1.4 + Math.random() * 1.1;
+                this.useDash(gameTime, directAngle + Math.PI + this.strafeDir * 0.4);
+              }
             } else {
-              // Small strafes look less mechanical and occasionally overcommit.
-              const strafe = angle + Math.PI / 2 * (Math.random() < 0.5 ? -1 : 1);
-              steerX = Math.cos(strafe) * 0.25;
-              steerY = Math.sin(strafe) * 0.25;
+              // Active perpendicular strafing during duels
+              steerX = Math.cos(perpAngle) * 0.92;
+              steerY = Math.sin(perpAngle) * 0.92;
             }
 
-            if (closestDist < 68) this.useSword(gameTime);
-            if (closestDist < this.data.spellMaxRange && this.mana >= COMBAT_BALANCE.spell.mana && Math.random() > profile.error * 0.35) {
+            // Sword melee when close
+            if (closestDist < 72) {
+              this.facingAngle = directAngle + (this.aiAimError || 0) * 0.5;
+              this.useSword(gameTime);
+            }
+
+            // Frequent E Signature Spell whenever MP allows
+            if (closestDist < this.data.spellMaxRange && this.mana >= COMBAT_BALANCE.spell.mana && gameTime >= this.spellCdTime) {
+              this.facingAngle = spellAimAngle;
               this.useSpell(gameTime);
             }
-            if (closestDist < COMBAT_BALANCE.manaBullet.range && Math.random() < 0.55) this.useManaBullet(gameTime);
-            if (this.inventory.BOMB > 0 && closestDist > 95 && closestDist < ITEM_DEFS.BOMB.range && Math.random() < 0.08 + profile.aggression * 0.08) {
+
+            // Frequent R Mana Bullet weaving whenever MP allows
+            if (closestDist < COMBAT_BALANCE.manaBullet.range && this.mana >= COMBAT_BALANCE.manaBullet.mana && gameTime >= this.manaCdTime && Math.random() < (0.72 + profile.t * 0.22)) {
+              this.facingAngle = bulletAimAngle;
+              this.useManaBullet(gameTime);
+            }
+
+            if (this.inventory.BOMB > 0 && closestDist > 90 && closestDist < ITEM_DEFS.BOMB.range && Math.random() < 0.12 + profile.aggression * 0.08) {
+              this.facingAngle = spellAimAngle;
               useInventoryItem('BOMB', this);
             }
-            if (closestDist < 150 && this.mana >= COMBAT_BALANCE.art.mana && gameTime >= this.nextArtTry && (canSecureKill || Math.random() < profile.aggression)) {
-              this.nextArtTry = gameTime + 3 + Math.random() * 4;
+
+            // Q Arcane Art combos: Level 25+ actively chains Q when target < 50% HP or slowed/CC'd
+            const enemySlowed = Array.isArray(closestEnemy.effects) && closestEnemy.effects.some(e => e.type === 'SLOW' || e.type === 'BURN');
+            const artRange = this.charKey === 'TIDECALLER' ? 320 : 165;
+            const wantsArtCombo = profile.artComboEnabled
+              ? (enemyHpRatio < 0.50 || enemySlowed || canSecureKill)
+              : (canSecureKill || Math.random() < 0.28);
+            if (closestDist < artRange && this.mana >= COMBAT_BALANCE.art.mana && gameTime >= this.nextArtTry && wantsArtCombo) {
+              this.nextArtTry = gameTime + (profile.artComboEnabled ? 2.2 : 3.4) + Math.random() * 2.0;
+              this.facingAngle = spellAimAngle;
               this.useArt(gameTime);
             }
-            if (canSecureKill && closestDist > 75 && closestDist < 180 && this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry) {
-              this.nextDashTry = gameTime + 2;
-              this.useDash(gameTime, aimAngle);
+
+            if (canSecureKill && closestDist > 75 && closestDist < 190 && this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry) {
+              this.nextDashTry = gameTime + 1.8;
+              this.useDash(gameTime, spellAimAngle);
             }
           }
 
-          // Skill-based, fallible projectile dodges.
+          // Defensive Dash to dodge incoming projectiles (active even at Level 1!)
           for (let i = 0; i < projectilePool.length; i++) {
             const projectile = projectilePool[i];
             if (!projectile.active || projectile.owner === this || projectile.type === 'BOMB') continue;
-            const distance = Math.hypot(projectile.x - this.x, projectile.y - this.y);
-            if (distance < 120 && this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry && Math.random() < profile.dodge) {
-              this.nextDashTry = gameTime + 1.4 + Math.random() * 1.6;
-              const dodgeAngle = Math.atan2(projectile.vy, projectile.vx) + Math.PI / 2;
-              steerX += Math.cos(dodgeAngle) * 1.5;
-              steerY += Math.sin(dodgeAngle) * 1.5;
-              this.useDash(gameTime, dodgeAngle);
+            const dxp = this.x - projectile.x;
+            const dyp = this.y - projectile.y;
+            const distance = Math.hypot(dxp, dyp);
+            if (distance < 138 && (dxp * projectile.vx + dyp * projectile.vy) > 0) {
+              const dodgeAngle = Math.atan2(projectile.vy, projectile.vx) + (Math.PI / 2) * this.strafeDir;
+              steerX += Math.cos(dodgeAngle) * 1.1;
+              steerY += Math.sin(dodgeAngle) * 1.1;
+              if (this.mana >= COMBAT_BALANCE.dash.mana && gameTime >= this.nextDashTry && Math.random() < profile.dodgeChance) {
+                this.nextDashTry = gameTime + 1.3 + Math.random() * 1.2;
+                this.useDash(gameTime, dodgeAngle);
+              }
               break;
             }
           }
 
-          // Local separation prevents stacked bots without global perfect movement.
+          // Cover / obstacle tangent awareness so bots skirt obstacles cleanly
+          for (let i = 0; i < obstaclePool.length; i++) {
+            const obs = obstaclePool[i];
+            const cx = obs.x + obs.w * 0.5;
+            const cy = obs.y + obs.h * 0.5;
+            const dxo = this.x - cx;
+            const dyo = this.y - cy;
+            const pad = Math.max(obs.w, obs.h) * 0.5 + 36;
+            const distO = Math.hypot(dxo, dyo);
+            if (distO < pad && distO > 0.01) {
+              const push = (pad - distO) / pad;
+              steerX += (dxo / distO) * push * 1.1 + (-dyo / distO) * this.strafeDir * push * 0.5;
+              steerY += (dyo / distO) * push * 1.1 + (dxo / distO) * this.strafeDir * push * 0.5;
+            }
+          }
+
+          // Local separation prevents stacked bots
           for (let i = 0; i < Game.entities.length; i++) {
             const other = Game.entities[i];
             if (other === this || !other.isAlive) continue;
             const dx = this.x - other.x;
             const dy = this.y - other.y;
             const distance = Math.hypot(dx, dy);
-            if (distance < 60 && distance > 0.001) {
-              const push = (60 - distance) / 60;
-              steerX += dx / distance * push * 1.2;
-              steerY += dy / distance * push * 1.2;
+            if (distance < 62 && distance > 0.001) {
+              const push = (62 - distance) / 62;
+              steerX += (dx / distance) * push * 1.25;
+              steerY += (dy / distance) * push * 1.25;
             }
           }
 
@@ -6175,27 +7245,38 @@
         }
 
         draw(ctx) {
+          if (this.despawned) return;
+
           if (!this.isAlive) {
-            if (this.deathAnimTimer > 0) {
-              drawDirectionalShadow(ctx, this.x, this.y, 0, this.radius * (this.deathAnimTimer / 0.5), this.isPlayer);
+            if (!this.isDying) return;
+            const elapsed = this.deathElapsed || 0;
+            const inPhase1 = elapsed < DEATH_PHASE1_DURATION;
+            const p2 = inPhase1 ? 0 : Math.min(1, (elapsed - DEATH_PHASE1_DURATION) / (DEATH_ANIM_DURATION - DEATH_PHASE1_DURATION));
+            const opacity = inPhase1 ? 1.0 : Math.max(0, 1.0 - p2);
+            const shadowScale = inPhase1 ? 1.0 : Math.max(0.15, 1.0 - p2 * 0.85);
+
+            drawDirectionalShadow(ctx, this.x, this.y, this.z || 0, this.radius * shadowScale, this.isPlayer);
+
+            // Phase 1 expanding impact ring
+            if (inPhase1) {
+              const ringP = elapsed / DEATH_PHASE1_DURATION;
               ctx.save();
-              ctx.translate(this.x, this.y);
-              ctx.scale(1.0, INV_CAMERA_PITCH);
-              ctx.globalAlpha = Math.max(0, this.deathAnimTimer / 0.5);
-              ctx.rotate((1 - this.deathAnimTimer / 0.5) * 0.9);
-              drawWizardFromSheet(ctx, this.charKey, this.isPlayer, this.facingAngle, 0, 0, 'idle', 0, 0);
+              ctx.strokeStyle = this.charKey === 'BERSERKER' ? '#fb923c' : (this.charKey === 'TIDECALLER' ? '#38bdf8' : '#c084fc');
+              ctx.globalAlpha = Math.max(0, 0.9 * (1 - ringP));
+              ctx.lineWidth = 4 * (1 - ringP * 0.5);
+              ctx.beginPath();
+              ctx.ellipse(this.x, this.y, 16 + ringP * 44, (16 + ringP * 44) * CAMERA_PITCH, 0, 0, Math.PI * 2);
+              ctx.stroke();
               ctx.restore();
-              return;
             }
+
             ctx.save();
-            ctx.strokeStyle = '#475569';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(this.x - 12, this.y - 12);
-            ctx.lineTo(this.x + 12, this.y + 12);
-            ctx.moveTo(this.x + 12, this.y - 12);
-            ctx.lineTo(this.x - 12, this.y + 12);
-            ctx.stroke();
+            ctx.translate(this.x, this.y - (this.z || 0) * INV_CAMERA_PITCH + p2 * 12);
+            ctx.scale(1.0 + p2 * 0.1, INV_CAMERA_PITCH * (1.0 - p2 * 0.28));
+            ctx.globalAlpha = opacity;
+            const tiltSign = Math.cos(this.deathKnockbackAngle || 0) >= 0 ? 1 : -1;
+            ctx.rotate(tiltSign * p2 * 1.38);
+            drawWizardFromSheet(ctx, this.charKey, this.isPlayer, this.facingAngle, 0, inPhase1 ? 0.15 : 0, 'idle', 0, inPhase1 ? 0.14 : 0);
             ctx.restore();
             return;
           }
@@ -6223,31 +7304,96 @@
 
           drawWizardFromSheet(ctx, this.charKey, this.isPlayer, this.facingAngle, this.invulnerableTimer, this.hitFlashTimer, this.animState, this.animFrame, this.squashAmount);
 
-          // Mini Health Bar
-          const barW = 34;
-          const barH = 5;
+          // Crisp, mobile-readable Overhead Combat Plate (LVL pill + Name + HP bar with white damage trail)
+          const isMobileCompact = DeviceOptimizer.current && DeviceOptimizer.current.isCompact;
+          const plateScale = isMobileCompact ? 1.16 : 1.0;
+          const barW = Math.round(54 * plateScale);
+          const barH = Math.round(6 * plateScale);
           const barX = -barW / 2;
-          const barY = AssetLoader.getSprite(this.charKey) ? -44 : -this.radius - 12;
+          const barY = (AssetLoader.getSprite(this.charKey) ? -45 : -this.radius - 14) - (isMobileCompact ? 4 : 0);
 
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-          ctx.fillRect(barX, barY, barW, barH);
-          const hpPercent = Math.max(0, this.hp / this.maxHp);
-          ctx.fillStyle = this.isPlayer ? '#22c55e' : (this.charKey === 'BERSERKER' ? '#ef4444' : '#c084fc');
+          // HP Bar track
+          ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
+          ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+
+          // White trailing damage-flash bar
+          const trailPct = Math.max(0, Math.min(1, (this.damageTrailHp || this.hp) / this.maxHp));
+          const hpPercent = Math.max(0, Math.min(1, this.hp / this.maxHp));
+          if (trailPct > hpPercent + 0.005) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(barX, barY, barW * trailPct, barH);
+          }
+
+          // Live HP fill
+          ctx.fillStyle = this.isPlayer
+            ? '#22c55e'
+            : (this.charKey === 'BERSERKER' ? '#ef4444' : (this.charKey === 'TIDECALLER' ? '#38bdf8' : '#c084fc'));
           ctx.fillRect(barX, barY, barW * hpPercent, barH);
-          ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(barX, barY, barW, barH);
 
-          // Name label
-          ctx.fillStyle = this.isPlayer ? '#fbbf24' : '#cbd5e1';
-          ctx.font = 'bold 9px system-ui, sans-serif';
+          // Shield sliver overlay
+          if (this.shield > 0) {
+            const shieldPct = Math.min(1, this.shield / this.maxHp);
+            ctx.fillStyle = '#67e8f9';
+            ctx.fillRect(barX, barY, barW * shieldPct, Math.max(2, Math.floor(barH * 0.45)));
+          }
+
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(barX - 0.5, barY - 0.5, barW + 1, barH + 1);
+
+          // Top Line: Compact LVL badge pill + Name with dark outline for all-biome contrast
+          const nameFontSize = Math.round(10 * plateScale);
+          const lvlFontSize = Math.round(8.5 * plateScale);
+          const labelText = this.isPlayer ? 'YOU' : this.name;
+          const lvlText = `LVL ${this.level || 1}`;
+          const topLineY = barY - Math.round(6 * plateScale);
+
+          ctx.font = `800 ${lvlFontSize}px system-ui, sans-serif`;
+          const lvlW = ctx.measureText(lvlText).width + 8;
+          ctx.font = `800 ${nameFontSize}px system-ui, sans-serif`;
+          const nameW = ctx.measureText(labelText).width;
+          const gap = 4;
+          const totalW = lvlW + gap + nameW;
+          const startX = -totalW / 2;
+
+          // Compact LVL pill
+          const pillH = Math.round(12 * plateScale);
+          const pillY = topLineY - pillH + 3;
+          ctx.fillStyle = this.isPlayer ? 'rgba(245, 158, 11, 0.92)' : 'rgba(15, 23, 42, 0.92)';
+          ctx.strokeStyle = this.isPlayer ? '#fef08a' : (this.charKey === 'BERSERKER' ? '#fb923c' : (this.charKey === 'TIDECALLER' ? '#38bdf8' : '#c084fc'));
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(startX, pillY, lvlW, pillH, 4);
+          } else {
+            ctx.rect(startX, pillY, lvlW, pillH);
+          }
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.font = `900 ${lvlFontSize}px system-ui, sans-serif`;
           ctx.textAlign = 'center';
-          ctx.fillText(this.isPlayer ? "YOU" : this.data.name, 0, barY - 3);
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = this.isPlayer ? '#0f172a' : '#f8fafc';
+          ctx.fillText(lvlText, startX + lvlW / 2, pillY + pillH / 2 + 0.5);
+
+          // Crisp Name with dark stroke outline
+          ctx.font = `800 ${nameFontSize}px system-ui, sans-serif`;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.lineJoin = 'round';
+          ctx.strokeStyle = 'rgba(2, 6, 23, 0.92)';
+          ctx.lineWidth = 3;
+          ctx.strokeText(labelText, startX + lvlW + gap, pillY + pillH / 2 + 0.5);
+          ctx.fillStyle = this.isPlayer ? '#fde047' : '#ffffff';
+          ctx.fillText(labelText, startX + lvlW + gap, pillY + pillH / 2 + 0.5);
+          ctx.textBaseline = 'alphabetic';
 
           if (!this.isPlayer && this.pingTarget && Game.time < this.pingTarget.expiresAt) {
             ctx.fillStyle = '#67e8f9';
             ctx.font = '900 10px system-ui, sans-serif';
-            ctx.fillText('🎯', 0, barY - 14);
+            ctx.textAlign = 'center';
+            ctx.fillText('🎯', 0, pillY - 5);
           }
 
           ctx.restore();
@@ -6836,16 +7982,35 @@
           Camera.y = py - this.player.z * INV_CAMERA_PITCH;
           Camera.zoomMode = '0.6';
 
+          this.playerDeathDelay = 0;
+          this.bonusLootXp = 0;
           const roster = ["BERSERKER", "TIDECALLER", "SHADOW"];
+          const botNames = pickUniqueBotNames(BOT_COUNT);
+          const baseLevel = Math.max(1, Math.min(MAX_PLAYER_LEVEL, PlayerData.level || 1));
           for (let i = 0; i < BOT_COUNT; i++) {
             let bx = 1000 + Math.random() * 18000;
             let by = 1000 + Math.random() * 18000;
-            for (let attempt = 0; attempt < 12 && !isSafeDeployment(bx, by); attempt++) {
+            for (let attempt = 0; attempt < 18; attempt++) {
+              const safeGround = isSafeDeployment(bx, by);
+              const farFromPlayer = Math.hypot(bx - px, by - py) >= 360;
+              let farFromBots = true;
+              for (let j = 1; j < this.entities.length; j++) {
+                if (Math.hypot(bx - this.entities[j].x, by - this.entities[j].y) < 420) {
+                  farFromBots = false;
+                  break;
+                }
+              }
+              if (safeGround && farFromPlayer && farFromBots) break;
               bx = 1000 + Math.random() * 18000;
               by = 1000 + Math.random() * 18000;
             }
-            const bot = new Entity(bx, by, false, roster[i % roster.length]);
-            bot.skill = getBotSkill();
+            const charKey = roster[Math.floor(Math.random() * roster.length)];
+            const offset = Math.floor(Math.random() * 7) - 3; // -3 to +3 levels around player
+            const botLevel = Math.max(1, Math.min(MAX_PLAYER_LEVEL, baseLevel + offset));
+            const bot = new Entity(bx, by, false, charKey, {
+              name: botNames[i] || `Arcanist_${i + 1}`,
+              level: botLevel
+            });
             bot.z = 3000 + Math.random() * 500;
             bot.vz = 0;
             bot.isGrounded = false;
@@ -6879,7 +8044,7 @@
             const dt = damageTextPool[i];
             if (!dt.active) continue;
             dt.y += dt.vy * (deltaTime * 60);
-            dt.alpha -= 0.025 * (deltaTime * 60);
+            dt.alpha -= (dt.callout ? 0.012 : 0.025) * (deltaTime * 60);
             if (dt.alpha <= 0) dt.active = false;
           }
 
@@ -6889,10 +8054,45 @@
             return;
           }
 
-          // Decrement deathAnimTimer for dead entities
+          // 0.85s DYING state animation: Phase 1 knockback/flash -> Phase 2 collapse/soul particles -> recycle
           for (let i = 0; i < this.entities.length; i++) {
-            if (!this.entities[i].isAlive && this.entities[i].deathAnimTimer > 0) {
-              this.entities[i].deathAnimTimer -= deltaTime;
+            const ent = this.entities[i];
+            if (!ent.isAlive && ent.isDying) {
+              ent.deathElapsed += deltaTime;
+              ent.deathAnimTimer = Math.max(0, DEATH_ANIM_DURATION - ent.deathElapsed);
+              if (ent.hitFlashTimer > 0) ent.hitFlashTimer = Math.max(0, ent.hitFlashTimer - deltaTime);
+
+              // Damped directional knockback + arc settle
+              if (Math.abs(ent.knockbackVx) > 0.05 || Math.abs(ent.knockbackVy) > 0.05) {
+                ent.x = Math.max(ent.radius, Math.min(ARENA_WIDTH - ent.radius, ent.x + ent.knockbackVx * (deltaTime * 60)));
+                ent.y = Math.max(ent.radius, Math.min(ARENA_HEIGHT - ent.radius, ent.y + ent.knockbackVy * (deltaTime * 60)));
+                const damp = Math.pow(0.84, deltaTime * 60);
+                ent.knockbackVx *= damp;
+                ent.knockbackVy *= damp;
+              }
+              if (!ent.isGrounded || ent.z > 0 || ent.vz !== 0) {
+                ent.vz += GRAVITY * deltaTime;
+                ent.z += ent.vz * deltaTime;
+                if (ent.z <= 0) {
+                  ent.z = 0;
+                  ent.vz = 0;
+                  ent.isGrounded = true;
+                }
+              }
+
+              // Phase 2 start (0.15s): emit 14-18 pooled elemental soul particles
+              if (ent.deathElapsed >= DEATH_PHASE1_DURATION && !ent.deathSoulBurstDone) {
+                ent.deathSoulBurstDone = true;
+                if (ent.isPlayer || isEntityInCameraView(ent, 160)) {
+                  spawnElementalSoulParticles(ent.x, ent.y, ent.charKey);
+                }
+              }
+
+              if (ent.deathElapsed >= DEATH_ANIM_DURATION) {
+                ent.isDying = false;
+                ent.state = 'DEAD';
+                ent.despawned = true;
+              }
             }
           }
 
@@ -7077,6 +8277,27 @@
           for (let i = 0; i < MAX_LOOT; i++) {
             const loot = lootPool[i];
             if (!loot.active) continue;
+            // Radial scatter & bounce physics for dropped loot
+            if (Math.abs(loot.vx) > 0.05 || Math.abs(loot.vy) > 0.05 || loot.z > 0 || loot.vz !== 0) {
+              loot.x = Math.max(40, Math.min(ARENA_WIDTH - 40, loot.x + loot.vx * (deltaTime * 60)));
+              loot.y = Math.max(40, Math.min(ARENA_HEIGHT - 40, loot.y + loot.vy * (deltaTime * 60)));
+              loot.vz += GRAVITY * 0.72 * deltaTime;
+              loot.z += loot.vz * deltaTime;
+              if (loot.z <= 0) {
+                loot.z = 0;
+                if (loot.bounceCount < 1 && Math.abs(loot.vz) > 70) {
+                  loot.vz = -loot.vz * 0.42;
+                  loot.vx *= 0.55;
+                  loot.vy *= 0.55;
+                  loot.bounceCount++;
+                } else {
+                  loot.vz = 0;
+                  loot.vx = 0;
+                  loot.vy = 0;
+                }
+              }
+            }
+            if (loot.z > 24) continue;
             for (let j = 0; j < this.entities.length; j++) {
               const entity = this.entities[j];
               if (!entity.isAlive || entity.z > 20) continue;
@@ -7089,7 +8310,7 @@
           }
 
 
-          if (this.player && this.player.isAlive) {
+          if (this.player && (this.player.isAlive || this.player.isDying)) {
             Camera.update(this.player.x, this.player.y, deltaTime);
           } else {
             Camera.update(this.storm.currentCenterX, this.storm.currentCenterY, deltaTime);
@@ -7101,6 +8322,9 @@
           if (this.time - lastHudUpdate >= 0.1) {
             lastHudUpdate = this.time;
             updateHUD();
+          }
+          if (this.playerDeathPending && this.playerDeathDelay > 0) {
+            this.playerDeathDelay = Math.max(0, this.playerDeathDelay - deltaTime);
           }
           this.resolveMatchEnd();
         },
@@ -7134,6 +8358,7 @@
         handlePlayerDeath() {
           if (this.matchFinished || this.playerDeathPending) return;
           this.playerDeathPending = true;
+          this.playerDeathDelay = DEATH_ANIM_DURATION;
           this.pendingPlacement = Math.max(2, this.aliveCount + 1);
         },
 
@@ -7145,9 +8370,8 @@
 
         resolveMatchEnd() {
           if (this.matchFinished) return;
-          // A player death in this simulation tick takes precedence over a queued
-          // victory, making simultaneous final storm deaths deterministic.
           if (this.playerDeathPending) {
+            if (this.playerDeathDelay > 0) return;
             this.state = 'GAMEOVER';
             document.body.dataset.state = 'gameover';
             this.finishMatch(false, this.pendingPlacement || Math.max(1, this.aliveCount + 1));
@@ -7159,14 +8383,13 @@
           }
         },
 
-        // FIX #2: finishMatch runs ONCE per match with instant rewards
+        // FIX #2: finishMatch runs ONCE per match with Level 100 progression & milestone rewards
         finishMatch(isVictory, placement) {
           if (this.matchFinished) return;
           this.matchFinished = true;
 
           if (isVictory) {
             Announcer.play('victory_royale');
-            // Victory burst: 60 gold particles
             if (this.player) {
               spawnParticles(this.player.x, this.player.y, 60, '#fbbf24', 8, 0.02);
             }
@@ -7175,6 +8398,7 @@
           const kills = this.player ? this.player.kills : 0;
           let earnedGold = 0;
           let earnedGems = 0;
+          let earnedCrystals = 0;
 
           if (placement === 1) { earnedGold += 100; earnedGems += 5; }
           else if (placement === 2) { earnedGold += 60; earnedGems += 2; }
@@ -7183,35 +8407,34 @@
 
           earnedGold += kills * 10;
 
-          // XP / Level & Spendable Progression System (survival time + kills + placement)
+          // XP / Level 100 Progression + Milestone Rewards
           const xpBreakdown = calculateMatchXp({
             survivalSeconds: this.time,
             kills,
             isVictory,
             placement
           });
-          const earnedXp = xpBreakdown.totalXp;
-          PlayerData.xp = (PlayerData.xp || 0) + earnedXp;
-          PlayerData.spendableXp = Math.min(999999999, (PlayerData.spendableXp || 0) + earnedXp);
-          PlayerData.totalXpEarned = Math.min(999999999, (PlayerData.totalXpEarned || 0) + earnedXp);
+          const earnedXp = xpBreakdown.totalXp + (this.bonusLootXp || 0);
+          PlayerData.spendableXp = Math.min(999999999, (PlayerData.spendableXp || 0) + xpBreakdown.totalXp);
+          PlayerData.totalXpEarned = Math.min(999999999, (PlayerData.totalXpEarned || 0) + xpBreakdown.totalXp);
 
-          let levelUpBonusGold = 0;
-          let didLevelUp = false;
-          while (PlayerData.xp >= (PlayerData.level || 1) * 100) {
-            PlayerData.xp -= (PlayerData.level || 1) * 100;
-            PlayerData.level = (PlayerData.level || 1) + 1;
-            levelUpBonusGold += 50;
-            didLevelUp = true;
-          }
+          const progression = applyPlayerLevelProgression(PlayerData.level || 1, PlayerData.xp || 0, earnedXp);
+          PlayerData.level = progression.level;
+          PlayerData.xp = progression.xp;
+
+          const didLevelUp = progression.levelsGained.length > 0;
           if (didLevelUp) {
             Announcer.play('level_up');
             AudioEngine.playSample('sfx_level_up', 0.9);
           }
-          earnedGold += levelUpBonusGold;
+          earnedGold += progression.bonusCoins;
+          earnedCrystals += progression.bonusCrystals;
+          earnedGems += progression.bonusGems;
 
           const survivalRounded = Math.max(0, Math.round(this.time));
           const damageRounded = Math.max(0, Math.round(this.player ? this.player.damageDealt : 0));
           PlayerData.gold += earnedGold;
+          PlayerData.astralCrystals = (PlayerData.astralCrystals || 0) + earnedCrystals;
           PlayerData.gems += earnedGems;
           PlayerData.totalMatches++;
           if (isVictory) PlayerData.totalWins++;
@@ -7223,7 +8446,7 @@
           clearMapPing(true);
           Input.reset();
 
-          UIController.showGameOver(isVictory, placement, this.player, earnedGold, earnedGems, kills, earnedXp, didLevelUp, xpBreakdown);
+          UIController.showGameOver(isVictory, placement, this.player, earnedGold, earnedGems, kills, earnedXp, didLevelUp, xpBreakdown, progression, earnedCrystals);
         }
       };
 
@@ -7613,23 +8836,23 @@
           }
         }
 
-        // Loot Items (Part D & 2.5D Float)
+        // Loot Items (Part D & 2.5D Float + Scatter Bounce)
         for (let i = 0; i < MAX_LOOT; i++) {
           const l = lootPool[i];
           if (!l.active) continue;
           if (l.x > Camera.x - halfW && l.x < Camera.x + halfW && l.y > Camera.y - halfH && l.y < Camera.y + halfH) {
             const lootImg = typeof AssetLoader !== 'undefined' ? AssetLoader.getLoot(l.type) : null;
             const itemDef = ITEM_DEFS[l.type];
-            const lootColor = l.type === 'GOLD' ? '#fbbf24' : l.type === 'GEMS' ? '#38bdf8' : itemDef.color;
+            const lootColor = l.type === 'GOLD' ? '#fbbf24' : (l.type === 'GEMS' ? '#38bdf8' : (l.type === 'XP' ? '#2dd4bf' : (itemDef ? itemDef.color : '#a855f7')));
             const bob = Math.sin(Game.time * 3 + l.x * 0.01 + l.y * 0.01) * 3;
             const scale = 1 + Math.sin(Game.time * 1.4) * 0.06;
-            const drawY = l.y + bob - 10;
+            const liftZ = (l.z || 0) * INV_CAMERA_PITCH;
+            const drawY = l.y + bob - 10 - liftZ;
 
-            // Directional floor shadow beneath floating loot
-            drawDirectionalShadow(CTX, l.x, l.y, 10 + bob, l.radius * 0.85, false);
+            // Directional floor shadow beneath floating/bouncing loot
+            drawDirectionalShadow(CTX, l.x, l.y, 10 + bob + (l.z || 0), l.radius * 0.85, false);
 
             CTX.save();
-            // Soft glow halo behind
             CTX.beginPath();
             CTX.arc(l.x, drawY, l.radius * 1.5, 0, Math.PI * 2);
             CTX.fillStyle = lootColor;
@@ -7649,12 +8872,12 @@
               CTX.strokeStyle = '#ffffff';
               CTX.lineWidth = 2;
               CTX.stroke();
-              CTX.font = '16px system-ui, sans-serif';
+              CTX.font = '15px system-ui, sans-serif';
               CTX.textAlign = 'center';
               CTX.textBaseline = 'middle';
-              const icons = { GOLD: '🪙', GEMS: '💎', MEDKIT: '✚', MANA: '◆', SHIELD: '⬡', HASTE: '➤', BOMB: '✹' };
+              const icons = { GOLD: '🪙', GEMS: '💎', XP: '⚡', MEDKIT: '✚', MANA: '◆', SHIELD: '⬡', HASTE: '➤', BOMB: '✹' };
               const icon = icons[l.type] || '•';
-              CTX.fillStyle = '#ffffff';
+              CTX.fillStyle = l.type === 'XP' ? '#0f172a' : '#ffffff';
               CTX.fillText(icon, l.x, drawY);
             }
             CTX.restore();
@@ -7689,6 +8912,7 @@
         }
         for (let i = 0; i < Game.entities.length; i++) {
           const entity = Game.entities[i];
+          if (entity.despawned) continue;
           if (entity.x < viewLeft || entity.x > viewRight || entity.y < viewTop || entity.y > viewBottom) continue;
           entity.draw(CTX);
         }
@@ -7696,18 +8920,28 @@
           drawWaypointBeacon(CTX);
         }
 
-        // LAYER 5: Floating Damage Numbers
-        CTX.font = 'bold 14px system-ui, sans-serif';
+        // LAYER 5: Floating Damage Numbers & Elimination Callouts
         CTX.textAlign = 'center';
         for (let i = 0; i < damageTextPool.length; i++) {
           const dt = damageTextPool[i];
           if (!dt.active || dt.x < viewLeft || dt.x > viewRight || dt.y < viewTop || dt.y > viewBottom) continue;
           CTX.save();
           CTX.globalAlpha = Math.max(0, dt.alpha);
-          CTX.fillStyle = dt.color;
-          CTX.shadowColor = 'rgba(0,0,0,0.85)';
-          CTX.shadowBlur = 4;
-          CTX.fillText(dt.text, dt.x, dt.y);
+          if (dt.callout) {
+            CTX.font = '900 15px system-ui, sans-serif';
+            CTX.lineJoin = 'round';
+            CTX.strokeStyle = 'rgba(2, 6, 23, 0.92)';
+            CTX.lineWidth = 4;
+            CTX.strokeText(dt.text, dt.x, dt.y);
+            CTX.fillStyle = dt.color;
+            CTX.fillText(dt.text, dt.x, dt.y);
+          } else {
+            CTX.font = 'bold 14px system-ui, sans-serif';
+            CTX.fillStyle = dt.color;
+            CTX.shadowColor = 'rgba(0,0,0,0.85)';
+            CTX.shadowBlur = 4;
+            CTX.fillText(dt.text, dt.x, dt.y);
+          }
           CTX.restore();
         }
 
@@ -8391,7 +9625,7 @@
           if (actBtns) actBtns.style.display = 'block';
         },
 
-        showGameOver(isWin, placement, player, goldEarned, gemsEarned, kills, xpEarned = 0, isLevelUp = false, xpBreakdown = null) {
+        showGameOver(isWin, placement, player, goldEarned, gemsEarned, kills, xpEarned = 0, isLevelUp = false, xpBreakdown = null, progression = null, crystalsEarned = 0) {
           Music.stop();
           document.getElementById('pause-screen').classList.add('hidden');
           if (isMapExpanded) toggleMapExpand();
@@ -8407,10 +9641,18 @@
             } else {
               title.textContent = `YOU PLACED #${placement}`;
               title.className = "go-title loss";
-              desc.textContent = "Fallen in combat. Collect your bounty and spend XP on upgrades!";
+              const killerNote = Game.killcamData && Game.killcamData.attackerName
+                ? `Eliminated by ${Game.killcamData.attackerName}. Collect your bounty and upgrade!`
+                : "Fallen in combat. Collect your bounty and spend XP on upgrades!";
+              desc.textContent = killerNote;
             }
 
             document.getElementById('rw-gold').textContent = `+${goldEarned} 🪙`;
+            const rwCrystals = document.getElementById('rw-crystals');
+            if (rwCrystals) {
+              rwCrystals.style.display = crystalsEarned > 0 ? 'inline' : 'none';
+              rwCrystals.textContent = `+${crystalsEarned} 🔮`;
+            }
             document.getElementById('rw-gems').textContent = `+${gemsEarned} 💎`;
             const rwXp = document.getElementById('rw-xp');
             if (rwXp) rwXp.textContent = `+${xpEarned} ⚡ XP`;
@@ -8418,7 +9660,29 @@
             const xpDetail = xpBreakdown
               ? `Survival +${xpBreakdown.survivalXp} · Elims +${xpBreakdown.combatXp} · Rank +${xpBreakdown.placementXp}`
               : `+${xpEarned} XP`;
-            document.getElementById('rw-breakdown-kills').textContent = `Kills: ${kills} · ${xpDetail}${isLevelUp ? ' ⭐ LEVEL UP!' : ''}`;
+            const lvlNote = isLevelUp
+              ? ` ⭐ LVL ${PlayerData.level >= MAX_PLAYER_LEVEL ? '100 · MAX' : PlayerData.level}!`
+              : '';
+            document.getElementById('rw-breakdown-kills').textContent = `Kills: ${kills} · ${xpDetail}${lvlNote}`;
+
+            // Milestone Reward Banner (Level 5, 10, ..., 100)
+            const msBanner = document.getElementById('milestone-banner');
+            const msTitle = document.getElementById('milestone-banner-title');
+            const msText = document.getElementById('milestone-banner-text');
+            if (msBanner && progression && Array.isArray(progression.milestones) && progression.milestones.length > 0) {
+              const lvList = progression.milestones.map(m => `LVL ${m.level}`).join(' & ');
+              const hasMax = progression.milestones.some(m => m.level === MAX_PLAYER_LEVEL);
+              const totalMsCoins = progression.milestones.reduce((s, m) => s + m.coins, 0);
+              const totalMsCrystals = progression.milestones.reduce((s, m) => s + m.crystals, 0);
+              const totalMsGems = progression.milestones.reduce((s, m) => s + m.gems, 0);
+              if (msTitle) msTitle.textContent = hasMax ? '👑 LEVEL 100 MAX MILESTONE UNLOCKED!' : `🏆 ${lvList} MILESTONE REWARD UNLOCKED!`;
+              const parts = [`+${totalMsCoins.toLocaleString('en-US')} 🪙`, `+${totalMsCrystals.toLocaleString('en-US')} 🔮`];
+              if (totalMsGems > 0) parts.push(`+${totalMsGems} 💎`);
+              if (msText) msText.textContent = parts.join('  ·  ');
+              msBanner.classList.remove('hidden');
+            } else if (msBanner) {
+              msBanner.classList.add('hidden');
+            }
 
             document.getElementById('stat-placement').textContent = `#${placement} / ${TOTAL_FIGHTERS}`;
             document.getElementById('stat-fighter').textContent = player ? player.data.name : "Champion";
@@ -8495,15 +9759,26 @@
           if (el) el.textContent = Number(PlayerData.spendableXp || 0).toLocaleString('en-US');
         });
 
+        const level = Math.max(1, Math.min(MAX_PLAYER_LEVEL, PlayerData.level || 1));
+        const isMaxLevel = level >= MAX_PLAYER_LEVEL;
+        const levelText = isMaxLevel ? 'LVL 100 · MAX' : `LVL ${level}`;
         const lvlEl = document.getElementById('lobby-level');
-        if (lvlEl) lvlEl.textContent = 'LVL ' + (PlayerData.level || 1);
+        if (lvlEl) {
+          lvlEl.textContent = levelText;
+          const pill = lvlEl.closest('.lvl-pill');
+          if (pill) pill.classList.toggle('is-max', isMaxLevel);
+        }
         const upLvlEl = document.getElementById('upgrades-level');
-        if (upLvlEl) upLvlEl.textContent = 'LVL ' + (PlayerData.level || 1);
-        const reqXp = (PlayerData.level || 1) * 100;
-        const curXp = PlayerData.xp || 0;
+        if (upLvlEl) {
+          upLvlEl.textContent = levelText;
+          const upPill = upLvlEl.closest('.lvl-pill');
+          if (upPill) upPill.classList.toggle('is-max', isMaxLevel);
+        }
+        const reqXp = getXpRequiredForLevel(level);
+        const curXp = isMaxLevel ? reqXp : Math.min(reqXp, PlayerData.xp || 0);
         const xpText = document.getElementById('lobby-xp-text');
-        if (xpText) xpText.textContent = `${curXp}/${reqXp} XP`;
-        const pct = Math.min(100, Math.max(0, (curXp / reqXp) * 100));
+        if (xpText) xpText.textContent = isMaxLevel ? 'MAX' : `${curXp}/${reqXp} XP`;
+        const pct = isMaxLevel ? 100 : Math.min(100, Math.max(0, (curXp / reqXp) * 100));
         const xpFill = document.getElementById('lobby-xp-fill');
         if (xpFill) xpFill.style.width = pct + '%';
         const upXpFill = document.getElementById('upgrades-xp-fill');
@@ -9057,7 +10332,9 @@
         const sv = document.getElementById('slider-voice'); if (sv) sv.value = PlayerData.voiceVolume;
         const th = document.getElementById('toggle-haptics'); if (th) th.checked = PlayerData.haptics;
         const motion = document.getElementById('toggle-motion'); if (motion) motion.checked = PlayerData.reducedMotion;
+        const cs = document.getElementById('slider-control-scale'); if (cs) cs.value = PlayerData.controlScale || 1;
         updateQualityButtonsUI();
+        updateDeviceModeUI();
         screen.classList.remove('hidden');
       }
 
@@ -9098,7 +10375,86 @@
         if (!['low', 'medium', 'high'].includes(q)) return;
         PlayerData.graphicsQuality = q;
         updateQualityButtonsUI();
-        resizeCanvas();
+        DeviceOptimizer.apply(true);
+      }
+
+      function setDeviceMode(mode) {
+        if (!['auto', 'mobile', 'tablet', 'desktop'].includes(mode)) return;
+        PlayerData.deviceMode = mode;
+        const cfg = DeviceOptimizer.apply(true);
+        PlayerData.save();
+        const modeLabel = mode === 'auto'
+          ? `Auto (${DeviceOptimizer.formatProfileLabel(cfg.profile)})`
+          : DeviceOptimizer.formatProfileLabel(cfg.profile);
+        showToast(`📱 Display optimized for ${modeLabel}`, false);
+      }
+
+      function cycleDeviceMode() {
+        const order = ['auto', 'mobile', 'tablet', 'desktop'];
+        const cur = order.indexOf(PlayerData.deviceMode || 'auto');
+        const next = order[(cur + 1) % order.length];
+        setDeviceMode(next);
+      }
+
+      function setTouchControlsMode(mode) {
+        if (!['auto', 'on', 'off'].includes(mode)) return;
+        PlayerData.touchControlsMode = mode;
+        DeviceOptimizer.apply(false);
+        PlayerData.save();
+        const label = mode === 'auto' ? 'Auto' : (mode === 'on' ? 'Always Show' : 'Hidden');
+        showToast(`🎮 Touch Controls: ${label}`, false);
+      }
+
+      function onControlScaleChange(val) {
+        const parsed = parseFloat(val);
+        if (!Number.isFinite(parsed)) return;
+        PlayerData.controlScale = Math.round(Math.max(0.75, Math.min(1.25, parsed)) * 100) / 100;
+        DeviceOptimizer.apply(false);
+      }
+
+      function updateDeviceModeUI() {
+        const cfg = DeviceOptimizer.current;
+        const mode = PlayerData.deviceMode || 'auto';
+        const touch = PlayerData.touchControlsMode || 'auto';
+
+        ['auto', 'mobile', 'tablet', 'desktop'].forEach(k => {
+          const b = document.getElementById('mode-btn-' + k);
+          if (b) {
+            b.classList.toggle('active', k === mode);
+            b.setAttribute('aria-pressed', String(k === mode));
+          }
+        });
+        ['auto', 'on', 'off'].forEach(k => {
+          const b = document.getElementById('touch-btn-' + k);
+          if (b) {
+            b.classList.toggle('active', k === touch);
+            b.setAttribute('aria-pressed', String(k === touch));
+          }
+        });
+
+        const scaleSlider = document.getElementById('slider-control-scale');
+        if (scaleSlider) scaleSlider.value = String(PlayerData.controlScale || 1);
+        const scaleVal = document.getElementById('control-scale-val');
+        if (scaleVal) scaleVal.textContent = `${Math.round((PlayerData.controlScale || 1) * 100)}%`;
+
+        const statusEl = document.getElementById('settings-device-status');
+        if (statusEl) {
+          const activeLabel = DeviceOptimizer.formatProfileLabel(cfg.profile);
+          statusEl.textContent = mode === 'auto'
+            ? `Auto-Optimized: ${activeLabel}`
+            : `Manual: ${activeLabel} (Detected ${DeviceOptimizer.formatProfileLabel(cfg.detectedProfile)})`;
+        }
+        const vpEl = document.getElementById('settings-viewport-size');
+        if (vpEl) vpEl.textContent = `${cfg.width || window.innerWidth}×${cfg.height || window.innerHeight}`;
+
+        const lobbyBtn = document.getElementById('btn-device-mode');
+        if (lobbyBtn) {
+          const icon = cfg.profile === 'desktop' ? '💻' : (cfg.profile === 'tablet' ? '📲' : '📱');
+          const shortName = mode === 'auto'
+            ? `Auto (${cfg.profile === 'desktop' ? 'Desktop' : (cfg.profile === 'tablet' ? 'Tablet' : 'Mobile')})`
+            : (mode.charAt(0).toUpperCase() + mode.slice(1));
+          lobbyBtn.textContent = `${icon} ${shortName}`;
+        }
       }
 
       function updateQualityButtonsUI() {
@@ -9432,6 +10788,7 @@
       // Initialize persistent data, controls, accessibility and the render loop.
       UI_ELEMENTS.init();
       PlayerData.load();
+      DeviceOptimizer.apply(true);
       Input.init();
       initializeAccessibility();
 
