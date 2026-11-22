@@ -1662,8 +1662,9 @@
       .tutorial-card { margin: auto; max-width: 500px; }
       .tutorial-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; text-align: left; }
       .tutorial-item { padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,0.025); }
-      .tutorial-item strong { display: block; margin-bottom: 4px; color: var(--gold); font-size: 11px; }
+      .tutorial-item > strong { display: block; margin-bottom: 4px; color: var(--gold); font-size: 11px; }
       .tutorial-item span { color: var(--muted); font-size: 11px; line-height: 1.45; }
+      .tutorial-item span strong { display: inline; color: #f8fafc; font-weight: 800; }
       kbd { display: inline-block; min-width: 20px; padding: 2px 5px; border: 1px solid rgba(255,255,255,0.2); border-bottom-width: 2px; border-radius: 5px; background: rgba(255,255,255,0.07); color: var(--ink); font: 700 10px/1.2 inherit; text-align: center; }
 
       /* In-match HUD */
@@ -1808,16 +1809,18 @@
         border-color: #fde68a; z-index: 4;
       }
       #btn-super.active { border-color: #fef08a; box-shadow: 0 0 24px rgba(251,191,36,0.75), inset 0 1px rgba(255,255,255,0.3); }
-      /* Quick-Use Loot Button & Expandable 5-Slot Fanout */
+      /* Quick-Use Loot Button & Expandable 5-Slot Fanout (Independent HUD Group) */
       #quick-use-wrap {
-        position: absolute;
-        left: -76px;
-        bottom: 16px;
+        position: fixed;
+        right: calc(max(clamp(12px, 3vw, 24px), env(safe-area-inset-right, 0px)) + 258px * var(--control-scale, 1) * var(--el-scale-actions, 1));
+        bottom: calc(max(clamp(10px, 3vh, 20px), env(safe-area-inset-bottom, 0px)) + 16px * var(--control-scale, 1));
         display: flex;
         align-items: flex-end;
         gap: 5px;
-        z-index: 12;
+        z-index: 25;
         pointer-events: auto;
+        transform: scale(calc(var(--control-scale, 1) * var(--el-scale-quickuse, 1)));
+        transform-origin: bottom right;
         touch-action: none;
         user-select: none;
         -webkit-user-select: none;
@@ -2204,14 +2207,24 @@
         gap: 4px;
       }
 
-      /* Scale touch controls smoothly from DeviceOptimizer */
+      /* Scale touch controls & customizable HUD elements smoothly */
       #joystick-zone {
-        transform: scale(var(--control-scale, 1));
+        transform: scale(calc(var(--control-scale, 1) * var(--el-scale-joystick, 1)));
         transform-origin: bottom left;
       }
       #action-buttons {
-        transform: scale(var(--control-scale, 1));
+        transform: scale(calc(var(--control-scale, 1) * var(--el-scale-actions, 1)));
         transform-origin: bottom right;
+      }
+      #hud-stats-card {
+        transform: scale(var(--el-scale-resources, 1));
+        transform-origin: top left;
+      }
+      .hud-custom-pos {
+        position: fixed !important;
+        right: auto !important;
+        bottom: auto !important;
+        transform-origin: top left !important;
       }
       html[data-touch-controls="off"] #joystick-zone,
       html[data-touch-controls="off"] #action-buttons {
@@ -2296,8 +2309,8 @@
         padding: 3px 7px;
       }
       html[data-device-profile="mobile-portrait"] #quick-use-wrap {
-        left: -62px;
-        bottom: 14px;
+        right: calc(max(12px, env(safe-area-inset-right, 0px)) + 236px * var(--control-scale, 1) * var(--el-scale-actions, 1));
+        bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 14px * var(--control-scale, 1));
       }
       html[data-device-profile="mobile-portrait"] #btn-quick-use {
         width: 52px;
@@ -2530,6 +2543,205 @@
       html[data-device-profile="desktop"][data-touch-controls="off"] #item-channel {
         bottom: calc(var(--safe-bottom) + 90px);
       }
+      /* ==========================================
+         CUSTOMISABLE MOBILE HUD LAYOUT EDITOR
+         ========================================== */
+      body.hud-editing #hud-container {
+        display: block !important;
+        opacity: 1 !important;
+        pointer-events: none !important;
+      }
+      body.hud-editing #hud-top .hud-tools-col,
+      body.hud-editing #hud-center-top,
+      body.hud-editing #kill-feed,
+      body.hud-editing #inventory-hud,
+      body.hud-editing #minimap-tip-toast {
+        opacity: 0.28;
+        pointer-events: none !important;
+      }
+      #hud-editor-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 260;
+        pointer-events: none;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+      #hud-editor-overlay.hidden { display: none !important; }
+      #hud-editor-stage {
+        position: absolute;
+        inset: 0;
+        pointer-events: auto;
+        touch-action: none;
+        background: rgba(2, 6, 23, 0.22);
+      }
+      #hud-editor-stage.grid-on {
+        background-color: rgba(2, 6, 23, 0.26);
+        background-image:
+          linear-gradient(to right, rgba(56, 189, 248, 0.14) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(56, 189, 248, 0.14) 1px, transparent 1px);
+        background-size: 16px 16px;
+      }
+      .hud-drag-box {
+        position: fixed;
+        border-radius: 14px;
+        border: 2px dashed rgba(148, 163, 184, 0.72);
+        background: rgba(15, 23, 42, 0.18);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        cursor: grab;
+        touch-action: none;
+        pointer-events: auto;
+        transition: border-color 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+        z-index: 262;
+      }
+      .hud-drag-box:active { cursor: grabbing; }
+      .hud-drag-box.selected {
+        border: 2.5px solid #38bdf8;
+        background: rgba(56, 189, 248, 0.14);
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.28), 0 0 18px rgba(56, 189, 248, 0.35);
+        z-index: 265;
+      }
+      .hud-drag-box.dragging {
+        border-color: #fbbf24;
+        background: rgba(251, 191, 36, 0.14);
+        box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.32);
+        z-index: 268;
+      }
+      .hud-drag-tag {
+        position: absolute;
+        top: -11px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: rgba(9, 14, 28, 0.94);
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        color: #e2e8f0;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        pointer-events: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+      }
+      .hud-drag-box.selected .hud-drag-tag {
+        background: linear-gradient(135deg, #0284c7, #2563eb);
+        border-color: #bae6fd;
+        color: #ffffff;
+      }
+      #hud-editor-toolbar {
+        position: fixed;
+        top: max(6px, env(safe-area-inset-top, 0px));
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 275;
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        justify-content: center;
+        gap: 5px;
+        padding: 4px 8px;
+        max-width: calc(100vw - 12px);
+        border-radius: 10px;
+        background: rgba(9, 14, 28, 0.94);
+        border: 1px solid rgba(148, 163, 184, 0.36);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+        pointer-events: auto;
+      }
+      .hud-ed-title {
+        font-size: 9.5px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        color: #7dd3fc;
+        padding: 0 4px;
+        white-space: nowrap;
+      }
+      .hud-ed-btn {
+        border: 1px solid rgba(148, 163, 184, 0.38);
+        border-radius: 7px;
+        background: rgba(30, 41, 59, 0.92);
+        color: #e2e8f0;
+        font: 800 10px/1.1 inherit !important;
+        padding: 5px 8px !important;
+        min-height: 26px;
+        cursor: pointer;
+        white-space: nowrap;
+        touch-action: manipulation;
+        transition: transform 0.1s ease, background-color 0.12s ease, border-color 0.12s ease;
+      }
+      .hud-ed-btn:active { transform: scale(0.95); }
+      .hud-ed-btn.active {
+        border-color: rgba(56, 189, 248, 0.8);
+        background: rgba(14, 116, 144, 0.48);
+        color: #e0f2fe;
+      }
+      .hud-ed-btn.danger {
+        border-color: rgba(248, 113, 113, 0.5);
+        color: #fecaca;
+      }
+      .hud-ed-btn.primary {
+        border-color: rgba(251, 191, 36, 0.85);
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #0b1120;
+      }
+      #hud-editor-inspector {
+        position: fixed;
+        top: calc(max(6px, env(safe-area-inset-top, 0px)) + 40px);
+        bottom: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 275;
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        justify-content: center;
+        gap: 9px;
+        padding: 5px 10px;
+        max-width: calc(100vw - 12px);
+        border-radius: 10px;
+        background: rgba(9, 14, 28, 0.94);
+        border: 1px solid rgba(56, 189, 248, 0.45);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+        pointer-events: auto;
+      }
+      .hud-ed-selected-name {
+        font-size: 10px;
+        font-weight: 900;
+        color: #fbbf24;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+      .hud-ed-slider-group {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 9.5px;
+        font-weight: 800;
+        color: #cbd5e1;
+        white-space: nowrap;
+      }
+      .hud-ed-slider-group input[type="range"] {
+        width: 72px;
+        accent-color: #38bdf8;
+        cursor: pointer;
+      }
+      .hud-ed-slider-val {
+        min-width: 31px;
+        text-align: right;
+        color: #7dd3fc;
+        font-variant-numeric: tabular-nums;
+      }
+      html[data-device-profile="mobile-portrait"] #hud-editor-toolbar {
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+      html[data-device-profile="mobile-portrait"] #hud-editor-inspector {
+        top: calc(max(6px, env(safe-area-inset-top, 0px)) + 74px);
+        flex-wrap: wrap;
+        gap: 6px;
+      }
     </style>
   </head>
   <body>
@@ -2565,7 +2777,7 @@
       <!-- TOP STATUS & CONTROLS IN HUD -->
       <div id="hud-container">
         <div id="hud-top">
-          <div class="hud-stats-card">
+          <div id="hud-stats-card" class="hud-stats-card">
             <div class="bar-wrapper">
               <div class="bar-label">
                 <span style="color: #fca5a5; display: inline-flex; align-items: center; gap: 3px;">❤️ HP</span>
@@ -2608,14 +2820,14 @@
               <div id="fps-counter" style="font-size: 10px; font-weight: 700; color: #64748b; align-self: center; margin-right: 2px;">60 FPS</div>
               <button type="button" id="btn-zoom-toggle" class="interactive hud-tool" onclick="toggleZoom()" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🔍 Auto</button>
               <button type="button" id="btn-expand-map" class="interactive hud-tool" onclick="toggleMapExpand()" aria-expanded="false" aria-label="Expand island map" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🗺️ Map</button>
-              <button type="button" id="btn-ping" class="interactive hud-tool" onclick="pingAtAim()" aria-label="Place waypoint ahead — G" title="Ping ahead (G)">📍 Ping</button>
+              <button type="button" id="btn-ping" class="interactive hud-tool" onclick="pingAtAim()" aria-label="Place waypoint ahead" title="Ping ahead">📍 Ping</button>
             </div>
           </div>
         </div>
 
         <div id="waypoint-hud" class="waypoint-hud hidden" role="group" aria-label="Current waypoint">
           <span id="waypoint-text">📍 Waypoint</span>
-          <button type="button" id="btn-clear-ping" class="interactive" onclick="clearMapPing()" aria-label="Clear waypoint" title="Clear waypoint (C)">×</button>
+          <button type="button" id="btn-clear-ping" class="interactive" onclick="clearMapPing()" aria-label="Clear waypoint" title="Clear waypoint">×</button>
         </div>
         <div id="kill-feed" role="log" aria-live="polite" aria-relevant="additions" aria-label="Elimination feed"></div>
         <div id="art-banner" aria-hidden="true">CRIMSON CLEAVE!</div>
@@ -2632,7 +2844,7 @@
 
         <div id="action-buttons">
           <!-- Sword -->
-          <button type="button" id="btn-sword" class="action-btn" title="Melee Attack" aria-label="Sword attack — Space or J">
+          <button type="button" id="btn-sword" class="action-btn" title="Melee Attack" aria-label="Sword attack">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="#fee2e2" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/>
               <path d="m13 19 6-6"/>
@@ -2644,7 +2856,7 @@
             <span id="cd-sword" class="cd-overlay" aria-hidden="true"></span>
           </button>
           <!-- Spell -->
-          <button type="button" id="btn-spell" class="action-btn" title="Arcane Spell" aria-label="Signature spell — E or K">
+          <button type="button" id="btn-spell" class="action-btn" title="Arcane Spell" aria-label="Signature spell">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="#bae6fd" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
               <path d="m12 2 2.5 6.5L21 11l-5 4.5 1.5 7L12 19l-5.5 3.5 1.5-7L3 11l6.5-2.5z"/>
             </svg>
@@ -2653,12 +2865,12 @@
             <span id="cd-spell" class="cd-overlay" aria-hidden="true"></span>
           </button>
           <!-- Mana Bullet -->
-          <button type="button" id="btn-mana" class="action-btn" title="Mana Bullet — cheap aimed shot" aria-label="Mana Bullet — R">
+          <button type="button" id="btn-mana" class="action-btn" title="Mana Bullet" aria-label="Mana Bullet">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="#cffafe" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
-            <span class="btn-name">BULLET</span><span class="btn-sub">2 MP · R</span><span id="cd-mana" class="cd-overlay" aria-hidden="true"></span>
+            <span class="btn-name">BULLET</span><span class="btn-sub">2 MP</span><span id="cd-mana" class="cd-overlay" aria-hidden="true"></span>
           </button>
           <!-- Dash -->
-          <button type="button" id="btn-dash" class="action-btn" title="Dash &amp; Leap" aria-label="Dash and leap — Shift or L">
+          <button type="button" id="btn-dash" class="action-btn" title="Dash &amp; Leap" aria-label="Dash and leap">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="#a7f3d0" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
             </svg>
@@ -2667,7 +2879,7 @@
             <span id="cd-dash" class="cd-overlay" aria-hidden="true"></span>
           </button>
           <!-- Art -->
-          <button type="button" id="btn-art" class="action-btn" title="Ultimate Arcane Art" aria-label="Arcane Art — Q">
+          <button type="button" id="btn-art" class="action-btn" title="Ultimate Arcane Art" aria-label="Arcane Art">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="#fbcfe8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
@@ -2676,34 +2888,35 @@
             <span id="cd-art" class="cd-overlay" aria-hidden="true"></span>
           </button>
           <!-- Super Sprint -->
-          <button type="button" id="btn-super" class="action-btn" title="Hold Super Sprint — +35% speed, drains stamina" aria-label="Hold Super Sprint — F" aria-pressed="false">
+          <button type="button" id="btn-super" class="action-btn" title="Hold Super Sprint" aria-label="Hold Super Sprint" aria-pressed="false">
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="#fef3c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4 5 14h6l-1 6 9-12h-6z"/><path d="M3 5h5M2 9h4M3 19h5"/></svg>
-            <span class="btn-name">SPRINT</span><span class="btn-sub">HOLD · F</span><span id="cd-super" class="cd-overlay" aria-hidden="true"></span>
+            <span class="btn-name">SPRINT</span><span class="btn-sub">HOLD</span><span id="cd-super" class="cd-overlay" aria-hidden="true"></span>
           </button>
           <!-- Dynamic Drag-to-Cancel Aiming Zone -->
           <div id="cancel-cast-zone" role="status" aria-label="Drag here to cancel spell cast" aria-hidden="true">
             <span class="cancel-x">✕</span>
             <span class="cancel-lbl">CANCEL</span>
           </div>
-          <!-- Thumb-Friendly Quick-Use Loot Button + Expand Chevron -->
-          <div id="quick-use-wrap" role="group" aria-label="Quick-use loot item">
-            <button type="button" id="btn-quick-use-expand" onclick="toggleQuickUseFanout()" aria-expanded="false" aria-label="Expand 5 inventory slots" title="Expand all 5 loot slots">▲</button>
-            <button type="button" id="btn-quick-use" class="empty" onclick="useQuickUseItem()" aria-label="Quick-use loot item">
-              <span class="quick-use-icon" id="quick-use-icon">✚</span>
-              <span class="quick-use-label" id="quick-use-label">LOOT</span>
-              <span id="quick-use-badge">0</span>
-              <span id="quick-use-cd" class="hidden" aria-hidden="true"></span>
-            </button>
-          </div>
         </div>
 
-        <div id="inventory-hud" role="group" aria-label="Match inventory — keys 1 to 5">
-          <button type="button" class="inventory-slot" data-item="MEDKIT" onclick="useInventoryItem('MEDKIT')" aria-label="Use Medkit, key 1"><span class="slot-key">1</span><span class="slot-icon">✚</span><span class="slot-name">MEDKIT</span><span class="slot-count" id="count-MEDKIT">0/5</span><span class="slot-cooldown hidden" id="cd-item-MEDKIT"></span></button>
-          <button type="button" class="inventory-slot" data-item="MANA" onclick="useInventoryItem('MANA')" aria-label="Use Mana Potion, key 2"><span class="slot-key">2</span><span class="slot-icon">◆</span><span class="slot-name">MANA</span><span class="slot-count" id="count-MANA">0/4</span><span class="slot-cooldown hidden" id="cd-item-MANA"></span></button>
-          <button type="button" class="inventory-slot" data-item="SHIELD" onclick="useInventoryItem('SHIELD')" aria-label="Use Shield Tonic, key 3"><span class="slot-key">3</span><span class="slot-icon">⬡</span><span class="slot-name">SHIELD</span><span class="slot-count" id="count-SHIELD">0/3</span><span class="slot-cooldown hidden" id="cd-item-SHIELD"></span></button>
-          <button type="button" class="inventory-slot" data-item="HASTE" onclick="useInventoryItem('HASTE')" aria-label="Use Haste Elixir, key 4"><span class="slot-key">4</span><span class="slot-icon">➤</span><span class="slot-name">HASTE</span><span class="slot-count" id="count-HASTE">0/2</span><span class="slot-cooldown hidden" id="cd-item-HASTE"></span></button>
-          <button type="button" class="inventory-slot" data-item="BOMB" onclick="useInventoryItem('BOMB')" aria-label="Throw Arcane Bomb, key 5"><span class="slot-key">5</span><span class="slot-icon">✹</span><span class="slot-name">BOMB</span><span class="slot-count" id="count-BOMB">0/2</span><span class="slot-cooldown hidden" id="cd-item-BOMB"></span></button>
-          <button type="button" id="btn-inventory-info" onclick="toggleItemDetails()" aria-label="Toggle item details" aria-expanded="false" title="Item details (I)">i</button>
+        <!-- Thumb-Friendly Quick-Use Loot Button + Expand Chevron (Independent Draggable Group) -->
+        <div id="quick-use-wrap" role="group" aria-label="Quick-use loot item">
+          <button type="button" id="btn-quick-use-expand" onclick="toggleQuickUseFanout()" aria-expanded="false" aria-label="Expand 5 inventory slots" title="Expand all 5 loot slots">▲</button>
+          <button type="button" id="btn-quick-use" class="empty" onclick="useQuickUseItem()" aria-label="Quick-use loot item">
+            <span class="quick-use-icon" id="quick-use-icon">✚</span>
+            <span class="quick-use-label" id="quick-use-label">LOOT</span>
+            <span id="quick-use-badge">0</span>
+            <span id="quick-use-cd" class="hidden" aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <div id="inventory-hud" role="group" aria-label="Match inventory">
+          <button type="button" class="inventory-slot" data-item="MEDKIT" onclick="useInventoryItem('MEDKIT')" aria-label="Use Medkit"><span class="slot-icon">✚</span><span class="slot-name">MEDKIT</span><span class="slot-count" id="count-MEDKIT">0/5</span><span class="slot-cooldown hidden" id="cd-item-MEDKIT"></span></button>
+          <button type="button" class="inventory-slot" data-item="MANA" onclick="useInventoryItem('MANA')" aria-label="Use Mana Potion"><span class="slot-icon">◆</span><span class="slot-name">MANA</span><span class="slot-count" id="count-MANA">0/4</span><span class="slot-cooldown hidden" id="cd-item-MANA"></span></button>
+          <button type="button" class="inventory-slot" data-item="SHIELD" onclick="useInventoryItem('SHIELD')" aria-label="Use Shield Tonic"><span class="slot-icon">⬡</span><span class="slot-name">SHIELD</span><span class="slot-count" id="count-SHIELD">0/3</span><span class="slot-cooldown hidden" id="cd-item-SHIELD"></span></button>
+          <button type="button" class="inventory-slot" data-item="HASTE" onclick="useInventoryItem('HASTE')" aria-label="Use Haste Elixir"><span class="slot-icon">➤</span><span class="slot-name">HASTE</span><span class="slot-count" id="count-HASTE">0/2</span><span class="slot-cooldown hidden" id="cd-item-HASTE"></span></button>
+          <button type="button" class="inventory-slot" data-item="BOMB" onclick="useInventoryItem('BOMB')" aria-label="Throw Arcane Bomb"><span class="slot-icon">✹</span><span class="slot-name">BOMB</span><span class="slot-count" id="count-BOMB">0/2</span><span class="slot-cooldown hidden" id="cd-item-BOMB"></span></button>
+          <button type="button" id="btn-inventory-info" onclick="toggleItemDetails()" aria-label="Toggle item details" aria-expanded="false" title="Item details">i</button>
         </div>
         <div id="item-details" class="hidden" role="status"><button type="button" id="btn-close-item-details" onclick="toggleItemDetails(false)" aria-label="Close item details">×</button><span id="item-details-text"></span></div>
         <div id="item-channel" class="hidden" role="status" aria-live="polite"><span id="item-channel-label"></span><div class="channel-track"><div id="item-channel-fill"></div></div></div>
@@ -2711,7 +2924,7 @@
 
       <div id="drop-screen" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="drop-title" style="z-index: 150; background: rgba(7, 9, 14, 0.95);">
         <h2 id="drop-title" style="color: #fbbf24; margin-bottom: 5px; font-weight: 900; letter-spacing: 2px;">SELECT DROP ZONE</h2>
-        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 15px;">Tap the island or choose a random deployment. Steer with your joystick or WASD while descending.</p>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 15px;">Tap the island or choose a random deployment. Steer with your left joystick while descending.</p>
         <div id="drop-map-container" style="position: relative; width: 280px; height: 280px; border: 2px solid #a855f7; border-radius: 12px; background: #040208; overflow: hidden; box-shadow: 0 0 30px rgba(168, 85, 247, 0.3); touch-action: none;">
           <canvas id="dropMapCanvas" width="560" height="560"></canvas>
           <div id="drop-pin" style="position: absolute; width: 16px; height: 16px; background: #fbbf24; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); display: none; box-shadow: 0 0 10px #fbbf24; pointer-events: none;"></div>
@@ -3033,7 +3246,6 @@
           <button type="button" class="btn-lobby-main" onclick="resumeGame()" style="width: 100%;">▶ Resume battle</button>
           <button type="button" class="btn-lobby-sec" onclick="openSettings()" style="width: 100%; justify-content: center;">⚙ Audio &amp; controls</button>
           <button type="button" class="btn-lobby-sec" onclick="returnToLobby(true)" style="width: 100%; justify-content: center; color: #ff9aa6;">Leave match</button>
-          <span class="version-note">Press Esc or P to resume</span>
         </div>
       </div>
 
@@ -3096,6 +3308,7 @@
           </div>
 
           <div style="margin-top: 6px; display: flex; flex-direction: column; gap: 8px;">
+            <button type="button" id="btn-customize-hud" class="btn-lobby-sec" onclick="openHudEditor()" style="justify-content: center; border-color: rgba(56, 189, 248, 0.55); color: #bae6fd;">🎛️ Customize HUD</button>
             <button type="button" class="btn-lobby-sec" onclick="forceLandscapeView()" style="justify-content: center;">↻ Force landscape view <span style="font-size: 10px; color: #94a3b8;">(no app)</span></button>
             <button type="button" class="btn-lobby-sec" onclick="resetPlayerProgress()" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); justify-content: center; font-size: 11px;">⚠️ Reset Game Progress</button>
             <button type="button" class="btn-lobby-main" onclick="closeSettings()" style="width: 100%; justify-content: center; padding: 10px; font-size: 13px;">SAVE &amp; CLOSE</button>
@@ -3109,16 +3322,47 @@
           <div style="font-size: 32px;">📜</div>
           <h2 id="tutorial-title" style="font-size: 18px; font-weight: 900; color: #38bdf8; letter-spacing: 1px;">ARCANE COMBAT GUIDE</h2>
           <div class="tutorial-grid">
-            <div class="tutorial-item"><strong>Move &amp; steer</strong><span>Left joystick or <kbd>WASD</kbd> / arrow keys.</span></div>
-            <div class="tutorial-item"><strong>Aim &amp; cancel cast</strong><span>Hold and drag an attack button to aim, then release. Drag onto the red <strong>✕ CANCEL</strong> zone to abort without spending MP or cooldown.</span></div>
-            <div class="tutorial-item"><strong>Dash &amp; leap</strong><span><kbd>Shift</kbd> grants brief invulnerability and clears low obstacles.</span></div>
-            <div class="tutorial-item"><strong>Arcane combat</strong><span><kbd>R</kbd> Mana Bullet · <kbd>Q</kbd> Arcane Art. Signature spell uses <kbd>E</kbd>.</span></div>
-            <div class="tutorial-item"><strong>Quick-Use &amp; 5 items</strong><span>Tap the Quick-Use loot button (auto-prioritizes Heal &lt;70% HP or Mana &lt;40% MP) or tap <strong>▲</strong> to fan out slots <kbd>1–5</kbd>.</span></div>
-            <div class="tutorial-item"><strong>Sprint</strong><span>Keep moving for 1.5s to sprint free. Hold <kbd>F</kbd> or SPRINT for +35% speed while stamina lasts.</span></div>
-            <div class="tutorial-item"><strong>Minimap &amp; quick-pings</strong><span>Double-tap minimap to quick-ping · Tap expanded island (<kbd>M</kbd>) to pin · Right-click or <kbd>C</kbd> to clear · <kbd>G</kbd> pings ahead.</span></div>
+            <div class="tutorial-item"><strong>Move &amp; steer</strong><span>Slide your thumb on the left joystick to move and steer.</span></div>
+            <div class="tutorial-item"><strong>Aim &amp; cancel cast</strong><span>Hold and drag any attack button to aim, then release. Drag onto the red <strong>✕ CANCEL</strong> zone to abort without spending MP or cooldown.</span></div>
+            <div class="tutorial-item"><strong>Dash &amp; leap</strong><span>Tap the <strong>DASH</strong> button to burst forward with brief invulnerability and clear low obstacles.</span></div>
+            <div class="tutorial-item"><strong>Arcane combat</strong><span>Tap or drag <strong>SWORD</strong> for melee combos, <strong>BULLET</strong> for quick mana shots, <strong>SPELL</strong> for your signature cast, and <strong>ART</strong> for your ultimate.</span></div>
+            <div class="tutorial-item"><strong>Quick-Use &amp; inventory fan</strong><span>Tap the Quick-Use loot button (auto-prioritizes Heal &lt;70% HP or Mana &lt;40% MP) or tap <strong>▲</strong> to fan out all 5 loot items.</span></div>
+            <div class="tutorial-item"><strong>Sprint</strong><span>Keep moving with the left joystick for 1.5s to auto-sprint free, or hold <strong>SPRINT</strong> for +35% speed while stamina lasts.</span></div>
+            <div class="tutorial-item"><strong>Minimap &amp; quick-pings</strong><span>Double-tap the minimap to quick-ping · Tap <strong>Map</strong> then tap the island to pin · Tap <strong>×</strong> on the waypoint bar to clear · Tap <strong>Ping</strong> to mark ahead.</span></div>
             <div class="tutorial-item"><strong>Survive &amp; adapt</strong><span>Stay inside the safe zone, watch biome weather (rain slows in forest, blizzards obscure snow), and spend XP between matches.</span></div>
           </div>
           <button type="button" class="btn-lobby-main" onclick="dismissTutorial()" style="width: 100%; justify-content: center; padding: 10px; font-size: 14px; margin-top: 6px;">ENTER ARENA</button>
+        </div>
+      </div>
+
+      <!-- CUSTOMISABLE MOBILE HUD LAYOUT EDITOR -->
+      <div id="hud-editor-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Customize Mobile HUD Layout">
+        <div id="hud-editor-stage" class="grid-on">
+          <div class="hud-drag-box" data-hud-group="joystick" role="button" tabindex="0" aria-label="Reposition Left Movement Joystick"><span class="hud-drag-tag">Joystick</span></div>
+          <div class="hud-drag-box" data-hud-group="actions" role="button" tabindex="0" aria-label="Reposition Right Combat Action Cluster"><span class="hud-drag-tag">Combat Cluster</span></div>
+          <div class="hud-drag-box" data-hud-group="quickuse" role="button" tabindex="0" aria-label="Reposition Quick-Use Loot Button"><span class="hud-drag-tag">Quick-Use Loot</span></div>
+          <div class="hud-drag-box" data-hud-group="resources" role="button" tabindex="0" aria-label="Reposition Top-Left Resource Bars"><span class="hud-drag-tag">HP / MP / Stamina</span></div>
+          <div class="hud-drag-box" data-hud-group="minimap" role="button" tabindex="0" aria-label="Reposition Minimap and Waypoint Widget"><span class="hud-drag-tag">Minimap</span></div>
+        </div>
+        <div id="hud-editor-toolbar" role="toolbar" aria-label="HUD Editor Actions">
+          <span class="hud-ed-title">HUD EDITOR</span>
+          <button type="button" id="btn-hud-snap" class="hud-ed-btn active" onclick="toggleHudEditorSnap()" aria-pressed="true">⊞ Snap: ON</button>
+          <button type="button" id="btn-hud-reset" class="hud-ed-btn danger" onclick="resetHudEditorLayout()">↺ Reset to Default</button>
+          <button type="button" id="btn-hud-cancel" class="hud-ed-btn" onclick="cancelHudEditor()">Cancel</button>
+          <button type="button" id="btn-hud-save" class="hud-ed-btn primary" onclick="saveHudEditorLayout()">✓ Save Layout</button>
+        </div>
+        <div id="hud-editor-inspector" role="group" aria-label="Selected HUD Control Settings">
+          <span id="hud-ed-selected-label" class="hud-ed-selected-name">Combat Cluster</span>
+          <label class="hud-ed-slider-group" for="hud-ed-scale">
+            <span>Size</span>
+            <input type="range" id="hud-ed-scale" min="75" max="135" step="5" value="100" oninput="onHudEditorScaleInput(this.value)">
+            <span id="hud-ed-scale-val" class="hud-ed-slider-val">100%</span>
+          </label>
+          <label class="hud-ed-slider-group" for="hud-ed-opacity">
+            <span>Opacity</span>
+            <input type="range" id="hud-ed-opacity" min="40" max="100" step="5" value="100" oninput="onHudEditorOpacityInput(this.value)">
+            <span id="hud-ed-opacity-val" class="hud-ed-slider-val">100%</span>
+          </label>
         </div>
       </div>
 
@@ -3757,13 +4001,476 @@
           if (shouldResizeCanvas && typeof resizeCanvas === 'function') {
             resizeCanvas();
           }
+          if (typeof HudLayoutManager !== 'undefined') {
+            HudLayoutManager.apply();
+          }
           getMinimapLayout();
+          if (typeof HudEditor !== 'undefined' && HudEditor.isOpen) {
+            HudEditor.syncDragBoxes();
+          }
           if (typeof updateDeviceModeUI === 'function') {
             updateDeviceModeUI();
           }
           return cfg;
         }
       };
+
+      // ==========================================
+      // CUSTOMISABLE MOBILE HUD LAYOUT MANAGER & EDITOR
+      // ==========================================
+      const HUD_LAYOUT_STORAGE_KEY = 'arcane_royale_hud_layout_v1';
+      const HUD_ELEMENT_IDS = ['joystick', 'actions', 'quickuse', 'resources', 'minimap'];
+      const HUD_ELEMENT_DOM = {
+        joystick: 'joystick-zone',
+        actions: 'action-buttons',
+        quickuse: 'quick-use-wrap',
+        resources: 'hud-stats-card'
+      };
+      const HUD_ELEMENT_LABELS = {
+        joystick: 'Left Joystick',
+        actions: 'Combat Cluster',
+        quickuse: 'Quick-Use Loot',
+        resources: 'HP / MP / Stamina',
+        minimap: 'Minimap & Waypoint'
+      };
+      const HUD_GRID_STEP = 16;
+
+      const HudLayoutManager = {
+        saved: null,
+        active: null,
+
+        clampScale(val) {
+          const n = Number(val);
+          if (!Number.isFinite(n)) return 1;
+          return Math.round(Math.max(0.75, Math.min(1.35, n)) * 100) / 100;
+        },
+
+        clampOpacity(val) {
+          const n = Number(val);
+          if (!Number.isFinite(n)) return 1;
+          return Math.round(Math.max(0.4, Math.min(1.0, n)) * 100) / 100;
+        },
+
+        createDefault(snapToGrid = true) {
+          return {
+            version: 1,
+            snapToGrid: Boolean(snapToGrid),
+            elements: {
+              joystick: { x: null, y: null, scale: 1, opacity: 1 },
+              actions: { x: null, y: null, scale: 1, opacity: 1 },
+              quickuse: { x: null, y: null, scale: 1, opacity: 1 },
+              resources: { x: null, y: null, scale: 1, opacity: 1 },
+              minimap: { x: null, y: null, scale: 1, opacity: 1 }
+            }
+          };
+        },
+
+        clone(cfg) {
+          const src = this.sanitize(cfg);
+          const out = this.createDefault(src.snapToGrid);
+          for (let i = 0; i < HUD_ELEMENT_IDS.length; i++) {
+            const id = HUD_ELEMENT_IDS[i];
+            out.elements[id] = { ...src.elements[id] };
+          }
+          return out;
+        },
+
+        sanitize(raw) {
+          const out = this.createDefault(true);
+          if (!raw || typeof raw !== 'object') return out;
+          if (typeof raw.snapToGrid === 'boolean') out.snapToGrid = raw.snapToGrid;
+          const els = raw.elements && typeof raw.elements === 'object' ? raw.elements : {};
+          for (let i = 0; i < HUD_ELEMENT_IDS.length; i++) {
+            const id = HUD_ELEMENT_IDS[i];
+            const item = els[id];
+            if (!item || typeof item !== 'object') continue;
+            const hasCoords = typeof item.x === 'number' && Number.isFinite(item.x) && typeof item.y === 'number' && Number.isFinite(item.y);
+            out.elements[id] = {
+              x: hasCoords ? Math.round(Math.max(0, Math.min(1, item.x)) * 10000) / 10000 : null,
+              y: hasCoords ? Math.round(Math.max(0, Math.min(1, item.y)) * 10000) / 10000 : null,
+              scale: this.clampScale(item.scale),
+              opacity: this.clampOpacity(item.opacity)
+            };
+          }
+          return out;
+        },
+
+        load() {
+          try {
+            const raw = localStorage.getItem(HUD_LAYOUT_STORAGE_KEY);
+            this.saved = raw ? this.sanitize(JSON.parse(raw)) : this.createDefault(true);
+          } catch (e) {
+            this.saved = this.createDefault(true);
+          }
+          this.active = this.clone(this.saved);
+          return this.saved;
+        },
+
+        save(layout) {
+          this.saved = this.sanitize(layout);
+          this.active = this.clone(this.saved);
+          try {
+            localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, JSON.stringify(this.saved));
+          } catch (e) {}
+          this.apply(this.saved);
+          return this.saved;
+        },
+
+        getSafeBounds() {
+          const vw = Math.max(240, window.innerWidth || 844);
+          const vh = Math.max(240, window.innerHeight || 390);
+          return { vw, vh, left: 8, right: 8, top: 8, bottom: 8 };
+        },
+
+        clampPx(x, y, w, h) {
+          const b = this.getSafeBounds();
+          const effW = Math.max(24, Math.min(b.vw - b.left - b.right, w || 48));
+          const effH = Math.max(24, Math.min(b.vh - b.top - b.bottom, h || 48));
+          const minX = b.left;
+          const maxX = Math.max(minX, b.vw - b.right - effW);
+          const minY = b.top;
+          const maxY = Math.max(minY, b.vh - b.bottom - effH);
+          return {
+            x: Math.round(Math.max(minX, Math.min(maxX, x))),
+            y: Math.round(Math.max(minY, Math.min(maxY, y)))
+          };
+        },
+
+        getEntry(id, layoutOverride) {
+          const src = layoutOverride || this.active || this.saved || this.createDefault(true);
+          return (src && src.elements && src.elements[id]) || { x: null, y: null, scale: 1, opacity: 1 };
+        },
+
+        apply(layoutOverride) {
+          const cfg = layoutOverride ? this.sanitize(layoutOverride) : (this.saved || this.load());
+          this.active = cfg;
+          const root = document.documentElement;
+          const b = this.getSafeBounds();
+
+          for (let i = 0; i < HUD_ELEMENT_IDS.length; i++) {
+            const id = HUD_ELEMENT_IDS[i];
+            const entry = cfg.elements[id];
+            if (id === 'minimap') continue;
+            root.style.setProperty(`--el-scale-${id}`, String(entry.scale));
+            const el = document.getElementById(HUD_ELEMENT_DOM[id]);
+            if (!el) continue;
+            el.style.opacity = String(entry.opacity);
+            if (entry.x !== null && entry.y !== null) {
+              el.classList.add('hud-custom-pos');
+              // Measure rendered visual size including active scale transform
+              const rect = el.getBoundingClientRect();
+              const w = rect.width > 12 ? rect.width : (id === 'actions' ? 180 : id === 'joystick' ? 110 : id === 'resources' ? 148 : 58);
+              const h = rect.height > 12 ? rect.height : (id === 'actions' ? 180 : id === 'joystick' ? 110 : id === 'resources' ? 76 : 58);
+              const pos = this.clampPx(entry.x * b.vw, entry.y * b.vh, w, h);
+              el.style.left = `${pos.x}px`;
+              el.style.top = `${pos.y}px`;
+            } else {
+              el.classList.remove('hud-custom-pos');
+              el.style.left = '';
+              el.style.top = '';
+            }
+          }
+          getMinimapLayout();
+        }
+      };
+
+      const HudEditor = {
+        isOpen: false,
+        selected: 'actions',
+        draft: null,
+        dragState: null,
+        returnContext: null,
+        bound: false,
+
+        init() {
+          if (this.bound) return;
+          this.bound = true;
+          const boxes = document.querySelectorAll('#hud-editor-stage .hud-drag-box');
+          boxes.forEach(box => {
+            const group = box.dataset.hudGroup;
+            if (!group) return;
+            box.addEventListener('touchstart', (e) => {
+              if (!this.isOpen || !e.changedTouches || !e.changedTouches.length) return;
+              e.preventDefault();
+              e.stopPropagation();
+              const t = e.changedTouches[0];
+              this.startDrag(group, t.clientX, t.clientY, t.identifier);
+            }, { passive: false });
+
+            box.addEventListener('pointerdown', (e) => {
+              if (!this.isOpen || e.pointerType === 'touch') return;
+              e.preventDefault();
+              e.stopPropagation();
+              this.startDrag(group, e.clientX, e.clientY, 'mouse');
+            });
+
+            box.addEventListener('keydown', (e) => {
+              if (!this.isOpen) return;
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.select(group);
+              }
+            });
+          });
+
+          window.addEventListener('touchmove', (e) => {
+            if (!this.isOpen || !this.dragState || this.dragState.touchId === 'mouse') return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+              const t = e.changedTouches[i];
+              if (t.identifier === this.dragState.touchId) {
+                e.preventDefault();
+                this.moveDrag(t.clientX, t.clientY);
+                return;
+              }
+            }
+          }, { passive: false });
+
+          const endTouch = (e) => {
+            if (!this.dragState || this.dragState.touchId === 'mouse') return;
+            for (let i = 0; i < e.changedTouches.length; i++) {
+              if (e.changedTouches[i].identifier === this.dragState.touchId) {
+                this.endDrag();
+                return;
+              }
+            }
+          };
+          window.addEventListener('touchend', endTouch, { passive: true });
+          window.addEventListener('touchcancel', endTouch, { passive: true });
+
+          window.addEventListener('pointermove', (e) => {
+            if (!this.isOpen || !this.dragState || this.dragState.touchId !== 'mouse') return;
+            e.preventDefault();
+            this.moveDrag(e.clientX, e.clientY);
+          });
+          window.addEventListener('pointerup', () => {
+            if (this.dragState && this.dragState.touchId === 'mouse') this.endDrag();
+          });
+        },
+
+        getGroupRect(group) {
+          if (group === 'minimap') {
+            const mv = getMinimapLayout();
+            return { left: mv.x, top: mv.y, width: mv.size, height: mv.size };
+          }
+          const el = document.getElementById(HUD_ELEMENT_DOM[group]);
+          if (!el) return { left: 20, top: 20, width: 80, height: 80 };
+          const r = el.getBoundingClientRect();
+          return {
+            left: r.left,
+            top: r.top,
+            width: Math.max(40, r.width),
+            height: Math.max(40, r.height)
+          };
+        },
+
+        open() {
+          this.init();
+          if (this.isOpen) return;
+          const settingsEl = document.getElementById('settings-screen');
+          const lobbyEl = document.getElementById('lobby-screen');
+          const pauseEl = document.getElementById('pause-screen');
+          const hudEl = document.getElementById('hud-container');
+          this.returnContext = {
+            hadSettings: settingsEl ? !settingsEl.classList.contains('hidden') : false,
+            hadLobby: lobbyEl ? !lobbyEl.classList.contains('hidden') : false,
+            hadPause: pauseEl ? !pauseEl.classList.contains('hidden') : false,
+            hadHudVisible: hudEl ? hudEl.style.display === 'block' : false
+          };
+
+          if (settingsEl) settingsEl.classList.add('hidden');
+          if (lobbyEl) lobbyEl.classList.add('hidden');
+          if (pauseEl) pauseEl.classList.add('hidden');
+          if (isQuickUseFanoutOpen) toggleQuickUseFanout(false);
+
+          this.isOpen = true;
+          this.draft = HudLayoutManager.clone(HudLayoutManager.saved || HudLayoutManager.load());
+          document.body.classList.add('hud-editing');
+          if (hudEl) hudEl.style.display = 'block';
+
+          // Ensure live arena preview camera is centered if editing from Lobby
+          if (!Game.player) {
+            Camera.x = ARENA_WIDTH / 2;
+            Camera.y = ARENA_HEIGHT / 2;
+          }
+
+          const overlay = document.getElementById('hud-editor-overlay');
+          if (overlay) overlay.classList.remove('hidden');
+
+          HudLayoutManager.apply(this.draft);
+          this.updateSnapUI();
+          this.select(this.selected || 'actions');
+          requestAnimationFrame(() => this.syncDragBoxes());
+        },
+
+        close(commit) {
+          if (!this.isOpen) return;
+          this.endDrag();
+          this.isOpen = false;
+          document.body.classList.remove('hud-editing');
+          const overlay = document.getElementById('hud-editor-overlay');
+          if (overlay) overlay.classList.add('hidden');
+
+          if (commit && this.draft) {
+            HudLayoutManager.save(this.draft);
+            showToast('Custom HUD layout saved!', false);
+          } else {
+            HudLayoutManager.apply(HudLayoutManager.saved || HudLayoutManager.load());
+          }
+          this.draft = null;
+
+          const ctx = this.returnContext || {};
+          const hudEl = document.getElementById('hud-container');
+          if (hudEl && !ctx.hadHudVisible && Game.state !== 'PLAYING' && Game.state !== 'DROPPING' && Game.state !== 'PAUSED') {
+            hudEl.style.display = 'none';
+          }
+          if (ctx.hadLobby) {
+            const lobbyEl = document.getElementById('lobby-screen');
+            if (lobbyEl) lobbyEl.classList.remove('hidden');
+          }
+          if (ctx.hadPause) {
+            const pauseEl = document.getElementById('pause-screen');
+            if (pauseEl) pauseEl.classList.remove('hidden');
+          }
+          if (ctx.hadSettings) {
+            const settingsEl = document.getElementById('settings-screen');
+            if (settingsEl) settingsEl.classList.remove('hidden');
+          }
+          this.returnContext = null;
+        },
+
+        select(group) {
+          if (!HUD_ELEMENT_IDS.includes(group)) return;
+          this.selected = group;
+          document.querySelectorAll('#hud-editor-stage .hud-drag-box').forEach(box => {
+            box.classList.toggle('selected', box.dataset.hudGroup === group);
+          });
+          const entry = this.draft ? this.draft.elements[group] : HudLayoutManager.getEntry(group);
+          const lbl = document.getElementById('hud-ed-selected-label');
+          if (lbl) lbl.textContent = HUD_ELEMENT_LABELS[group] || group;
+          const scSlider = document.getElementById('hud-ed-scale');
+          const scVal = document.getElementById('hud-ed-scale-val');
+          const opSlider = document.getElementById('hud-ed-opacity');
+          const opVal = document.getElementById('hud-ed-opacity-val');
+          const scPct = Math.round((entry.scale || 1) * 100);
+          const opPct = Math.round((entry.opacity || 1) * 100);
+          if (scSlider) scSlider.value = String(scPct);
+          if (scVal) scVal.textContent = `${scPct}%`;
+          if (opSlider) opSlider.value = String(opPct);
+          if (opVal) opVal.textContent = `${opPct}%`;
+        },
+
+        startDrag(group, clientX, clientY, touchId) {
+          this.select(group);
+          const rect = this.getGroupRect(group);
+          this.dragState = {
+            group,
+            touchId,
+            startX: clientX,
+            startY: clientY,
+            origLeft: rect.left,
+            origTop: rect.top,
+            width: rect.width,
+            height: rect.height
+          };
+          const box = document.querySelector(`#hud-editor-stage .hud-drag-box[data-hud-group="${group}"]`);
+          if (box) box.classList.add('dragging');
+        },
+
+        moveDrag(clientX, clientY) {
+          const d = this.dragState;
+          if (!d || !this.draft) return;
+          let nextX = d.origLeft + (clientX - d.startX);
+          let nextY = d.origTop + (clientY - d.startY);
+          if (this.draft.snapToGrid) {
+            nextX = Math.round(nextX / HUD_GRID_STEP) * HUD_GRID_STEP;
+            nextY = Math.round(nextY / HUD_GRID_STEP) * HUD_GRID_STEP;
+          }
+          const clamped = HudLayoutManager.clampPx(nextX, nextY, d.width, d.height);
+          const b = HudLayoutManager.getSafeBounds();
+          const entry = this.draft.elements[d.group];
+          entry.x = Math.round((clamped.x / b.vw) * 10000) / 10000;
+          entry.y = Math.round((clamped.y / b.vh) * 10000) / 10000;
+          HudLayoutManager.apply(this.draft);
+          this.syncDragBoxes();
+        },
+
+        endDrag() {
+          if (!this.dragState) return;
+          const group = this.dragState.group;
+          this.dragState = null;
+          const box = document.querySelector(`#hud-editor-stage .hud-drag-box[data-hud-group="${group}"]`);
+          if (box) box.classList.remove('dragging');
+        },
+
+        setSelectedScale(pct) {
+          if (!this.draft || !this.selected) return;
+          const scale = HudLayoutManager.clampScale(Number(pct) / 100);
+          this.draft.elements[this.selected].scale = scale;
+          const scVal = document.getElementById('hud-ed-scale-val');
+          if (scVal) scVal.textContent = `${Math.round(scale * 100)}%`;
+          HudLayoutManager.apply(this.draft);
+          this.syncDragBoxes();
+        },
+
+        setSelectedOpacity(pct) {
+          if (!this.draft || !this.selected) return;
+          const opacity = HudLayoutManager.clampOpacity(Number(pct) / 100);
+          this.draft.elements[this.selected].opacity = opacity;
+          const opVal = document.getElementById('hud-ed-opacity-val');
+          if (opVal) opVal.textContent = `${Math.round(opacity * 100)}%`;
+          HudLayoutManager.apply(this.draft);
+          this.syncDragBoxes();
+        },
+
+        toggleSnap() {
+          if (!this.draft) return;
+          this.draft.snapToGrid = !this.draft.snapToGrid;
+          this.updateSnapUI();
+        },
+
+        updateSnapUI() {
+          const on = this.draft ? Boolean(this.draft.snapToGrid) : true;
+          const stage = document.getElementById('hud-editor-stage');
+          const btn = document.getElementById('btn-hud-snap');
+          if (stage) stage.classList.toggle('grid-on', on);
+          if (btn) {
+            btn.classList.toggle('active', on);
+            btn.setAttribute('aria-pressed', String(on));
+            btn.textContent = on ? '⊞ Snap: ON' : '⊞ Snap: OFF';
+          }
+        },
+
+        resetToDefault() {
+          const keepSnap = this.draft ? this.draft.snapToGrid : true;
+          this.draft = HudLayoutManager.createDefault(keepSnap);
+          HudLayoutManager.apply(this.draft);
+          this.select(this.selected || 'actions');
+          requestAnimationFrame(() => this.syncDragBoxes());
+          showToast('Default HUD restored — tap Save Layout to keep', false);
+        },
+
+        syncDragBoxes() {
+          if (!this.isOpen) return;
+          for (let i = 0; i < HUD_ELEMENT_IDS.length; i++) {
+            const group = HUD_ELEMENT_IDS[i];
+            const box = document.querySelector(`#hud-editor-stage .hud-drag-box[data-hud-group="${group}"]`);
+            if (!box) continue;
+            const rect = this.getGroupRect(group);
+            box.style.left = `${Math.round(rect.left)}px`;
+            box.style.top = `${Math.round(rect.top)}px`;
+            box.style.width = `${Math.round(rect.width)}px`;
+            box.style.height = `${Math.round(rect.height)}px`;
+          }
+        }
+      };
+
+      function openHudEditor() { HudEditor.open(); }
+      function saveHudEditorLayout() { HudEditor.close(true); }
+      function cancelHudEditor() { HudEditor.close(false); }
+      function resetHudEditorLayout() { HudEditor.resetToDefault(); }
+      function toggleHudEditorSnap() { HudEditor.toggleSnap(); }
+      function onHudEditorScaleInput(val) { HudEditor.setSelectedScale(val); }
+      function onHudEditorOpacityInput(val) { HudEditor.setSelectedOpacity(val); }
 
       function getMinimapLayout() {
         let size;
@@ -3777,9 +4484,19 @@
           y = top + (window.innerHeight - top - bottom - size) / 2;
         } else {
           const cfg = DeviceOptimizer.current;
-          size = cfg.minimapSize || Math.max(88, Math.min(128, Math.min(window.innerWidth, window.innerHeight) * 0.18));
-          x = cfg.minimapX || 14;
-          y = cfg.minimapY || Math.max(12, Math.min(122, window.innerHeight - size - 12));
+          const custom = typeof HudLayoutManager !== 'undefined' ? HudLayoutManager.getEntry('minimap') : null;
+          const baseSize = cfg.minimapSize || Math.max(88, Math.min(128, Math.min(window.innerWidth, window.innerHeight) * 0.18));
+          size = Math.round(baseSize * (custom ? custom.scale : 1));
+          if (custom && custom.x !== null && custom.y !== null) {
+            const vw = Math.max(240, window.innerWidth || 844);
+            const vh = Math.max(240, window.innerHeight || 390);
+            const clamped = HudLayoutManager.clampPx(custom.x * vw, custom.y * vh, size, size + 16);
+            x = clamped.x;
+            y = clamped.y;
+          } else {
+            x = cfg.minimapX || 14;
+            y = cfg.minimapY || Math.max(12, Math.min(122, window.innerHeight - size - 12));
+          }
           if (typeof document !== 'undefined' && document.documentElement) {
             document.documentElement.style.setProperty('--minimap-bottom', Math.round(y + size + 24) + 'px');
             document.documentElement.style.setProperty('--minimap-left', Math.round(x) + 'px');
@@ -9654,7 +10371,7 @@
         // ==========================================
         // PART 3: MINIMAP (Screen-space Canvas HUD - Section 7)
         // ==========================================
-        if (Game.state === "PLAYING" || Game.state === "DROPPING") {
+        if (Game.state === "PLAYING" || Game.state === "DROPPING" || (typeof HudEditor !== 'undefined' && HudEditor.isOpen)) {
           const mapView = getMinimapLayout();
           const mapSize = mapView.size;
           const mapX = mapView.x;
@@ -9667,7 +10384,8 @@
           }
 
           CTX.save();
-          CTX.globalAlpha = isMapExpanded ? 1 : 0.94;
+          const minimapOpacity = typeof HudLayoutManager !== 'undefined' ? HudLayoutManager.getEntry('minimap').opacity : 1;
+          CTX.globalAlpha = isMapExpanded ? 1 : (0.94 * minimapOpacity);
 
           // Dark background square with glassmorphism feel
           CTX.fillStyle = 'rgba(15, 23, 42, 0.9)';
@@ -9912,9 +10630,9 @@
           CTX.fillText(dropTitle, window.innerWidth / 2, 34);
           CTX.font = '700 11px system-ui, sans-serif';
           CTX.lineWidth = 3;
-          CTX.strokeText('STEER WITH JOYSTICK OR WASD', window.innerWidth / 2, 52);
+          CTX.strokeText('STEER WITH LEFT JOYSTICK', window.innerWidth / 2, 52);
           CTX.fillStyle = '#cbd5e1';
-          CTX.fillText('STEER WITH JOYSTICK OR WASD', window.innerWidth / 2, 52);
+          CTX.fillText('STEER WITH LEFT JOYSTICK', window.innerWidth / 2, 52);
           if (!PlayerData.reducedMotion) {
             CTX.strokeStyle = 'rgba(210,225,255,0.18)';
             CTX.lineWidth = 2;
@@ -9946,7 +10664,7 @@
         const rawDelta = Math.max(0, (currentTime - lastTime) / 1000);
         lastTime = currentTime;
         const deltaTime = Math.min(rawDelta, 0.05);
-        const active = Game.state === 'PLAYING' || Game.state === 'DROPPING';
+        const active = Game.state === 'PLAYING' || Game.state === 'DROPPING' || (typeof HudEditor !== 'undefined' && HudEditor.isOpen);
 
         if (!active && currentTime - lastIdleRender < 200) {
           requestAnimationFrame(gameLoop);
@@ -11412,9 +12130,10 @@
         });
       }
 
-      // Initialize persistent data, controls, accessibility and the render loop.
+      // Initialize persistent data, custom HUD layout, controls, accessibility and the render loop.
       UI_ELEMENTS.init();
       PlayerData.load();
+      HudLayoutManager.load();
       DeviceOptimizer.apply(true);
       Input.init();
       initializeAccessibility();
@@ -11427,7 +12146,7 @@
         "Dash grants brief invulnerability and leaps over low obstacles",
         "Pick up gems to unlock new fighters",
         "Each fighter has a unique ultimate ability",
-        "M opens the map · tap to ping · G pings ahead · C clears"
+        "Double-tap the minimap to quick-ping · Drag an attack onto ✕ CANCEL to abort"
       ];
       let tipIndex = 0;
       const tipInterval = setInterval(() => {
