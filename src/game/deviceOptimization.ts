@@ -44,106 +44,52 @@ export function clampControlScale(raw: unknown): number {
 }
 
 export function detectDeviceProfile(env: DeviceEnvironmentInput): ResolvedDeviceProfile {
-  const width = Math.max(240, Math.floor(Number(env.width) || 1280));
-  const height = Math.max(240, Math.floor(Number(env.height) || 720));
-  const minDim = Math.min(width, height);
-  const maxDim = Math.max(width, height);
-  const isPortrait = height > width;
-  const isTouch = Boolean(env.hasCoarsePointer || (env.maxTouchPoints || 0) > 0);
-
-  if (minDim <= 540 || (isPortrait && width <= 600) || (isTouch && minDim <= 560 && maxDim <= 960)) {
-    return isPortrait ? 'mobile-portrait' : 'mobile-landscape';
-  }
-  if ((isTouch && maxDim <= 1366) || (!isTouch && width < 1024)) {
-    return 'tablet';
-  }
-  return 'desktop';
+  const width = Math.max(240, Math.floor(Number(env.width) || 844));
+  const height = Math.max(240, Math.floor(Number(env.height) || 390));
+  return height > width ? 'mobile-portrait' : 'mobile-landscape';
 }
 
 export function resolveScreenOptimization(input: ScreenOptimizationInput): ResolvedScreenOptimization {
-  const width = Math.max(240, Math.floor(Number(input.width) || 1280));
-  const height = Math.max(240, Math.floor(Number(input.height) || 720));
+  const width = Math.max(240, Math.floor(Number(input.width) || 844));
+  const height = Math.max(240, Math.floor(Number(input.height) || 390));
   const orientation: 'portrait' | 'landscape' = height > width ? 'portrait' : 'landscape';
-  const modePref: DeviceModePreference = VALID_DEVICE_MODES.includes(input.modePref) ? input.modePref : 'auto';
-  const touchPref: TouchControlsPreference = VALID_TOUCH_MODES.includes(input.touchPref) ? input.touchPref : 'auto';
   const quality: GraphicsQualityPreference =
     input.graphicsQuality === 'low' || input.graphicsQuality === 'medium' || input.graphicsQuality === 'high'
       ? input.graphicsQuality
       : 'high';
 
-  const detectedProfile = detectDeviceProfile(input);
-  let profile: ResolvedDeviceProfile;
-  if (modePref === 'auto') {
-    profile = detectedProfile;
-  } else if (modePref === 'mobile') {
-    profile = orientation === 'portrait' ? 'mobile-portrait' : 'mobile-landscape';
-  } else {
-    profile = modePref;
-  }
-
-  const isTouchDevice = Boolean(input.hasCoarsePointer || (input.maxTouchPoints || 0) > 0);
-  const showTouchControls =
-    touchPref === 'on'
-      ? true
-      : touchPref === 'off'
-        ? false
-        : profile !== 'desktop' || isTouchDevice;
+  // Mobile-only mode: always resolve to mobile-portrait or mobile-landscape with touch controls enabled
+  const detectedProfile: ResolvedDeviceProfile = orientation === 'portrait' ? 'mobile-portrait' : 'mobile-landscape';
+  const profile: ResolvedDeviceProfile = detectedProfile;
+  const modePref: DeviceModePreference = 'mobile';
+  const showTouchControls = true;
 
   const userScale = clampControlScale(input.controlScale ?? 1);
-  let autoControlFit = 1;
-  if (profile === 'mobile-landscape') {
-    autoControlFit = Math.min(0.76, Math.max(0.58, Math.min(width / 960, height / 490)));
-  } else if (profile === 'mobile-portrait') {
-    autoControlFit = Math.min(0.84, Math.max(0.66, width / 470));
-  } else if (profile === 'tablet') {
-    autoControlFit = 0.92;
-  }
+  const autoControlFit =
+    profile === 'mobile-landscape'
+      ? Math.min(0.84, Math.max(0.58, Math.min(width / 960, height / 490)))
+      : Math.min(0.86, Math.max(0.66, width / 470));
   const controlScale = Math.round(Math.max(0.54, Math.min(1.25, autoControlFit * userScale)) * 100) / 100;
 
   const hudScale =
     profile === 'mobile-landscape'
       ? Math.round(Math.max(0.8, Math.min(1.05, 0.88 * userScale)) * 100) / 100
-      : profile === 'mobile-portrait'
-        ? Math.round(Math.max(0.82, Math.min(1.08, 0.92 * userScale)) * 100) / 100
-        : Math.round(Math.max(0.85, Math.min(1.15, userScale)) * 100) / 100;
+      : Math.round(Math.max(0.82, Math.min(1.08, 0.92 * userScale)) * 100) / 100;
 
-  let dprCap = 2;
-  if (quality === 'low') {
-    dprCap = 1;
-  } else if (quality === 'medium') {
-    dprCap = profile === 'desktop' ? 1.5 : 1.25;
-  } else {
-    dprCap = profile === 'desktop' ? 2 : profile === 'tablet' ? 1.75 : 1.5;
-  }
-
-  const targetCombatSpan =
-    profile === 'mobile-portrait'
-      ? 540
-      : profile === 'mobile-landscape'
-        ? 560
-        : profile === 'tablet'
-          ? 600
-          : 620;
+  const dprCap = quality === 'low' ? 1 : quality === 'medium' ? 1.25 : 1.5;
+  const targetCombatSpan = profile === 'mobile-portrait' ? 540 : 560;
 
   let minimapSize: number;
   let minimapX: number;
   let minimapY: number;
   if (profile === 'mobile-landscape') {
-    minimapSize = Math.round(Math.max(66, Math.min(92, height * 0.21)));
+    minimapSize = Math.round(Math.max(66, Math.min(96, height * 0.21)));
     minimapX = 10;
-    minimapY = Math.round(Math.max(82, Math.min(92, height - minimapSize - 118)));
-  } else if (profile === 'mobile-portrait') {
+    minimapY = Math.round(Math.max(82, Math.min(96, height - minimapSize - 118)));
+  } else {
     minimapSize = Math.round(Math.max(74, Math.min(96, width * 0.22)));
     minimapX = 10;
     minimapY = 104;
-  } else if (profile === 'tablet') {
-    minimapSize = Math.round(Math.max(94, Math.min(118, Math.min(width, height) * 0.16)));
-    minimapX = 14;
-    minimapY = 118;
-  } else {
-    minimapSize = Math.round(Math.max(96, Math.min(128, Math.min(width, height) * 0.18)));
-    minimapX = 14;
-    minimapY = Math.round(Math.max(12, Math.min(122, height - minimapSize - 12)));
   }
 
   return {
@@ -151,7 +97,7 @@ export function resolveScreenOptimization(input: ScreenOptimizationInput): Resol
     detectedProfile,
     modePref,
     orientation,
-    isCompact: profile === 'mobile-portrait' || profile === 'mobile-landscape',
+    isCompact: true,
     showTouchControls,
     controlScale,
     hudScale,

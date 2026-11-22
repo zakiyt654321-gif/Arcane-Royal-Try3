@@ -148,33 +148,46 @@
         transform: translate(-50%, -50%) scale(1);
       }
 
+      #gameCanvas {
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+
       /* IN-GAME HUD */
       #hud-container {
         position: absolute;
         inset: 0;
         pointer-events: none;
         display: none;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        padding-left: env(safe-area-inset-left, 0px);
+        padding-right: env(safe-area-inset-right, 0px);
       }
       #hud-top {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        padding: clamp(6px, 1.5vh, 12px) clamp(8px, 2vw, 16px);
+        padding: max(clamp(6px, 1.5vh, 12px), env(safe-area-inset-top, 0px)) max(clamp(8px, 2vw, 16px), env(safe-area-inset-right, 0px)) 0 max(clamp(8px, 2vw, 16px), env(safe-area-inset-left, 0px));
         width: 100%;
         gap: 8px;
       }
       .hud-stats-card {
-        background: rgba(15, 23, 42, 0.4);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(10, 15, 30, 0.62);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 10px;
-        padding: 6px 12px;
+        padding: 5px 10px;
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        min-width: clamp(160px, 28vw, 220px);
-        max-width: 210px;
+        gap: 3px;
+        min-width: clamp(146px, 24vw, 196px);
+        max-width: 196px;
         box-shadow: 0 4px 14px rgba(0,0,0,0.4);
       }
       .bar-wrapper {
@@ -1654,58 +1667,117 @@
       kbd { display: inline-block; min-width: 20px; padding: 2px 5px; border: 1px solid rgba(255,255,255,0.2); border-bottom-width: 2px; border-radius: 5px; background: rgba(255,255,255,0.07); color: var(--ink); font: 700 10px/1.2 inherit; text-align: center; }
 
       /* In-match HUD */
-      #hud-top { padding: var(--safe-top) var(--safe-right) 0 var(--safe-left); }
-      .hud-stats-card { min-width: clamp(155px, 25vw, 230px); border-color: var(--line); border-radius: 13px; background: rgba(7,11,23,0.7); backdrop-filter: blur(12px); }
-      .bar-track { height: 8px; border: 0; background: rgba(255,255,255,0.08); }
+      #hud-top {
+        padding: max(8px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
+      }
+      .hud-stats-card {
+        min-width: clamp(142px, 22vw, 196px);
+        max-width: 196px;
+        border-color: var(--line);
+        border-radius: 11px;
+        background: rgba(7, 11, 23, 0.68);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+      }
+      html[data-graphics-quality="low"] .hud-stats-card,
+      html[data-graphics-quality="low"] .hud-status-pill,
+      html[data-graphics-quality="low"] .kill-feed-item,
+      html[data-graphics-quality="low"] #joystick-zone,
+      html[data-graphics-quality="low"] #btn-quick-use,
+      html[data-graphics-quality="low"] #cancel-cast-zone {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      .bar-track { height: 7px; border: 0; background: rgba(255,255,255,0.1); }
       #hp-bar-fill { background: linear-gradient(90deg, #ff596c, #ff8c88); }
       #mana-bar-fill { background: linear-gradient(90deg, #438bff, #61dbff); }
-      .storm-badge, .alive-badge { border-color: var(--line); background: rgba(7,11,23,0.74); box-shadow: 0 8px 20px rgba(0,0,0,0.22); }
+      .storm-badge { border-color: var(--line); background: rgba(7,11,23,0.74); box-shadow: 0 6px 16px rgba(0,0,0,0.22); }
+      .hud-top-status-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        pointer-events: auto;
+      }
+      .hud-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(7, 11, 23, 0.78);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        color: #cbd5e1;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      }
+      .hud-status-pill strong {
+        color: #fbbf24;
+        font-variant-numeric: tabular-nums;
+      }
+      .hud-pill-sep {
+        color: rgba(148, 163, 184, 0.5);
+        font-weight: 400;
+      }
       .hud-tool {
-        min-width: 76px;
-        min-height: 30px;
-        padding: 5px 9px !important;
+        min-width: 56px;
+        min-height: 28px;
+        padding: 4px 8px !important;
         border: 1px solid var(--line) !important;
         border-radius: 8px !important;
-        background: rgba(7,11,23,0.74) !important;
+        background: rgba(7,11,23,0.78) !important;
         color: #d5deed !important;
         font-size: 10px !important;
       }
-      .hud-map-actions { display: flex; gap: 4px; margin-top: 4px; }
-      .hud-map-actions .hud-tool { min-width: 52px; margin-top: 0 !important; }
+      .hud-map-actions { display: flex; gap: 4px; margin-top: 2px; justify-content: flex-end; }
+      .hud-map-actions .hud-tool { min-width: 48px; margin-top: 0 !important; }
       .waypoint-hud {
-        position: absolute; top: calc(var(--safe-top) + 100px); left: 50%; transform: translateX(-50%);
-        z-index: 26; display: flex; align-items: center; gap: 8px; max-width: min(420px, 62vw);
-        padding: 6px 7px 6px 11px; border: 1px solid rgba(103, 232, 249, 0.42); border-radius: 999px;
+        position: absolute; top: calc(var(--safe-top) + 46px); left: 50%; transform: translateX(-50%);
+        z-index: 26; display: flex; align-items: center; gap: 8px; max-width: min(360px, 58vw);
+        padding: 5px 7px 5px 11px; border: 1px solid rgba(103, 232, 249, 0.42); border-radius: 999px;
         background: rgba(4, 18, 29, 0.9); color: #a5f3fc; box-shadow: 0 5px 22px rgba(0,0,0,0.35);
-        font-size: 11px; font-weight: 800; letter-spacing: 0.02em; pointer-events: none; white-space: nowrap;
+        font-size: 10.5px; font-weight: 800; letter-spacing: 0.02em; pointer-events: none; white-space: nowrap;
       }
       #waypoint-text { overflow: hidden; text-overflow: ellipsis; }
       #btn-clear-ping {
-        width: 24px; height: 24px; flex: 0 0 24px; padding: 0; border: 1px solid rgba(255,255,255,0.2);
+        width: 22px; height: 22px; flex: 0 0 22px; padding: 0; border: 1px solid rgba(255,255,255,0.2);
         border-radius: 50%; background: rgba(255,255,255,0.08); color: #fff; cursor: pointer; pointer-events: auto;
       }
-      .map-help {
-        position: absolute; z-index: 24; left: 50%; bottom: calc(var(--safe-bottom) + 8px); transform: translateX(-50%);
-        width: max-content; max-width: 90vw; padding: 7px 12px; border: 1px solid rgba(103,232,249,0.25);
-        border-radius: 999px; background: rgba(4,12,24,0.88); color: #c8edf5; text-align: center;
-        font-size: 10px; font-weight: 700; pointer-events: none;
+      #joystick-zone {
+        left: max(clamp(12px, 3vw, 24px), env(safe-area-inset-left, 0px));
+        bottom: max(clamp(12px, 3.5vh, 22px), env(safe-area-inset-bottom, 0px));
+        background: radial-gradient(circle, rgba(160,181,230,0.11), rgba(63,76,113,0.04));
+        border-color: rgba(200,215,255,0.26);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
       }
-      .combat-stats {
-        position: absolute;
-        top: var(--minimap-bottom, 274px);
-        left: var(--minimap-left, 14px);
-        z-index: 24;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        pointer-events: none;
-      }
-      .combat-stat { padding: 5px 9px; border: 1px solid var(--line); border-radius: 9px; background: rgba(7,11,23,0.62); color: var(--muted); font-size: 10px; font-weight: 750; }
-      .combat-stat strong { color: var(--gold); font-variant-numeric: tabular-nums; }
-      #joystick-zone { left: var(--safe-left); bottom: var(--safe-bottom); background: radial-gradient(circle, rgba(160,181,230,0.11), rgba(63,76,113,0.04)); border-color: rgba(200,215,255,0.26); backdrop-filter: blur(4px); }
       #joystick-stick { background: radial-gradient(circle at 35% 30%, #f9fbff, #9baecb); border-color: rgba(255,255,255,0.65); }
-      #action-buttons { right: var(--safe-right); bottom: var(--safe-bottom); }
-      .action-btn { padding: 0; font-family: inherit; cursor: pointer; border-color: rgba(255,255,255,0.45); box-shadow: 0 8px 22px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.18); }
+      #action-buttons {
+        right: max(clamp(12px, 3vw, 24px), env(safe-area-inset-right, 0px));
+        bottom: max(clamp(10px, 3vh, 20px), env(safe-area-inset-bottom, 0px));
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+      .action-btn {
+        padding: 0; font-family: inherit; cursor: pointer;
+        border-color: rgba(255,255,255,0.45);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.4), inset 0 1px rgba(255,255,255,0.18);
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
       .action-btn:focus-visible { outline-offset: 5px !important; }
       #btn-sword { background: radial-gradient(circle at 35% 25%, #ff8973, #a91835 72%); }
       #btn-spell { background: radial-gradient(circle at 35% 25%, #6fc5ff, #2053b8 72%); }
@@ -1736,28 +1808,221 @@
         border-color: #fde68a; z-index: 4;
       }
       #btn-super.active { border-color: #fef08a; box-shadow: 0 0 24px rgba(251,191,36,0.75), inset 0 1px rgba(255,255,255,0.3); }
+      /* Quick-Use Loot Button & Expandable 5-Slot Fanout */
+      #quick-use-wrap {
+        position: absolute;
+        left: -76px;
+        bottom: 16px;
+        display: flex;
+        align-items: flex-end;
+        gap: 5px;
+        z-index: 12;
+        pointer-events: auto;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+      }
+      #btn-quick-use {
+        position: relative;
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        border: 2px solid rgba(110, 231, 183, 0.72);
+        background: radial-gradient(circle at 30% 25%, rgba(30, 58, 74, 0.92), rgba(9, 16, 32, 0.96));
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        color: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2px;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.48), inset 0 1px rgba(255, 255, 255, 0.22);
+        transition: transform 0.12s ease, border-color 0.15s ease, opacity 0.15s ease;
+        touch-action: none;
+        font-family: inherit;
+      }
+      #btn-quick-use:active { transform: scale(0.92); }
+      #btn-quick-use.empty {
+        opacity: 0.56;
+        border-color: rgba(148, 163, 184, 0.4);
+        filter: saturate(0.35);
+      }
+      #btn-quick-use.urgent-heal {
+        border-color: #fb7185;
+        background: radial-gradient(circle at 30% 25%, rgba(159, 18, 57, 0.92), rgba(40, 10, 22, 0.96));
+      }
+      #btn-quick-use.urgent-mana {
+        border-color: #38bdf8;
+        background: radial-gradient(circle at 30% 25%, rgba(12, 74, 110, 0.92), rgba(8, 20, 42, 0.96));
+      }
+      .quick-use-icon {
+        font-size: 20px;
+        line-height: 22px;
+        pointer-events: none;
+      }
+      .quick-use-label {
+        font-size: 7.5px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #e2e8f0;
+        margin-top: 1px;
+        pointer-events: none;
+      }
+      #quick-use-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 999px;
+        border: 1.5px solid #0f172a;
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: #111827;
+        font-size: 10px;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-variant-numeric: tabular-nums;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+        pointer-events: none;
+      }
+      #quick-use-cd {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: rgba(2, 6, 23, 0.78);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 900;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+      }
+      #btn-quick-use-expand {
+        position: absolute;
+        top: -26px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30px;
+        height: 22px;
+        border-radius: 9px;
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        background: rgba(15, 23, 42, 0.9);
+        color: #e2e8f0;
+        font-size: 10px;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+        touch-action: manipulation;
+      }
+      #btn-quick-use-expand[aria-expanded="true"] {
+        background: rgba(99, 102, 241, 0.85);
+        border-color: #c4b5fd;
+        transform: translateX(-50%) rotate(180deg);
+      }
+
+      /* Dynamic Drag-to-Cancel Aiming Zone */
+      #cancel-cast-zone {
+        position: absolute;
+        left: -84px;
+        top: -20px;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 2px dashed rgba(248, 113, 113, 0.78);
+        background: rgba(15, 23, 42, 0.78);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        color: #fca5a5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+        opacity: 0;
+        transform: scale(0.75);
+        pointer-events: none;
+        z-index: 40;
+        transition: opacity 0.14s ease, transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+        touch-action: none;
+      }
+      #cancel-cast-zone.visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+      #cancel-cast-zone.cancel-active {
+        opacity: 1;
+        border-style: solid;
+        border-color: #fecaca;
+        background: radial-gradient(circle, rgba(220, 38, 38, 0.94), rgba(127, 29, 29, 0.96));
+        color: #ffffff;
+        transform: scale(1.12);
+        box-shadow: 0 0 24px rgba(239, 68, 68, 0.85), inset 0 1px rgba(255, 255, 255, 0.35);
+        animation: cancelZonePulse 0.45s ease-in-out infinite alternate;
+      }
+      @keyframes cancelZonePulse {
+        0% { transform: scale(1.1); }
+        100% { transform: scale(1.16); }
+      }
+      .cancel-x {
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1;
+        pointer-events: none;
+      }
+      .cancel-lbl {
+        font-size: 7.5px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        pointer-events: none;
+      }
+
       #inventory-hud {
-        position: absolute; left: 50%; bottom: calc(var(--safe-bottom) + 94px);
-        transform: translateX(-50%); display: flex; align-items: flex-end; gap: 6px;
-        pointer-events: auto; z-index: 32; max-width: calc(100vw - 24px);
+        position: absolute; left: 50%; bottom: max(12px, env(safe-area-inset-bottom, 0px));
+        transform: translateX(-50%) translateY(12px);
+        display: none; align-items: flex-end; gap: 5px;
+        padding: 6px 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.34);
+        background: rgba(7, 11, 24, 0.92);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+        pointer-events: auto; z-index: 34; max-width: calc(100vw - 24px);
+        opacity: 0;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+      }
+      #inventory-hud.fanout-open {
+        display: flex;
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
       }
       .inventory-slot {
-        position: relative; width: 64px; height: 62px; padding: 4px 3px 3px;
-        overflow: hidden; border: 1px solid rgba(148,163,184,0.42); border-radius: 11px;
+        position: relative; width: 52px; height: 50px; padding: 4px 3px 3px;
+        overflow: hidden; border: 1px solid rgba(148,163,184,0.42); border-radius: 10px;
         background: linear-gradient(160deg, rgba(30,41,59,0.94), rgba(8,13,27,0.94));
-        color: #e2e8f0; box-shadow: 0 6px 20px rgba(0,0,0,0.38); cursor: pointer;
+        color: #e2e8f0; box-shadow: 0 6px 16px rgba(0,0,0,0.38); cursor: pointer;
         touch-action: manipulation; font-family: inherit;
       }
       .inventory-slot:hover, .inventory-slot:focus-visible { border-color: #c4b5fd; outline: none; transform: translateY(-2px); }
       .inventory-slot.empty { filter: saturate(0.25); opacity: 0.62; }
-      .inventory-slot .slot-key { position: absolute; top: 3px; left: 5px; color: #94a3b8; font-size: 9px; font-weight: 900; }
-      .inventory-slot .slot-icon { display: block; font-size: 22px; line-height: 25px; }
-      .inventory-slot .slot-name { display: block; overflow: hidden; font-size: 8px; font-weight: 800; white-space: nowrap; text-overflow: ellipsis; }
-      .inventory-slot .slot-count { position: absolute; top: 2px; right: 5px; color: #fff; font-size: 12px; font-weight: 900; text-shadow: 0 1px 3px #000; }
-      .inventory-slot .slot-cooldown { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(2,6,23,0.76); color: #fff; font-size: 17px; font-weight: 900; pointer-events: none; }
-      #btn-inventory-info { width: 30px; height: 30px; margin-bottom: 3px; border-radius: 50%; border: 1px solid #64748b; background: #111827; color: #cbd5e1; font-weight: 900; cursor: pointer; }
+      .inventory-slot .slot-key { position: absolute; top: 3px; left: 5px; color: #94a3b8; font-size: 8.5px; font-weight: 900; }
+      .inventory-slot .slot-icon { display: block; font-size: 17px; line-height: 20px; }
+      .inventory-slot .slot-name { display: block; overflow: hidden; font-size: 7px; font-weight: 800; white-space: nowrap; text-overflow: ellipsis; }
+      .inventory-slot .slot-count { position: absolute; top: 2px; right: 4px; color: #fff; font-size: 10px; font-weight: 900; text-shadow: 0 1px 3px #000; }
+      .inventory-slot .slot-cooldown { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(2,6,23,0.76); color: #fff; font-size: 15px; font-weight: 900; pointer-events: none; }
+      #btn-inventory-info { width: 26px; height: 26px; margin-bottom: 3px; border-radius: 50%; border: 1px solid #64748b; background: #111827; color: #cbd5e1; font-weight: 900; font-size: 11px; cursor: pointer; }
       #item-details {
-        position: absolute; left: 50%; bottom: calc(var(--safe-bottom) + 166px); transform: translateX(-50%);
+        position: absolute; left: 50%; bottom: calc(var(--safe-bottom) + 126px); transform: translateX(-50%);
         width: min(440px, calc(100vw - 28px)); padding: 10px 38px 10px 12px; z-index: 36;
         border: 1px solid rgba(167,139,250,0.5); border-radius: 12px; background: rgba(7,11,24,0.96);
         color: #cbd5e1; font-size: 11px; line-height: 1.45; box-shadow: 0 12px 35px rgba(0,0,0,0.45); pointer-events: auto;
@@ -1955,12 +2220,12 @@
 
       /* MOBILE PORTRAIT PROFILE (e.g. 360x780, 390x844, 430x932) */
       html[data-device-profile="mobile-portrait"] #hud-top {
-        padding: var(--safe-top) 10px 0 10px;
+        padding: max(8px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
         align-items: flex-start;
       }
       html[data-device-profile="mobile-portrait"] .hud-stats-card {
-        min-width: 142px;
-        max-width: 164px;
+        min-width: 136px;
+        max-width: 158px;
         padding: 5px 8px;
       }
       html[data-device-profile="mobile-portrait"] .bar-label {
@@ -1971,31 +2236,31 @@
       }
       html[data-device-profile="mobile-portrait"] .hud-tools-col {
         min-width: auto;
-        display: grid;
-        grid-template-columns: repeat(2, auto);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
         gap: 4px;
-        align-items: stretch;
       }
-      html[data-device-profile="mobile-portrait"] .hud-map-actions {
-        display: contents;
+      html[data-device-profile="mobile-portrait"] .hud-status-pill {
+        font-size: 9.5px;
+        padding: 3px 8px;
       }
       html[data-device-profile="mobile-portrait"] .hud-tool {
-        min-width: 54px;
-        min-height: 28px;
-        padding: 4px 6px !important;
+        min-width: 48px;
+        min-height: 26px;
+        padding: 3px 6px !important;
         font-size: 9.5px !important;
       }
       html[data-device-profile="mobile-portrait"] #hud-center-top {
         position: absolute;
-        top: calc(var(--safe-top) + 86px);
-        left: 108px;
-        right: 10px;
+        top: calc(max(8px, env(safe-area-inset-top, 0px)) + 84px);
+        left: max(108px, env(safe-area-inset-left, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
         transform: none;
         align-items: flex-end;
         gap: 4px;
       }
       html[data-device-profile="mobile-portrait"] .storm-badge,
-      html[data-device-profile="mobile-portrait"] .alive-badge,
       html[data-device-profile="mobile-portrait"] .weather-badge {
         font-size: 9.5px;
         padding: 3px 8px;
@@ -2003,20 +2268,10 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      html[data-device-profile="mobile-portrait"] .combat-stats {
-        top: var(--minimap-bottom, 214px);
-        left: var(--minimap-left, 10px);
-        flex-direction: row;
-        gap: 4px;
-      }
-      html[data-device-profile="mobile-portrait"] .combat-stat {
-        padding: 3px 6px;
-        font-size: 9px;
-      }
       html[data-device-profile="mobile-portrait"] .waypoint-hud {
-        top: calc(var(--safe-top) + 148px);
+        top: calc(var(--safe-top) + 122px);
         left: auto;
-        right: 10px;
+        right: max(10px, env(safe-area-inset-right, 0px));
         transform: none;
         max-width: calc(100vw - 122px);
         font-size: 10px;
@@ -2024,14 +2279,14 @@
       }
       html[data-device-profile="mobile-portrait"] body[data-state="playing"] #toast-msg,
       html[data-device-profile="mobile-portrait"] body[data-state="dropping"] #toast-msg {
-        top: calc(var(--safe-top) + 192px);
+        top: calc(var(--safe-top) + 168px);
         font-size: 11px;
         padding: 6px 12px;
       }
       html[data-device-profile="mobile-portrait"] #kill-feed {
-        top: calc(var(--safe-top) + 188px);
+        top: calc(var(--safe-top) + 162px);
         left: auto;
-        right: 10px;
+        right: max(10px, env(safe-area-inset-right, 0px));
         transform: none;
         align-items: flex-end;
         max-width: 58vw;
@@ -2040,8 +2295,22 @@
         font-size: 9px;
         padding: 3px 7px;
       }
+      html[data-device-profile="mobile-portrait"] #quick-use-wrap {
+        left: -62px;
+        bottom: 14px;
+      }
+      html[data-device-profile="mobile-portrait"] #btn-quick-use {
+        width: 52px;
+        height: 52px;
+      }
+      html[data-device-profile="mobile-portrait"] #cancel-cast-zone {
+        left: -70px;
+        top: -26px;
+        width: 58px;
+        height: 58px;
+      }
       html[data-device-profile="mobile-portrait"] #inventory-hud {
-        bottom: calc(var(--safe-bottom) + 186px);
+        bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 206px);
         gap: 4px;
       }
       html[data-device-profile="mobile-portrait"] .inventory-slot {
@@ -2061,7 +2330,7 @@
       }
       html[data-device-profile="mobile-portrait"] #item-details,
       html[data-device-profile="mobile-portrait"] #item-channel {
-        bottom: calc(var(--safe-bottom) + 238px);
+        bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 264px);
       }
       html[data-device-profile="mobile-portrait"] .currency-bar {
         flex-direction: column;
@@ -2109,11 +2378,11 @@
 
       /* MOBILE LANDSCAPE PROFILE (e.g. 667x375, 844x390, 915x412) */
       html[data-device-profile="mobile-landscape"] #hud-top {
-        padding: 8px max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
+        padding: max(6px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
         align-items: flex-start;
       }
       html[data-device-profile="mobile-landscape"] .hud-stats-card {
-        min-width: 138px;
+        min-width: 136px;
         max-width: 158px;
         padding: 4px 7px;
       }
@@ -2128,16 +2397,18 @@
       }
       html[data-device-profile="mobile-landscape"] .hud-tools-col {
         min-width: auto;
-        display: grid;
-        grid-template-columns: repeat(2, auto);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
         gap: 4px;
       }
-      html[data-device-profile="mobile-landscape"] .hud-map-actions {
-        display: contents;
+      html[data-device-profile="mobile-landscape"] .hud-status-pill {
+        font-size: 9.5px;
+        padding: 3px 9px;
       }
       html[data-device-profile="mobile-landscape"] .hud-tool {
-        min-width: 52px;
-        min-height: 26px;
+        min-width: 44px;
+        min-height: 25px;
         padding: 3px 6px !important;
         font-size: 9px !important;
       }
@@ -2145,36 +2416,32 @@
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
-        max-width: 54vw;
+        max-width: 42vw;
         gap: 4px;
       }
       html[data-device-profile="mobile-landscape"] .storm-badge,
-      html[data-device-profile="mobile-landscape"] .alive-badge,
       html[data-device-profile="mobile-landscape"] .weather-badge {
         font-size: 9.5px;
         padding: 2px 8px;
       }
-      html[data-device-profile="mobile-landscape"] .combat-stats {
-        display: none;
-      }
       html[data-device-profile="mobile-landscape"] .waypoint-hud {
-        top: calc(var(--safe-top) + 56px);
+        top: calc(max(6px, env(safe-area-inset-top, 0px)) + 34px);
         font-size: 10px;
         padding: 4px 6px 4px 10px;
       }
       html[data-device-profile="mobile-landscape"] body[data-state="playing"] #toast-msg,
       html[data-device-profile="mobile-landscape"] body[data-state="dropping"] #toast-msg {
-        top: calc(var(--safe-top) + 92px);
+        top: calc(max(6px, env(safe-area-inset-top, 0px)) + 68px);
         font-size: 11px;
         padding: 5px 12px;
       }
       html[data-device-profile="mobile-landscape"] #kill-feed {
-        top: calc(var(--safe-top) + 68px);
+        top: calc(max(6px, env(safe-area-inset-top, 0px)) + 64px);
         left: auto;
-        right: max(10px, env(safe-area-inset-right));
+        right: max(10px, env(safe-area-inset-right, 0px));
         transform: none;
         align-items: flex-end;
-        max-width: min(290px, 42vw);
+        max-width: min(260px, 38vw);
       }
       html[data-device-profile="mobile-landscape"] #kill-feed .kill-feed-item {
         font-size: 9px;
@@ -2183,8 +2450,8 @@
         overflow: hidden;
       }
       html[data-device-profile="mobile-landscape"] #inventory-hud {
-        bottom: max(8px, env(safe-area-inset-bottom));
-        gap: 3px;
+        bottom: max(12px, env(safe-area-inset-bottom, 0px));
+        gap: 4px;
       }
       html[data-device-profile="mobile-landscape"] .inventory-slot {
         width: 44px;
@@ -2209,7 +2476,7 @@
       }
       html[data-device-profile="mobile-landscape"] #item-details,
       html[data-device-profile="mobile-landscape"] #item-channel {
-        bottom: calc(var(--safe-bottom) + 58px);
+        bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 64px);
       }
       html[data-device-profile="mobile-landscape"] #lobby-screen .lobby-title-card {
         display: none;
@@ -2325,18 +2592,24 @@
 
           <div id="hud-center-top">
             <div id="storm-badge" class="storm-badge">STORM: SAFE (45s)</div>
-            <div id="alive-badge" class="alive-badge">⚔️ 50 ALIVE</div>
             <div id="weather-badge" class="weather-badge hidden" role="status" aria-live="polite"></div>
           </div>
 
           <div class="hud-tools-col">
-            <div id="fps-counter" style="font-size: 11px; font-weight: 700; color: #64748b;">60 FPS</div>
-            <button type="button" id="btn-zoom-toggle" class="interactive hud-tool" onclick="toggleZoom()" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🔍 Zoom: Auto</button>
+            <div class="hud-top-status-row">
+              <div id="hud-status-pill" class="hud-status-pill" role="status" aria-label="Match eliminations and survivors">
+                <span>ELIMS: <strong id="hud-kills">0</strong></span>
+                <span class="hud-pill-sep">|</span>
+                <span>ALIVE: <strong id="hud-alive-compact">50</strong></span>
+              </div>
+              <button type="button" id="btn-pause" class="interactive hud-tool" onclick="togglePause()" aria-label="Pause game">⏸</button>
+            </div>
             <div class="hud-map-actions">
+              <div id="fps-counter" style="font-size: 10px; font-weight: 700; color: #64748b; align-self: center; margin-right: 2px;">60 FPS</div>
+              <button type="button" id="btn-zoom-toggle" class="interactive hud-tool" onclick="toggleZoom()" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🔍 Auto</button>
               <button type="button" id="btn-expand-map" class="interactive hud-tool" onclick="toggleMapExpand()" aria-expanded="false" aria-label="Expand island map" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🗺️ Map</button>
               <button type="button" id="btn-ping" class="interactive hud-tool" onclick="pingAtAim()" aria-label="Place waypoint ahead — G" title="Ping ahead (G)">📍 Ping</button>
             </div>
-            <button type="button" id="btn-pause" class="interactive hud-tool" onclick="togglePause()" aria-label="Pause game">Ⅱ Pause</button>
           </div>
         </div>
 
@@ -2344,13 +2617,8 @@
           <span id="waypoint-text">📍 Waypoint</span>
           <button type="button" id="btn-clear-ping" class="interactive" onclick="clearMapPing()" aria-label="Clear waypoint" title="Clear waypoint (C)">×</button>
         </div>
-        <div id="map-help" class="map-help hidden">Double-tap minimap to quick-ping · Tap expanded island to pin · Right-click or C to clear · M to close</div>
         <div id="kill-feed" role="log" aria-live="polite" aria-relevant="additions" aria-label="Elimination feed"></div>
         <div id="art-banner" aria-hidden="true">CRIMSON CLEAVE!</div>
-        <div id="combat-stats" class="combat-stats" role="group" aria-label="Current match statistics">
-          <span class="combat-stat">ELIMS <strong id="hud-kills">0</strong></span>
-          <span class="combat-stat">ALIVE <strong id="hud-alive-compact">50</strong></span>
-        </div>
         <div id="killstreak-banner" style="position:absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); font-size: 30px; font-weight: 900; color: #fbbf24; text-shadow: 0 0 20px #f59e0b; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 100;">KILL STREAK!</div>
 
         <!-- Touch Controls -->
@@ -2412,6 +2680,21 @@
             <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="#fef3c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4 5 14h6l-1 6 9-12h-6z"/><path d="M3 5h5M2 9h4M3 19h5"/></svg>
             <span class="btn-name">SPRINT</span><span class="btn-sub">HOLD · F</span><span id="cd-super" class="cd-overlay" aria-hidden="true"></span>
           </button>
+          <!-- Dynamic Drag-to-Cancel Aiming Zone -->
+          <div id="cancel-cast-zone" role="status" aria-label="Drag here to cancel spell cast" aria-hidden="true">
+            <span class="cancel-x">✕</span>
+            <span class="cancel-lbl">CANCEL</span>
+          </div>
+          <!-- Thumb-Friendly Quick-Use Loot Button + Expand Chevron -->
+          <div id="quick-use-wrap" role="group" aria-label="Quick-use loot item">
+            <button type="button" id="btn-quick-use-expand" onclick="toggleQuickUseFanout()" aria-expanded="false" aria-label="Expand 5 inventory slots" title="Expand all 5 loot slots">▲</button>
+            <button type="button" id="btn-quick-use" class="empty" onclick="useQuickUseItem()" aria-label="Quick-use loot item">
+              <span class="quick-use-icon" id="quick-use-icon">✚</span>
+              <span class="quick-use-label" id="quick-use-label">LOOT</span>
+              <span id="quick-use-badge">0</span>
+              <span id="quick-use-cd" class="hidden" aria-hidden="true"></span>
+            </button>
+          </div>
         </div>
 
         <div id="inventory-hud" role="group" aria-label="Match inventory — keys 1 to 5">
@@ -2487,7 +2770,6 @@
           </div>
           <div class="currency-actions">
             <button type="button" class="btn-lobby-sec" onclick="openShop('crystals')" style="padding: 4px 12px; font-size: 11px;">🔮 Vault</button>
-            <button type="button" id="btn-device-mode" class="btn-lobby-sec" onclick="cycleDeviceMode()" title="Cycle screen optimization mode (Auto / Mobile / Tablet / Desktop)" style="padding: 4px 12px; font-size: 11px;">📱 Display: Auto</button>
             <button type="button" id="btn-autoaim" class="btn-lobby-sec" onclick="toggleAutoAim()" style="padding: 4px 12px; font-size: 11px;">🎯 Auto-Aim: ON</button>
             <button type="button" id="btn-settings" class="btn-operator" onclick="openSettings()" title="Settings" aria-label="Open settings">⚙️</button>
             <button type="button" id="btn-operator" class="btn-operator" onclick="triggerOperatorAccess()" title="Open demo supplies" aria-label="Open demo supplies">✨</button>
@@ -2510,7 +2792,7 @@
               <div class="feature-chips" role="group" aria-label="Game features">
                 <span class="feature-chip">⚔ Three champions</span>
                 <span class="feature-chip">🌀 Dynamic storm</span>
-                <span class="feature-chip">🎮 Touch + keyboard</span>
+                <span class="feature-chip">📱 Mobile touch controls</span>
                 <span class="feature-chip">🌐 HTML5 · no account</span>
               </div>
               <div class="lobby-record" role="group" aria-label="Career statistics">
@@ -2789,30 +3071,11 @@
           </div>
 
           <div class="settings-divider"></div>
-          <div class="settings-section-label">Screen &amp; Device Optimization</div>
+          <div class="settings-section-label">Mobile Display &amp; Controls</div>
 
           <div class="settings-device-banner" role="status" aria-live="polite">
-            <span id="settings-device-status">Active: Auto</span>
+            <span id="settings-device-status">Mobile Landscape</span>
             <span id="settings-viewport-size" style="color: #7dd3fc; font-variant-numeric: tabular-nums;">--</span>
-          </div>
-
-          <div class="settings-row">
-            <span class="settings-label">Screen Mode</span>
-            <div class="settings-quality-group" role="group" aria-label="Screen optimization mode">
-              <button type="button" id="mode-btn-auto" class="quality-btn" onclick="setDeviceMode('auto')">Auto</button>
-              <button type="button" id="mode-btn-mobile" class="quality-btn" onclick="setDeviceMode('mobile')">Mobile</button>
-              <button type="button" id="mode-btn-tablet" class="quality-btn" onclick="setDeviceMode('tablet')">Tablet</button>
-              <button type="button" id="mode-btn-desktop" class="quality-btn" onclick="setDeviceMode('desktop')">Desktop</button>
-            </div>
-          </div>
-
-          <div class="settings-row">
-            <span class="settings-label">Touch Controls</span>
-            <div class="settings-quality-group" role="group" aria-label="Touch controls visibility">
-              <button type="button" id="touch-btn-auto" class="quality-btn" onclick="setTouchControlsMode('auto')">Auto</button>
-              <button type="button" id="touch-btn-on" class="quality-btn" onclick="setTouchControlsMode('on')">Show</button>
-              <button type="button" id="touch-btn-off" class="quality-btn" onclick="setTouchControlsMode('off')">Hide</button>
-            </div>
           </div>
 
           <div class="settings-row">
@@ -2847,13 +3110,12 @@
           <h2 id="tutorial-title" style="font-size: 18px; font-weight: 900; color: #38bdf8; letter-spacing: 1px;">ARCANE COMBAT GUIDE</h2>
           <div class="tutorial-grid">
             <div class="tutorial-item"><strong>Move &amp; steer</strong><span>Left joystick or <kbd>WASD</kbd> / arrow keys.</span></div>
-            <div class="tutorial-item"><strong>Aim &amp; attack</strong><span>Hold and drag an action, then release. <kbd>Space</kbd> sword · <kbd>E</kbd> spell.</span></div>
+            <div class="tutorial-item"><strong>Aim &amp; cancel cast</strong><span>Hold and drag an attack button to aim, then release. Drag onto the red <strong>✕ CANCEL</strong> zone to abort without spending MP or cooldown.</span></div>
             <div class="tutorial-item"><strong>Dash &amp; leap</strong><span><kbd>Shift</kbd> grants brief invulnerability and clears low obstacles.</span></div>
             <div class="tutorial-item"><strong>Arcane combat</strong><span><kbd>R</kbd> Mana Bullet · <kbd>Q</kbd> Arcane Art. Signature spell uses <kbd>E</kbd>.</span></div>
-            <div class="tutorial-item"><strong>Five match items</strong><span><kbd>1–5</kbd> use loot · <kbd>I</kbd> shows details. Full stacks leave loot on the ground.</span></div>
+            <div class="tutorial-item"><strong>Quick-Use &amp; 5 items</strong><span>Tap the Quick-Use loot button (auto-prioritizes Heal &lt;70% HP or Mana &lt;40% MP) or tap <strong>▲</strong> to fan out slots <kbd>1–5</kbd>.</span></div>
             <div class="tutorial-item"><strong>Sprint</strong><span>Keep moving for 1.5s to sprint free. Hold <kbd>F</kbd> or SPRINT for +35% speed while stamina lasts.</span></div>
-            <div class="tutorial-item"><strong>Map &amp; pause</strong><span><kbd>M</kbd> expands the map · <kbd>Esc</kbd> pauses the battle.</span></div>
-            <div class="tutorial-item"><strong>Waypoint pings</strong><span>Double-tap minimap to quick-ping (alerts bots &amp; sets HUD marker). <kbd>G</kbd> pings ahead · <kbd>C</kbd> clears.</span></div>
+            <div class="tutorial-item"><strong>Minimap &amp; quick-pings</strong><span>Double-tap minimap to quick-ping · Tap expanded island (<kbd>M</kbd>) to pin · Right-click or <kbd>C</kbd> to clear · <kbd>G</kbd> pings ahead.</span></div>
             <div class="tutorial-item"><strong>Survive &amp; adapt</strong><span>Stay inside the safe zone, watch biome weather (rain slows in forest, blizzards obscure snow), and spend XP between matches.</span></div>
           </div>
           <button type="button" class="btn-lobby-main" onclick="dismissTutorial()" style="width: 100%; justify-content: center; padding: 10px; font-size: 14px; margin-top: 6px;">ENTER ARENA</button>
@@ -2979,6 +3241,9 @@
       let aimAction = null;
       let aimAngle = 0;
       let aimPointerId = null;
+      let aimTouchId = null;
+      let isCancelAimHovered = false;
+      let isQuickUseFanoutOpen = false;
       let isMapExpanded = false;
       let killstreakTimer = null;
       const STORAGE_KEY = 'arcane_royale_save_v3';
@@ -2990,7 +3255,7 @@
         'statUpgrades', 'selectedFighter', 'unlockedFighters',
         'totalMatches', 'totalWins', 'totalKills',
         'musicVolume', 'sfxVolume', 'voiceVolume', 'haptics', 'reducedMotion', 'graphicsQuality',
-        'deviceMode', 'touchControlsMode', 'controlScale', 'tutorialSeen'
+        'deviceMode', 'touchControlsMode', 'controlScale', 'tutorialSeen', 'firstMatchTipShown'
       ];
       const STAT_UPGRADE_DEFS = Object.freeze({
         maxHealth: Object.freeze({
@@ -3223,10 +3488,11 @@
         haptics: true,
         reducedMotion: false,
         graphicsQuality: 'high',
-        deviceMode: 'auto',
-        touchControlsMode: 'auto',
+        deviceMode: 'mobile',
+        touchControlsMode: 'on',
         controlScale: 1.0,
         tutorialSeen: false,
+        firstMatchTipShown: false,
 
         load() {
           let data = null;
@@ -3280,10 +3546,12 @@
           this.reducedMotion = typeof source.reducedMotion === 'boolean' ? source.reducedMotion : systemReducedMotion;
           document.documentElement.classList.toggle('reduce-motion', this.reducedMotion);
           this.graphicsQuality = ['low', 'medium', 'high'].includes(source.graphicsQuality) ? source.graphicsQuality : 'high';
-          this.deviceMode = ['auto', 'mobile', 'tablet', 'desktop'].includes(source.deviceMode) ? source.deviceMode : 'auto';
-          this.touchControlsMode = ['auto', 'on', 'off'].includes(source.touchControlsMode) ? source.touchControlsMode : 'auto';
+          this.deviceMode = 'mobile';
+          this.touchControlsMode = 'on';
           this.controlScale = Math.round(finite(source.controlScale, 1.0, 0.75, 1.25) * 100) / 100;
           this.tutorialSeen = typeof source.tutorialSeen === 'boolean' ? source.tutorialSeen : false;
+          this.firstMatchTipShown = typeof source.firstMatchTipShown === 'boolean' ? source.firstMatchTipShown : false;
+          document.documentElement.dataset.graphicsQuality = this.graphicsQuality;
 
           const unlockedFighters = Array.isArray(source.unlockedFighters) ? source.unlockedFighters : ['BERSERKER'];
           this.unlockedFighters = [...new Set(unlockedFighters.filter(key => fighterKeys.includes(key)))];
@@ -3387,120 +3655,69 @@
       let activePing = null;
 
       // ==========================================
-      // AUTO DEVICE SCREEN OPTIMIZER + MANUAL MODE
+      // MOBILE-ONLY SCREEN OPTIMIZER
       // ==========================================
       const DeviceOptimizer = {
         current: {
-          profile: 'desktop',
-          detectedProfile: 'desktop',
-          modePref: 'auto',
+          profile: 'mobile-landscape',
+          detectedProfile: 'mobile-landscape',
+          modePref: 'mobile',
           orientation: 'landscape',
-          isCompact: false,
-          showTouchControls: false,
-          controlScale: 1,
-          hudScale: 1,
-          dprCap: 2,
-          targetCombatSpan: 620,
-          minimapSize: 120,
-          minimapX: 14,
-          minimapY: 96
+          isCompact: true,
+          showTouchControls: true,
+          controlScale: 0.76,
+          hudScale: 0.88,
+          dprCap: 1.5,
+          targetCombatSpan: 560,
+          minimapSize: 82,
+          minimapX: 10,
+          minimapY: 86
         },
 
-        detectProfile(width, height, hasCoarsePointer, maxTouchPoints) {
-          const w = Math.max(240, Math.floor(Number(width) || 1280));
-          const h = Math.max(240, Math.floor(Number(height) || 720));
-          const minDim = Math.min(w, h);
-          const maxDim = Math.max(w, h);
-          const isPortrait = h > w;
-          const isTouch = Boolean(hasCoarsePointer || (maxTouchPoints || 0) > 0);
-
-          if (minDim <= 540 || (isPortrait && w <= 600) || (isTouch && minDim <= 560 && maxDim <= 960)) {
-            return isPortrait ? 'mobile-portrait' : 'mobile-landscape';
-          }
-          if ((isTouch && maxDim <= 1366) || (!isTouch && w < 1024)) {
-            return 'tablet';
-          }
-          return 'desktop';
+        detectProfile(width, height) {
+          const w = Math.max(240, Math.floor(Number(width) || 844));
+          const h = Math.max(240, Math.floor(Number(height) || 390));
+          return h > w ? 'mobile-portrait' : 'mobile-landscape';
         },
 
         getViewportSize() {
           const vv = window.visualViewport;
-          const width = Math.max(240, Math.round((vv && vv.width) || window.innerWidth || 1280));
-          const height = Math.max(240, Math.round((vv && vv.height) || window.innerHeight || 720));
+          const width = Math.max(240, Math.round((vv && vv.width) || window.innerWidth || 844));
+          const height = Math.max(240, Math.round((vv && vv.height) || window.innerHeight || 390));
           return { width, height };
         },
 
         resolve() {
           const { width, height } = this.getViewportSize();
-          const hasCoarsePointer = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
-          const maxTouchPoints = navigator.maxTouchPoints || 0;
           const orientation = height > width ? 'portrait' : 'landscape';
-          const modePref = ['auto', 'mobile', 'tablet', 'desktop'].includes(PlayerData.deviceMode) ? PlayerData.deviceMode : 'auto';
-          const touchPref = ['auto', 'on', 'off'].includes(PlayerData.touchControlsMode) ? PlayerData.touchControlsMode : 'auto';
           const quality = ['low', 'medium', 'high'].includes(PlayerData.graphicsQuality) ? PlayerData.graphicsQuality : 'high';
-          const detectedProfile = this.detectProfile(width, height, hasCoarsePointer, maxTouchPoints);
-
-          let profile = detectedProfile;
-          if (modePref === 'mobile') {
-            profile = orientation === 'portrait' ? 'mobile-portrait' : 'mobile-landscape';
-          } else if (modePref === 'tablet' || modePref === 'desktop') {
-            profile = modePref;
-          }
-
-          const isTouchDevice = Boolean(hasCoarsePointer || maxTouchPoints > 0);
-          const showTouchControls = touchPref === 'on'
-            ? true
-            : touchPref === 'off'
-              ? false
-              : (profile !== 'desktop' || isTouchDevice);
+          const profile = orientation === 'portrait' ? 'mobile-portrait' : 'mobile-landscape';
+          const detectedProfile = profile;
+          const modePref = 'mobile';
+          const showTouchControls = true;
 
           const rawScale = Number(PlayerData.controlScale);
           const userScale = Number.isFinite(rawScale) ? Math.max(0.75, Math.min(1.25, rawScale)) : 1;
-          let autoControlFit = 1;
-          if (profile === 'mobile-landscape') {
-            autoControlFit = Math.min(0.76, Math.max(0.58, Math.min(width / 960, height / 490)));
-          } else if (profile === 'mobile-portrait') {
-            autoControlFit = Math.min(0.84, Math.max(0.66, width / 470));
-          } else if (profile === 'tablet') {
-            autoControlFit = 0.92;
-          }
+          const autoControlFit = profile === 'mobile-landscape'
+            ? Math.min(0.84, Math.max(0.58, Math.min(width / 960, height / 490)))
+            : Math.min(0.86, Math.max(0.66, width / 470));
           const controlScale = Math.round(Math.max(0.54, Math.min(1.25, autoControlFit * userScale)) * 100) / 100;
           const hudScale = profile === 'mobile-landscape'
             ? Math.round(Math.max(0.8, Math.min(1.05, 0.88 * userScale)) * 100) / 100
-            : profile === 'mobile-portrait'
-              ? Math.round(Math.max(0.82, Math.min(1.08, 0.92 * userScale)) * 100) / 100
-              : Math.round(Math.max(0.85, Math.min(1.15, userScale)) * 100) / 100;
+            : Math.round(Math.max(0.82, Math.min(1.08, 0.92 * userScale)) * 100) / 100;
 
-          let dprCap = 2;
-          if (quality === 'low') dprCap = 1;
-          else if (quality === 'medium') dprCap = profile === 'desktop' ? 1.5 : 1.25;
-          else dprCap = profile === 'desktop' ? 2 : (profile === 'tablet' ? 1.75 : 1.5);
-
-          const targetCombatSpan = profile === 'mobile-portrait'
-            ? 540
-            : profile === 'mobile-landscape'
-              ? 560
-              : profile === 'tablet'
-                ? 600
-                : 620;
+          const dprCap = quality === 'low' ? 1 : (quality === 'medium' ? 1.25 : 1.5);
+          const targetCombatSpan = profile === 'mobile-portrait' ? 540 : 560;
 
           let minimapSize, minimapX, minimapY;
           if (profile === 'mobile-landscape') {
-            minimapSize = Math.round(Math.max(66, Math.min(92, height * 0.21)));
+            minimapSize = Math.round(Math.max(66, Math.min(96, height * 0.21)));
             minimapX = 10;
-            minimapY = Math.round(Math.max(82, Math.min(92, height - minimapSize - 118)));
-          } else if (profile === 'mobile-portrait') {
+            minimapY = Math.round(Math.max(82, Math.min(96, height - minimapSize - 118)));
+          } else {
             minimapSize = Math.round(Math.max(74, Math.min(96, width * 0.22)));
             minimapX = 10;
             minimapY = 104;
-          } else if (profile === 'tablet') {
-            minimapSize = Math.round(Math.max(94, Math.min(118, Math.min(width, height) * 0.16)));
-            minimapX = 14;
-            minimapY = 118;
-          } else {
-            minimapSize = Math.round(Math.max(96, Math.min(128, Math.min(width, height) * 0.18)));
-            minimapX = 14;
-            minimapY = Math.round(Math.max(12, Math.min(122, height - minimapSize - 12)));
           }
 
           this.current = {
@@ -3508,7 +3725,7 @@
             detectedProfile,
             modePref,
             orientation,
-            isCompact: profile === 'mobile-portrait' || profile === 'mobile-landscape',
+            isCompact: true,
             showTouchControls,
             controlScale,
             hudScale,
@@ -3524,18 +3741,16 @@
         },
 
         formatProfileLabel(profile) {
-          if (profile === 'mobile-portrait') return 'Mobile Portrait';
-          if (profile === 'mobile-landscape') return 'Mobile Landscape';
-          if (profile === 'tablet') return 'Tablet';
-          return 'Desktop';
+          return profile === 'mobile-portrait' ? 'Mobile Portrait' : 'Mobile Landscape';
         },
 
         apply(shouldResizeCanvas = true) {
           const cfg = this.resolve();
           const root = document.documentElement;
           root.dataset.deviceProfile = cfg.profile;
-          root.dataset.deviceMode = cfg.modePref;
-          root.dataset.touchControls = cfg.showTouchControls ? 'on' : 'off';
+          root.dataset.deviceMode = 'mobile';
+          root.dataset.touchControls = 'on';
+          root.dataset.graphicsQuality = PlayerData.graphicsQuality || 'high';
           root.style.setProperty('--control-scale', String(cfg.controlScale));
           root.style.setProperty('--hud-scale', String(cfg.hudScale));
 
@@ -3796,18 +4011,17 @@
           btn.setAttribute('aria-expanded', String(isMapExpanded));
           btn.setAttribute('aria-label', isMapExpanded ? 'Close island map' : 'Expand island map');
         }
-        const help = document.getElementById('map-help');
-        if (help) help.classList.toggle('hidden', !isMapExpanded);
         const jZone = document.getElementById('joystick-zone');
         const aBtns = document.getElementById('action-buttons');
-        const inventory = document.getElementById('inventory-hud');
         const channel = document.getElementById('item-channel');
-        if (jZone) jZone.style.display = isMapExpanded ? 'none' : 'block';
+        if (jZone) jZone.style.display = isMapExpanded ? 'none' : 'flex';
         if (aBtns) aBtns.style.display = isMapExpanded ? 'none' : 'block';
-        if (inventory) inventory.style.display = isMapExpanded ? 'none' : 'flex';
         if (channel && isMapExpanded) channel.style.visibility = 'hidden';
         else if (channel) channel.style.visibility = '';
-        if (isMapExpanded) toggleItemDetails(false);
+        if (isMapExpanded) {
+          toggleItemDetails(false);
+          toggleQuickUseFanout(false);
+        }
         getMinimapLayout();
       }
 
@@ -4246,7 +4460,7 @@
 
       // Toast UI Helper (FIX 6: Timer clearTimeout)
       let toastTimer = null;
-      function showToast(text, isError = true) {
+      function showToast(text, isError = true, durationMs = 2000) {
         const el = document.getElementById('toast-msg');
         if (!el) return;
         if (toastTimer) clearTimeout(toastTimer);
@@ -4262,7 +4476,14 @@
         toastTimer = setTimeout(() => {
           el.classList.remove('show');
           toastTimer = null;
-        }, 2000);
+        }, Math.max(800, Number(durationMs) || 2000));
+      }
+
+      function showFirstMatchMinimapTip() {
+        if (PlayerData.firstMatchTipShown) return;
+        PlayerData.firstMatchTipShown = true;
+        schedulePlayerSave();
+        showToast('💡 Tip: Double-tap the minimap to quick-ping a waypoint.', '#38bdf8', 3000);
       }
 
       // Export a clean HTML entry point with no captured runtime state.
@@ -4319,7 +4540,7 @@
           if (transition) transition.classList.remove('active');
           const toast = byId('toast-msg');
           if (toast) toast.classList.remove('show');
-          for (const id of ['waypoint-hud', 'map-help']) {
+          for (const id of ['waypoint-hud']) {
             const element = byId(id);
             if (element) element.classList.add('hidden');
           }
@@ -4380,10 +4601,15 @@
       const ARENA_WIDTH = 20000;
       const ARENA_HEIGHT = 20000;
 
+      function getDprCapForQuality(quality) {
+        const q = quality || PlayerData.graphicsQuality || 'high';
+        if (q === 'low') return 1.0;
+        if (q === 'medium') return 1.25;
+        return 1.5;
+      }
+
       function resizeCanvas() {
-        const dprCap = (typeof DeviceOptimizer !== 'undefined' && DeviceOptimizer.current && DeviceOptimizer.current.dprCap)
-          ? DeviceOptimizer.current.dprCap
-          : (PlayerData.graphicsQuality === 'low' ? 1 : (PlayerData.graphicsQuality === 'medium' ? 1.5 : 2));
+        const dprCap = getDprCapForQuality(PlayerData.graphicsQuality);
         const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, dprCap));
         const width = window.innerWidth;
         const height = window.innerHeight;
@@ -5076,7 +5302,19 @@
         killFeedTimers.push(fadeTimer);
       }
 
+      const VIEWPORT_CULL_MARGIN = 140;
+      const DISTANT_BOT_AI_STEP = 1 / 15;
+
+      function isPointWithinCameraCull(x, y, margin = VIEWPORT_CULL_MARGIN) {
+        const zoom = (typeof Camera !== 'undefined' && Camera.getZoom) ? Camera.getZoom() : 1;
+        const safeZoom = Math.max(0.1, zoom);
+        const halfW = (window.innerWidth / (2 * safeZoom)) + margin;
+        const halfH = (window.innerHeight / (2 * safeZoom * CAMERA_PITCH)) + margin;
+        return Math.abs(x - Camera.x) <= halfW && Math.abs(y - Camera.y) <= halfH;
+      }
+
       function spawnParticles(x, y, count, color, speed = 3, decay = 0.04) {
+        if (Game.state === 'PLAYING' && !isPointWithinCameraCull(x, y, VIEWPORT_CULL_MARGIN)) return;
         const qualityScale = PlayerData.graphicsQuality === 'low' ? 0.45 : (PlayerData.graphicsQuality === 'medium' ? 0.72 : 1);
         count = Math.max(1, Math.round(count * qualityScale));
         let spawned = 0;
@@ -5100,6 +5338,7 @@
       }
 
       function spawnElementalSoulParticles(x, y, charKey) {
+        if (Game.state === 'PLAYING' && !isPointWithinCameraCull(x, y, VIEWPORT_CULL_MARGIN)) return;
         const palettes = {
           BERSERKER: ['#fb923c', '#f97316', '#fde047'],
           TIDECALLER: ['#38bdf8', '#7dd3fc', '#e0f2fe'],
@@ -5163,6 +5402,7 @@
       const Input = {
         joystickActive: false,
         joystickPointerId: null,
+        joystickTouchId: null,
         joystickCenterX: 0,
         joystickCenterY: 0,
         joystickX: 0,
@@ -5172,8 +5412,44 @@
         maxRange: 45,
         isHoldingSword: false,
         isSuperSprintHeld: false,
+        superSprintTouchId: null,
         keys: new Set(),
         buttonPointerIds: {},
+        buttonTouchIds: {},
+
+        setCancelZoneVisible(visible) {
+          const cancelEl = document.getElementById('cancel-cast-zone');
+          if (!cancelEl) return;
+          cancelEl.classList.toggle('visible', Boolean(visible));
+          cancelEl.setAttribute('aria-hidden', String(!visible));
+          if (!visible) {
+            isCancelAimHovered = false;
+            cancelEl.classList.remove('cancel-active');
+          }
+        },
+
+        updateCancelZoneHit(clientX, clientY) {
+          const cancelEl = document.getElementById('cancel-cast-zone');
+          if (!cancelEl || !isAiming) {
+            isCancelAimHovered = false;
+            return false;
+          }
+          const rect = cancelEl.getBoundingClientRect();
+          if (rect.width <= 0 || rect.height <= 0) {
+            isCancelAimHovered = false;
+            return false;
+          }
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const hitRadius = Math.max(rect.width, rect.height) * 0.5 + 12;
+          const inside = Math.hypot(clientX - cx, clientY - cy) <= hitRadius;
+          if (inside !== isCancelAimHovered) {
+            isCancelAimHovered = inside;
+            cancelEl.classList.toggle('cancel-active', inside);
+            if (inside) haptic([8]);
+          }
+          return inside;
+        },
 
         init() {
           CANVAS.addEventListener('pointerdown', handleMinimapPointer);
@@ -5199,7 +5475,54 @@
           window.addEventListener('resize', updateCenter);
           setTimeout(updateCenter, 0);
 
+          const findTouchById = (touchList, id) => {
+            if (id === null || id === undefined || !touchList) return null;
+            for (let i = 0; i < touchList.length; i++) {
+              if (touchList[i].identifier === id) return touchList[i];
+            }
+            return null;
+          };
+
+          const clearJoystickState = () => {
+            this.joystickActive = false;
+            this.joystickPointerId = null;
+            this.joystickTouchId = null;
+            this.joystickX = 0;
+            this.joystickY = 0;
+            stick.style.transform = 'translate(0px, 0px)';
+            this.syncMovement();
+          };
+
+          // Strict Touch.identifier isolation for left-thumb joystick
+          zone.addEventListener('touchstart', event => {
+            if (Game.state !== 'PLAYING' && Game.state !== 'DROPPING') return;
+            event.preventDefault();
+            if (this.joystickActive) return;
+            const touch = event.changedTouches[0];
+            if (!touch) return;
+            this.joystickActive = true;
+            this.joystickTouchId = touch.identifier;
+            updateCenter();
+            this.handleJoystickMove(touch.clientX, touch.clientY, stick);
+          }, { passive: false });
+          zone.addEventListener('touchmove', event => {
+            if (!this.joystickActive || this.joystickTouchId === null) return;
+            const touch = findTouchById(event.changedTouches, this.joystickTouchId) || findTouchById(event.touches, this.joystickTouchId);
+            if (!touch) return;
+            event.preventDefault();
+            this.handleJoystickMove(touch.clientX, touch.clientY, stick);
+          }, { passive: false });
+          const releaseJoystickTouch = event => {
+            if (!this.joystickActive || this.joystickTouchId === null) return;
+            if (!findTouchById(event.changedTouches, this.joystickTouchId)) return;
+            clearJoystickState();
+          };
+          window.addEventListener('touchend', releaseJoystickTouch, { passive: true });
+          window.addEventListener('touchcancel', releaseJoystickTouch, { passive: true });
+
+          // Non-touch pointer fallback (mouse/pen/Playwright testing)
           zone.addEventListener('pointerdown', event => {
+            if (event.pointerType === 'touch') return;
             if (Game.state !== 'PLAYING' && Game.state !== 'DROPPING') return;
             if (event.button !== undefined && event.button !== 0) return;
             event.preventDefault();
@@ -5211,37 +5534,70 @@
             this.handleJoystickMove(event.clientX, event.clientY, stick);
           });
           zone.addEventListener('pointermove', event => {
+            if (event.pointerType === 'touch') return;
             if (!this.joystickActive || event.pointerId !== this.joystickPointerId) return;
             event.preventDefault();
             this.handleJoystickMove(event.clientX, event.clientY, stick);
           });
-
-          const releaseJoystick = event => {
-            if (!this.joystickActive || (event.pointerId !== undefined && event.pointerId !== this.joystickPointerId)) return;
-            this.joystickActive = false;
-            this.joystickPointerId = null;
-            this.joystickX = 0;
-            this.joystickY = 0;
-            stick.style.transform = 'translate(0px, 0px)';
-            this.syncMovement();
+          const releaseJoystickPointer = event => {
+            if (event.pointerType === 'touch') return;
+            if (!this.joystickActive || this.joystickPointerId === null || event.pointerId !== this.joystickPointerId) return;
+            clearJoystickState();
           };
-          window.addEventListener('pointerup', releaseJoystick);
-          window.addEventListener('pointercancel', releaseJoystick);
+          window.addEventListener('pointerup', releaseJoystickPointer);
+          window.addEventListener('pointercancel', releaseJoystickPointer);
 
           const aimActions = { 'btn-sword': 'sword', 'btn-spell': 'spell', 'btn-mana': 'mana', 'btn-art': 'art' };
+          const beginAim = (button, action, clientX, clientY) => {
+            AudioEngine.init();
+            isAiming = true;
+            aimAction = action;
+            isCancelAimHovered = false;
+            this.setCancelZoneVisible(true);
+            this.updateAimFromPointer(clientX, clientY);
+            this.updateCancelZoneHit(clientX, clientY);
+            button.classList.add('pressed');
+            button.setAttribute('aria-pressed', 'true');
+          };
+          const finalizeAim = (shouldFire) => {
+            const action = aimAction;
+            const cancelledByZone = isCancelAimHovered;
+            isAiming = false;
+            aimAction = null;
+            aimPointerId = null;
+            aimTouchId = null;
+            this.setCancelZoneVisible(false);
+            for (const id of Object.keys(aimActions)) {
+              const button = document.getElementById(id);
+              if (button) {
+                button.classList.remove('pressed');
+                button.setAttribute('aria-pressed', 'false');
+              }
+            }
+            if (shouldFire && !cancelledByZone && action) {
+              Game.playerAction(action);
+            }
+          };
+
           for (const [buttonId, action] of Object.entries(aimActions)) {
             const button = document.getElementById(buttonId);
+            // Multi-touch Touch.identifier path for right-thumb aimable abilities
+            button.addEventListener('touchstart', event => {
+              if (Game.state !== 'PLAYING' || isAiming) return;
+              const touch = event.changedTouches[0];
+              if (!touch) return;
+              event.preventDefault();
+              aimTouchId = touch.identifier;
+              beginAim(button, action, touch.clientX, touch.clientY);
+            }, { passive: false });
+            // Non-touch pointer fallback
             button.addEventListener('pointerdown', event => {
+              if (event.pointerType === 'touch') return;
               if (Game.state !== 'PLAYING' || isAiming || (event.button !== undefined && event.button !== 0)) return;
               event.preventDefault();
-              AudioEngine.init();
-              isAiming = true;
-              aimAction = action;
               aimPointerId = event.pointerId;
               try { button.setPointerCapture(event.pointerId); } catch (error) { /* Global pointer listeners provide a fallback. */ }
-              this.updateAimFromPointer(event.clientX, event.clientY);
-              button.classList.add('pressed');
-              button.setAttribute('aria-pressed', 'true');
+              beginAim(button, action, event.clientX, event.clientY);
             });
             // Keyboard and assistive-technology activation produces click detail 0.
             button.addEventListener('click', event => {
@@ -5249,31 +5605,72 @@
             });
           }
 
+          window.addEventListener('touchmove', event => {
+            if (!isAiming || aimTouchId === null) return;
+            const touch = findTouchById(event.changedTouches, aimTouchId) || findTouchById(event.touches, aimTouchId);
+            if (!touch) return;
+            event.preventDefault();
+            this.updateAimFromPointer(touch.clientX, touch.clientY);
+            this.updateCancelZoneHit(touch.clientX, touch.clientY);
+          }, { passive: false });
+          window.addEventListener('touchend', event => {
+            if (!isAiming || aimTouchId === null) return;
+            const touch = findTouchById(event.changedTouches, aimTouchId);
+            if (!touch) return;
+            this.updateCancelZoneHit(touch.clientX, touch.clientY);
+            finalizeAim(true);
+          }, { passive: true });
+          window.addEventListener('touchcancel', event => {
+            if (!isAiming || aimTouchId === null) return;
+            if (!findTouchById(event.changedTouches, aimTouchId)) return;
+            finalizeAim(false);
+          }, { passive: true });
+
           window.addEventListener('pointermove', event => {
+            if (event.pointerType === 'touch') return;
             if (isAiming && event.pointerId === aimPointerId) {
               event.preventDefault();
               this.updateAimFromPointer(event.clientX, event.clientY);
+              this.updateCancelZoneHit(event.clientX, event.clientY);
             }
           });
-          const finishAim = (event, shouldFire) => {
-            if (!isAiming || (event.pointerId !== undefined && event.pointerId !== aimPointerId)) return;
-            const action = aimAction;
-            isAiming = false;
-            aimAction = null;
-            aimPointerId = null;
-            for (const id of Object.keys(aimActions)) {
-              const button = document.getElementById(id);
-              button.classList.remove('pressed');
-              button.setAttribute('aria-pressed', 'false');
-            }
-            if (shouldFire && action) Game.playerAction(action);
-          };
-          window.addEventListener('pointerup', event => finishAim(event, true));
-          window.addEventListener('pointercancel', event => finishAim(event, false));
+          window.addEventListener('pointerup', event => {
+            if (event.pointerType === 'touch') return;
+            if (!isAiming || aimPointerId === null || event.pointerId !== aimPointerId) return;
+            this.updateCancelZoneHit(event.clientX, event.clientY);
+            finalizeAim(true);
+          });
+          window.addEventListener('pointercancel', event => {
+            if (event.pointerType === 'touch') return;
+            if (!isAiming || aimPointerId === null || event.pointerId !== aimPointerId) return;
+            finalizeAim(false);
+          });
+
           this.bindButton('btn-dash', 'dash', () => Game.playerAction('dash'));
 
           const superButton = document.getElementById('btn-super');
+          superButton.addEventListener('touchstart', event => {
+            if (Game.state !== 'PLAYING') return;
+            const touch = event.changedTouches[0];
+            if (!touch) return;
+            event.preventDefault();
+            AudioEngine.init();
+            this.isSuperSprintHeld = true;
+            this.superSprintTouchId = touch.identifier;
+            superButton.classList.add('pressed');
+          }, { passive: false });
+          const releaseSuperTouch = event => {
+            if (this.superSprintTouchId === null) return;
+            if (!findTouchById(event.changedTouches, this.superSprintTouchId)) return;
+            this.superSprintTouchId = null;
+            this.isSuperSprintHeld = false;
+            superButton.classList.remove('pressed');
+          };
+          window.addEventListener('touchend', releaseSuperTouch, { passive: true });
+          window.addEventListener('touchcancel', releaseSuperTouch, { passive: true });
+
           superButton.addEventListener('pointerdown', event => {
+            if (event.pointerType === 'touch') return;
             if (Game.state !== 'PLAYING' || (event.button !== undefined && event.button !== 0)) return;
             event.preventDefault();
             AudioEngine.init();
@@ -5282,15 +5679,16 @@
             superButton.classList.add('pressed');
             try { superButton.setPointerCapture(event.pointerId); } catch (error) { /* Global release remains available. */ }
           });
-          const releaseSuper = event => {
+          const releaseSuperPointer = event => {
+            if (event.pointerType === 'touch') return;
             if (this.buttonPointerIds.super === undefined) return;
             if (event.pointerId !== undefined && event.pointerId !== this.buttonPointerIds.super) return;
             delete this.buttonPointerIds.super;
             this.isSuperSprintHeld = false;
             superButton.classList.remove('pressed');
           };
-          window.addEventListener('pointerup', releaseSuper);
-          window.addEventListener('pointercancel', releaseSuper);
+          window.addEventListener('pointerup', releaseSuperPointer);
+          window.addEventListener('pointercancel', releaseSuperPointer);
           superButton.addEventListener('click', event => {
             // Assistive technology cannot hold a pointer; activation toggles instead.
             if (event.detail === 0 && Game.state === 'PLAYING') this.isSuperSprintHeld = !this.isSuperSprintHeld;
@@ -5371,7 +5769,31 @@
 
         bindButton(elementId, actionKey, callback) {
           const element = document.getElementById(elementId);
+          element.addEventListener('touchstart', event => {
+            if (Game.state !== 'PLAYING') return;
+            const touch = event.changedTouches[0];
+            if (!touch) return;
+            event.preventDefault();
+            AudioEngine.init();
+            this.buttonTouchIds[actionKey] = touch.identifier;
+            element.classList.add('pressed');
+            callback();
+          }, { passive: false });
+          const releaseTouch = event => {
+            if (this.buttonTouchIds[actionKey] === undefined) return;
+            for (let i = 0; i < event.changedTouches.length; i++) {
+              if (event.changedTouches[i].identifier === this.buttonTouchIds[actionKey]) {
+                delete this.buttonTouchIds[actionKey];
+                element.classList.remove('pressed');
+                break;
+              }
+            }
+          };
+          window.addEventListener('touchend', releaseTouch, { passive: true });
+          window.addEventListener('touchcancel', releaseTouch, { passive: true });
+
           element.addEventListener('pointerdown', event => {
+            if (event.pointerType === 'touch') return;
             if (Game.state !== 'PLAYING' || (event.button !== undefined && event.button !== 0)) return;
             event.preventDefault();
             AudioEngine.init();
@@ -5379,14 +5801,15 @@
             element.classList.add('pressed');
             callback();
           });
-          const release = event => {
+          const releasePointer = event => {
+            if (event.pointerType === 'touch') return;
             if (this.buttonPointerIds[actionKey] === undefined) return;
             if (event.pointerId !== undefined && event.pointerId !== this.buttonPointerIds[actionKey]) return;
             delete this.buttonPointerIds[actionKey];
             element.classList.remove('pressed');
           };
-          window.addEventListener('pointerup', release);
-          window.addEventListener('pointercancel', release);
+          window.addEventListener('pointerup', releasePointer);
+          window.addEventListener('pointercancel', releasePointer);
           element.addEventListener('click', event => {
             if (event.detail === 0) callback();
           });
@@ -5445,15 +5868,20 @@
         reset() {
           this.joystickActive = false;
           this.joystickPointerId = null;
+          this.joystickTouchId = null;
           this.joystickX = 0;
           this.joystickY = 0;
           this.keys.clear();
           this.isHoldingSword = false;
           this.isSuperSprintHeld = false;
+          this.superSprintTouchId = null;
           this.buttonPointerIds = {};
+          this.buttonTouchIds = {};
           isAiming = false;
           aimAction = null;
           aimPointerId = null;
+          aimTouchId = null;
+          this.setCancelZoneVisible(false);
           this.syncMovement();
           const stick = document.getElementById('joystick-stick');
           if (stick) stick.style.transform = 'translate(0px, 0px)';
@@ -5551,6 +5979,72 @@
       }
 
       // ==========================================
+      // PRE-RENDERED GLOW SPRITE ATLAS (ZERO ctx.shadowBlur)
+      // ==========================================
+      const GlowAtlas = {
+        textures: {},
+        size: 64,
+        palette: {
+          fire: ['rgba(255, 237, 213, 0.95)', 'rgba(249, 115, 22, 0.52)', 'rgba(239, 68, 68, 0)'],
+          water: ['rgba(224, 242, 254, 0.95)', 'rgba(56, 189, 248, 0.52)', 'rgba(2, 132, 199, 0)'],
+          dark: ['rgba(243, 232, 255, 0.92)', 'rgba(168, 85, 247, 0.55)', 'rgba(109, 40, 217, 0)'],
+          heal: ['rgba(220, 252, 231, 0.95)', 'rgba(74, 222, 128, 0.5)', 'rgba(22, 163, 74, 0)'],
+          gold: ['rgba(254, 249, 195, 0.95)', 'rgba(251, 191, 36, 0.52)', 'rgba(245, 158, 11, 0)'],
+          cyan: ['rgba(207, 250, 254, 0.95)', 'rgba(34, 211, 238, 0.52)', 'rgba(6, 182, 212, 0)'],
+          crimson: ['rgba(254, 202, 202, 0.95)', 'rgba(239, 68, 68, 0.55)', 'rgba(185, 28, 28, 0)'],
+          magenta: ['rgba(250, 232, 255, 0.95)', 'rgba(232, 121, 249, 0.52)', 'rgba(192, 38, 211, 0)']
+        },
+
+        init() {
+          if (Object.keys(this.textures).length > 0) return;
+          const sz = this.size;
+          const half = sz / 2;
+          for (const [tone, stops] of Object.entries(this.palette)) {
+            const c = document.createElement('canvas');
+            c.width = sz;
+            c.height = sz;
+            const gctx = c.getContext('2d');
+            const grad = gctx.createRadialGradient(half, half, 1, half, half, half);
+            grad.addColorStop(0, stops[0]);
+            grad.addColorStop(0.42, stops[1]);
+            grad.addColorStop(1, stops[2]);
+            gctx.fillStyle = grad;
+            gctx.fillRect(0, 0, sz, sz);
+            this.textures[tone] = c;
+          }
+        },
+
+        get(tone) {
+          if (!this.textures[tone]) this.init();
+          return this.textures[tone] || this.textures.gold;
+        }
+      };
+      GlowAtlas.init();
+
+      function resolveGlowTone(color) {
+        if (!color) return 'gold';
+        const c = String(color).toLowerCase();
+        if (c.includes('f97316') || c.includes('fb923c') || c.includes('ea580c')) return 'fire';
+        if (c.includes('ef4444') || c.includes('dc2626') || c.includes('f87171')) return 'crimson';
+        if (c.includes('38bdf8') || c.includes('0ea5e9') || c.includes('60a5fa') || c.includes('3b82f6')) return 'water';
+        if (c.includes('22d3ee') || c.includes('67e8f9') || c.includes('06b6d4') || c.includes('2dd4bf')) return 'cyan';
+        if (c.includes('a855f7') || c.includes('c084fc') || c.includes('8b5cf6') || c.includes('7c3aed')) return 'dark';
+        if (c.includes('e879f9') || c.includes('d946ef') || c.includes('ec4899')) return 'magenta';
+        if (c.includes('4ade80') || c.includes('22c55e') || c.includes('10b981')) return 'heal';
+        return 'gold';
+      }
+
+      function drawGlowSprite(ctx, tone, x, y, radius, alpha = 0.78) {
+        const tex = GlowAtlas.get(tone);
+        if (!tex || radius <= 0 || alpha <= 0) return;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(tex, x - radius, y - radius, radius * 2, radius * 2);
+        ctx.restore();
+      }
+
+      // ==========================================
       // PRE-RENDERED WIZARD SPRITE CACHE (FIX 4)
       // ==========================================
       const SPRITE_CACHE = {};
@@ -5639,11 +6133,10 @@
           octx.moveTo(2, 8);
           octx.lineTo(24, 10);
           octx.stroke();
+          drawGlowSprite(octx, 'water', 26, 10, 11, 0.72);
           octx.beginPath();
           octx.arc(26, 10, 5, 0, Math.PI * 2);
           octx.fillStyle = '#38bdf8';
-          octx.shadowColor = '#0284c7';
-          octx.shadowBlur = 10;
           octx.fill();
         } else {
           octx.fillStyle = '#a855f7';
@@ -5668,26 +6161,20 @@
       function drawWizardSprite(ctx, charKey, isPlayer, facingAngle, invuln, hitFlash, swordActive) {
         ctx.save();
 
-        const data = CHARACTER_DATA[charKey] || CHARACTER_DATA.BERSERKER;
-        const mainColor = hitFlash > 0 ? '#ffffff' : data.color;
-
         // Idle bob animation (Math.sin(performance.now() / 200))
         const idleBob = Math.sin(performance.now() / 200) * 1.5;
         ctx.translate(0, idleBob);
         const floatRot = Math.sin(performance.now() / 300) * 0.05;
         ctx.rotate(floatRot);
 
-        // Bright gold glowing aura for human player
+        // Bright gold glowing aura for human player (GlowAtlas, zero shadowBlur)
         if (isPlayer) {
-          ctx.save();
+          drawGlowSprite(ctx, 'gold', 0, 0, 34, 0.42);
           ctx.beginPath();
           ctx.arc(0, 0, 24, 0, Math.PI * 2);
           ctx.strokeStyle = '#fbbf24';
-          ctx.lineWidth = 3;
-          ctx.shadowColor = '#f59e0b';
-          ctx.shadowBlur = 16;
+          ctx.lineWidth = 2.5;
           ctx.stroke();
-          ctx.restore();
         }
 
         if (invuln > 0) {
@@ -5700,13 +6187,16 @@
         const sprite = getCachedSprite(charKey, isPlayer, hitFlash);
         ctx.drawImage(sprite, -SPRITE_SIZE / 2, -SPRITE_SIZE / 2);
 
-        // Slash Arc
+        // Slash Arc (layered additive glow + crisp white core)
         if (swordActive) {
           ctx.save();
+          ctx.strokeStyle = 'rgba(254, 240, 138, 0.45)';
+          ctx.lineWidth = 10;
+          ctx.beginPath();
+          ctx.arc(0, 0, 36, -Math.PI / 3, Math.PI / 3);
+          ctx.stroke();
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 5;
-          ctx.shadowColor = '#fef08a';
-          ctx.shadowBlur = 12;
+          ctx.lineWidth = 4;
           ctx.beginPath();
           ctx.arc(0, 0, 36, -Math.PI / 3, Math.PI / 3);
           ctx.stroke();
@@ -5750,24 +6240,19 @@
         }
 
         ctx.save();
-        const data = CHARACTER_DATA[charKey] || CHARACTER_DATA.BERSERKER;
-        const mainColor = hitFlash > 0 ? '#ffffff' : data.color;
 
         // Idle bob animation
         const idleBob = Math.sin(performance.now() / 200) * 1.5;
         ctx.translate(0, idleBob);
 
-        // Player aura
+        // Player aura (GlowAtlas, zero shadowBlur)
         if (isPlayer) {
-          ctx.save();
+          drawGlowSprite(ctx, 'gold', 0, 0, 42, 0.38);
           ctx.beginPath();
           ctx.arc(0, 0, 30, 0, Math.PI * 2);
           ctx.strokeStyle = '#fbbf24';
-          ctx.lineWidth = 3;
-          ctx.shadowColor = '#f59e0b';
-          ctx.shadowBlur = 16;
+          ctx.lineWidth = 2.5;
           ctx.stroke();
-          ctx.restore();
         }
 
         if (invuln > 0) {
@@ -5786,14 +6271,17 @@
         const row = frame[0];
         const col = frame[1];
 
-        // Bright white arc when attacking
+        // Bright white arc when attacking (layered stroke, zero shadowBlur)
         if (animState === 'attack') {
           ctx.save();
           ctx.rotate(facingAngle);
+          ctx.strokeStyle = 'rgba(254, 240, 138, 0.45)';
+          ctx.lineWidth = 10;
+          ctx.beginPath();
+          ctx.arc(0, 0, 36, -Math.PI / 6, Math.PI / 6);
+          ctx.stroke();
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 5;
-          ctx.shadowColor = '#fef08a';
-          ctx.shadowBlur = 14;
+          ctx.lineWidth = 4;
           ctx.beginPath();
           ctx.arc(0, 0, 36, -Math.PI / 6, Math.PI / 6);
           ctx.stroke();
@@ -5981,6 +6469,7 @@
         const current = entity.inventory[type] || 0;
         const accepted = Math.max(0, Math.min(quantity, def.cap - current));
         entity.inventory[type] = current + accepted;
+        if (accepted > 0) entity.lastPickedItem = type;
         return accepted;
       }
 
@@ -6045,6 +6534,66 @@
         }
       }
 
+      const QUICK_USE_META = Object.freeze({
+        MEDKIT: Object.freeze({ icon: '✚', short: 'HEAL' }),
+        MANA: Object.freeze({ icon: '◆', short: 'MANA' }),
+        SHIELD: Object.freeze({ icon: '⬡', short: 'SHIELD' }),
+        HASTE: Object.freeze({ icon: '➤', short: 'HASTE' }),
+        BOMB: Object.freeze({ icon: '✹', short: 'BOMB' })
+      });
+
+      function selectQuickUseItemForPlayer(p) {
+        if (!p || !p.inventory) return { item: null, totalCount: 0, reason: 'empty' };
+        let totalCount = 0;
+        for (let i = 0; i < INVENTORY_ORDER.length; i++) {
+          totalCount += Math.max(0, Math.floor(p.inventory[INVENTORY_ORDER[i]] || 0));
+        }
+        if (totalCount === 0) return { item: null, totalCount: 0, reason: 'empty' };
+        const hpRatio = p.maxHp > 0 ? (p.hp / p.maxHp) : 1;
+        const mpRatio = p.maxMana > 0 ? (p.mana / p.maxMana) : 1;
+        if (hpRatio < 0.7 && (p.inventory.MEDKIT || 0) > 0) {
+          return { item: 'MEDKIT', totalCount, reason: 'low-hp' };
+        }
+        if (mpRatio < 0.4 && (p.inventory.MANA || 0) > 0) {
+          return { item: 'MANA', totalCount, reason: 'low-mp' };
+        }
+        if (p.lastPickedItem && (p.inventory[p.lastPickedItem] || 0) > 0) {
+          return { item: p.lastPickedItem, totalCount, reason: 'recent' };
+        }
+        const fallbackOrder = ['SHIELD', 'HASTE', 'BOMB', 'MEDKIT', 'MANA'];
+        for (let i = 0; i < fallbackOrder.length; i++) {
+          if ((p.inventory[fallbackOrder[i]] || 0) > 0) {
+            return { item: fallbackOrder[i], totalCount, reason: 'fallback' };
+          }
+        }
+        return { item: null, totalCount: 0, reason: 'empty' };
+      }
+
+      function toggleQuickUseFanout(force) {
+        const hud = document.getElementById('inventory-hud');
+        const btn = document.getElementById('btn-quick-use-expand');
+        if (!hud) return;
+        const nextOpen = typeof force === 'boolean' ? force : !isQuickUseFanoutOpen;
+        isQuickUseFanoutOpen = nextOpen;
+        hud.classList.toggle('fanout-open', nextOpen);
+        if (btn) btn.setAttribute('aria-expanded', String(nextOpen));
+        if (!nextOpen) toggleItemDetails(false);
+      }
+
+      function useQuickUseItem() {
+        const p = Game.player;
+        if (!p || !p.isAlive || Game.state !== 'PLAYING') return false;
+        if (p.itemChannel) {
+          return useInventoryItem(p.itemChannel.type, p);
+        }
+        const pick = selectQuickUseItemForPlayer(p);
+        if (!pick.item) {
+          showToast('No loot items yet — collect potions or bombs!', true);
+          return false;
+        }
+        return useInventoryItem(pick.item, p);
+      }
+
       function updateInventoryHUD() {
         const p = Game.player;
         if (!p) return;
@@ -6053,10 +6602,11 @@
           const count = document.getElementById(`count-${type}`);
           const slot = document.querySelector(`[data-item="${type}"]`);
           const cooldown = document.getElementById(`cd-item-${type}`);
-          if (count) count.textContent = `${p.inventory[type]}/${def.cap}`;
+          const qty = p.inventory[type] || 0;
+          if (count) count.textContent = `${qty}/${def.cap}`;
           if (slot) {
-            slot.classList.toggle('empty', p.inventory[type] === 0);
-            slot.setAttribute('aria-label', `${def.name}, ${p.inventory[type]} of ${def.cap}. ${def.description}`);
+            slot.classList.toggle('empty', qty === 0);
+            slot.setAttribute('aria-label', `${def.name}, ${qty} of ${def.cap}. ${def.description}`);
           }
           if (cooldown) {
             const remaining = Math.max(0, p.itemCooldowns[type] - Game.time);
@@ -6064,12 +6614,47 @@
             cooldown.textContent = remaining > 0 ? remaining.toFixed(1) : '';
           }
         }
+
+        // Update Thumb-Friendly Quick-Use Loot Button
+        const quickBtn = document.getElementById('btn-quick-use');
+        if (quickBtn) {
+          const pick = selectQuickUseItemForPlayer(p);
+          const activeType = p.itemChannel ? p.itemChannel.type : pick.item;
+          const meta = activeType ? QUICK_USE_META[activeType] : null;
+          const iconEl = document.getElementById('quick-use-icon');
+          const labelEl = document.getElementById('quick-use-label');
+          const badgeEl = document.getElementById('quick-use-badge');
+          const cdEl = document.getElementById('quick-use-cd');
+          quickBtn.classList.toggle('empty', !activeType);
+          quickBtn.classList.toggle('urgent-heal', pick.reason === 'low-hp');
+          quickBtn.classList.toggle('urgent-mana', pick.reason === 'low-mp');
+          quickBtn.dataset.item = activeType || '';
+          if (iconEl) iconEl.textContent = meta ? meta.icon : '✚';
+          if (labelEl) labelEl.textContent = meta ? meta.short : 'LOOT';
+          if (badgeEl) badgeEl.textContent = String(pick.totalCount);
+          if (activeType) {
+            const def = ITEM_DEFS[activeType];
+            quickBtn.setAttribute('aria-label', `Quick-Use ${def.name} (${p.inventory[activeType]} owned, ${pick.totalCount} total loot)`);
+            if (cdEl) {
+              const rem = Math.max(0, (p.itemCooldowns[activeType] || 0) - Game.time);
+              cdEl.classList.toggle('hidden', rem <= 0);
+              cdEl.textContent = rem > 0 ? rem.toFixed(1) : '';
+            }
+          } else {
+            quickBtn.setAttribute('aria-label', 'Quick-Use loot item (empty)');
+            if (cdEl) {
+              cdEl.classList.add('hidden');
+              cdEl.textContent = '';
+            }
+          }
+        }
+
         const channel = document.getElementById('item-channel');
         if (channel) {
           channel.classList.toggle('hidden', !p.itemChannel);
           if (p.itemChannel) {
             const current = p.itemChannel;
-            document.getElementById('item-channel-label').textContent = `${ITEM_DEFS[current.type].name} — tap slot again to cancel`;
+            document.getElementById('item-channel-label').textContent = `${ITEM_DEFS[current.type].name} — tap again to cancel`;
             document.getElementById('item-channel-fill').style.width = `${Math.max(0, Math.min(100, (1 - current.remaining / current.total) * 100))}%`;
           }
         }
@@ -6165,6 +6750,8 @@
           // Match-only inventory and effects; bots carry 1 starting Medkit so tactical disengage-and-heal works reliably.
           this.inventory = { MEDKIT: isPlayer ? 0 : 1, MANA: 0, SHIELD: 0, HASTE: 0, BOMB: 0 };
           this.itemCooldowns = { MEDKIT: 0, MANA: 0, SHIELD: 0, HASTE: 0, BOMB: 0 };
+          this.lastPickedItem = isPlayer ? null : 'MEDKIT';
+          this.aiTickAccum = isPlayer ? 0 : Math.random() * (1 / 15);
           this.globalItemReady = 0;
           this.itemChannel = null;
           this.shield = 0;
@@ -6344,7 +6931,17 @@
               moveX = Math.cos(this.wanderAngle || 0) * 0.4;
               moveY = Math.sin(this.wanderAngle || 0) * 0.4;
             } else {
-              this.updateBotAI(deltaTime, gameTime);
+              // Tick on-screen bots at full 60Hz; throttle distant off-screen bots (>140px outside view) to 15Hz
+              if (isPointWithinCameraCull(this.x, this.y, VIEWPORT_CULL_MARGIN)) {
+                this.aiTickAccum = 0;
+                this.updateBotAI(deltaTime, gameTime);
+              } else {
+                this.aiTickAccum = (this.aiTickAccum || 0) + deltaTime;
+                if (this.aiTickAccum >= DISTANT_BOT_AI_STEP) {
+                  this.updateBotAI(this.aiTickAccum, gameTime);
+                  this.aiTickAccum = 0;
+                }
+              }
               moveX = this.aiMoveX || 0;
               moveY = this.aiMoveY || 0;
             }
@@ -7291,11 +7888,11 @@
 
           if (this.shield > 0) {
             ctx.save();
-            ctx.globalAlpha = 0.45 + Math.sin(Game.time * 7) * 0.12;
+            const pulseA = 0.45 + Math.sin(Game.time * 7) * 0.12;
+            drawGlowSprite(ctx, 'cyan', 0, 0, 40, pulseA * 0.65);
+            ctx.globalAlpha = pulseA;
             ctx.strokeStyle = '#67e8f9';
             ctx.lineWidth = 3;
-            ctx.shadowColor = '#06b6d4';
-            ctx.shadowBlur = 12;
             ctx.beginPath();
             ctx.arc(0, 0, 31, 0, Math.PI * 2);
             ctx.stroke();
@@ -7495,32 +8092,39 @@
           return 'coast';
         },
 
+        _modResult: {
+          biome: 'coast',
+          activeEvent: null,
+          endsAt: 0,
+          speedMultiplier: 1.0,
+          visibilityPenalty: 0,
+          manaRegenMultiplier: 1.0
+        },
+
         getModifiersAt(x, y, matchTime = Game.time) {
+          const out = this._modResult;
           const biome = this.getBiomeAt(x, y);
+          out.biome = biome;
           for (let i = 0; i < this.activeEvents.length; i++) {
             const ev = this.activeEvents[i];
             if (ev.biome === biome && matchTime >= ev.startedAt && matchTime <= ev.endsAt) {
               const cfg = BIOME_WEATHER_CATALOG[ev.kind];
               if (cfg) {
-                return {
-                  biome,
-                  activeEvent: cfg,
-                  endsAt: ev.endsAt,
-                  speedMultiplier: cfg.speedMultiplier,
-                  visibilityPenalty: cfg.visibilityPenalty,
-                  manaRegenMultiplier: cfg.manaRegenMultiplier
-                };
+                out.activeEvent = cfg;
+                out.endsAt = ev.endsAt;
+                out.speedMultiplier = cfg.speedMultiplier;
+                out.visibilityPenalty = cfg.visibilityPenalty;
+                out.manaRegenMultiplier = cfg.manaRegenMultiplier;
+                return out;
               }
             }
           }
-          return {
-            biome,
-            activeEvent: null,
-            endsAt: 0,
-            speedMultiplier: 1.0,
-            visibilityPenalty: 0,
-            manaRegenMultiplier: 1.0
-          };
+          out.activeEvent = null;
+          out.endsAt = 0;
+          out.speedMultiplier = 1.0;
+          out.visibilityPenalty = 0;
+          out.manaRegenMultiplier = 1.0;
+          return out;
         },
 
         update(deltaTime, matchTime) {
@@ -7825,10 +8429,11 @@
             else ctx.lineTo(x, y);
           }
           ctx.closePath();
+          ctx.strokeStyle = 'rgba(217, 70, 239, 0.32)';
+          ctx.lineWidth = 12;
+          ctx.stroke();
           ctx.strokeStyle = '#e879f9';
-          ctx.lineWidth = 4;
-          ctx.shadowColor = '#d946ef';
-          ctx.shadowBlur = 18;
+          ctx.lineWidth = 3.5;
           ctx.stroke();
 
           ctx.restore();
@@ -8119,6 +8724,7 @@
               AudioEngine.playTone(140, 'sawtooth', 0.28, 0.45, 55);
               haptic([50, 25, 50]);
               Announcer.play('match_start');
+              showFirstMatchMinimapTip();
             }
 
             for (let i = 0; i < this.entities.length; i++) {
@@ -8464,11 +9070,10 @@
         const distance = Game.player ? Math.hypot(Game.player.x - activePing.x, Game.player.y - activePing.y) : 0;
         ctx.save();
         ctx.translate(activePing.x, activePing.y);
+        drawGlowSprite(ctx, 'cyan', 0, 0, 44 + pulse, 0.45);
         ctx.strokeStyle = '#67e8f9';
         ctx.fillStyle = 'rgba(8, 145, 178, 0.18)';
         ctx.lineWidth = 3;
-        ctx.shadowColor = '#06b6d4';
-        ctx.shadowBlur = 14;
         ctx.beginPath();
         ctx.ellipse(0, 0, 30 + pulse, 18 + pulse * 0.5, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -8486,11 +9091,15 @@
         ctx.lineWidth = 2;
         ctx.strokeRect(-11, -136, 22, 22);
         ctx.rotate(-Math.PI / 4);
-        ctx.shadowBlur = 4;
-        ctx.fillStyle = '#ecfeff';
+        const beaconLabel = `📍 ${activePing.label} · ${formatWorldDistance(distance)}`;
         ctx.font = '800 13px system-ui, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`📍 ${activePing.label} · ${formatWorldDistance(distance)}`, 0, -154);
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(2, 6, 23, 0.9)';
+        ctx.lineWidth = 3.5;
+        ctx.strokeText(beaconLabel, 0, -154);
+        ctx.fillStyle = '#ecfeff';
+        ctx.fillText(beaconLabel, 0, -154);
         ctx.restore();
       }
 
@@ -8535,174 +9144,235 @@
       }
 
       // ==========================================
-      // RENDERING PIPELINE (FIX #5 & FIX #6: Zero GC Stutter)
+      // OFFSCREEN STATIC TERRAIN CHUNK CACHE (60 FPS MOBILE)
+      // ==========================================
+      const TerrainCache = {
+        chunkSize: 1024,
+        pixelScale: 0.5,
+        maxChunks: 24,
+        chunks: new Map(),
+        fingerprint: '',
+
+        computeFingerprint() {
+          return `${BIOME_ZONES.length}|${BEACH_LAYOUT.length}|${PATH_LAYOUT.length}|${WATER_LAYOUT.length}|${BRIDGE_LAYOUT.length}|${LANDMARK_LAYOUT.length}|${decalPool.length}`;
+        },
+
+        invalidate() {
+          this.chunks.clear();
+          this.fingerprint = this.computeFingerprint();
+        },
+
+        getChunk(cx, cy) {
+          const fp = this.computeFingerprint();
+          if (fp !== this.fingerprint) this.invalidate();
+
+          const key = `${cx}_${cy}`;
+          if (this.chunks.has(key)) {
+            const cached = this.chunks.get(key);
+            // Refresh LRU order
+            this.chunks.delete(key);
+            this.chunks.set(key, cached);
+            return cached;
+          }
+
+          const size = this.chunkSize;
+          const wx = cx * size;
+          const wy = cy * size;
+          const wx2 = wx + size;
+          const wy2 = wy + size;
+          const pxSize = Math.round(size * this.pixelScale);
+
+          const off = document.createElement('canvas');
+          off.width = pxSize;
+          off.height = pxSize;
+          const tctx = off.getContext('2d', { alpha: false });
+          tctx.scale(this.pixelScale, this.pixelScale);
+          tctx.translate(-wx, -wy);
+
+          const isBlankMap = BIOME_ZONES.length === 0 && BEACH_LAYOUT.length === 0;
+          tctx.fillStyle = isBlankMap ? '#1E293B' : '#0B2D48';
+          tctx.fillRect(wx, wy, size, size);
+
+          if (isBlankMap) {
+            const gridMinor = 500;
+            const startX = Math.max(0, Math.floor(wx / gridMinor) * gridMinor);
+            const endX = Math.min(ARENA_WIDTH, Math.ceil(wx2 / gridMinor) * gridMinor);
+            const startY = Math.max(0, Math.floor(wy / gridMinor) * gridMinor);
+            const endY = Math.min(ARENA_HEIGHT, Math.ceil(wy2 / gridMinor) * gridMinor);
+
+            tctx.strokeStyle = 'rgba(148, 163, 184, 0.10)';
+            tctx.lineWidth = 2;
+            tctx.beginPath();
+            for (let gx = startX; gx <= endX; gx += gridMinor) {
+              if (gx % 2000 === 0) continue;
+              tctx.moveTo(gx, startY);
+              tctx.lineTo(gx, endY);
+            }
+            for (let gy = startY; gy <= endY; gy += gridMinor) {
+              if (gy % 2000 === 0) continue;
+              tctx.moveTo(startX, gy);
+              tctx.lineTo(endX, gy);
+            }
+            tctx.stroke();
+
+            tctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+            tctx.lineWidth = 3;
+            tctx.beginPath();
+            const majorStartX = Math.max(0, Math.floor(wx / 2000) * 2000);
+            const majorStartY = Math.max(0, Math.floor(wy / 2000) * 2000);
+            for (let gx = majorStartX; gx <= endX; gx += 2000) {
+              tctx.moveTo(gx, startY);
+              tctx.lineTo(gx, endY);
+            }
+            for (let gy = majorStartY; gy <= endY; gy += 2000) {
+              tctx.moveTo(startX, gy);
+              tctx.lineTo(endX, gy);
+            }
+            tctx.stroke();
+          } else {
+            for (let i = 0; i < BEACH_LAYOUT.length; i++) {
+              const b = BEACH_LAYOUT[i];
+              if (b.x + b.w > wx && b.x < wx2 && b.y + b.h > wy && b.y < wy2) {
+                tctx.fillStyle = b.fill;
+                tctx.fillRect(b.x, b.y, b.w, b.h);
+                tctx.strokeStyle = b.edge;
+                tctx.lineWidth = 4;
+                tctx.strokeRect(b.x, b.y, b.w, b.h);
+              }
+            }
+            for (let i = 0; i < BIOME_ZONES.length; i++) {
+              const z = BIOME_ZONES[i];
+              if (z.x + z.w > wx && z.x < wx2 && z.y + z.h > wy && z.y < wy2) {
+                tctx.fillStyle = z.colorTop;
+                tctx.fillRect(z.x, z.y, z.w, z.h);
+              }
+            }
+            for (let i = 0; i < PATH_LAYOUT.length; i++) {
+              const pt = PATH_LAYOUT[i];
+              if (pt.x + pt.w > wx && pt.x < wx2 && pt.y + pt.h > wy && pt.y < wy2) {
+                tctx.fillStyle = pt.fill;
+                tctx.fillRect(pt.x, pt.y, pt.w, pt.h);
+                tctx.strokeStyle = pt.edge;
+                tctx.lineWidth = 3;
+                tctx.strokeRect(pt.x, pt.y, pt.w, pt.h);
+              }
+            }
+            for (let i = 0; i < WATER_LAYOUT.length; i++) {
+              const w = WATER_LAYOUT[i];
+              if (w.x + w.w > wx && w.x < wx2 && w.y + w.h > wy && w.y < wy2) {
+                tctx.fillStyle = w.color;
+                tctx.fillRect(w.x, w.y, w.w, w.h);
+                tctx.strokeStyle = w.edge;
+                tctx.lineWidth = 4;
+                tctx.strokeRect(w.x + 2, w.y + 2, w.w - 4, w.h - 4);
+              }
+            }
+            for (let i = 0; i < BRIDGE_LAYOUT.length; i++) {
+              const br = BRIDGE_LAYOUT[i];
+              if (br.x + br.w > wx && br.x < wx2 && br.y + br.h > wy && br.y < wy2) {
+                tctx.fillStyle = br.edge;
+                tctx.fillRect(br.x, br.y, br.w, br.h);
+                tctx.fillStyle = br.deck;
+                tctx.fillRect(br.x + 10, br.y + 10, br.w - 20, br.h - 20);
+                tctx.strokeStyle = br.highlight;
+                tctx.lineWidth = 3;
+                tctx.beginPath();
+                if (br.w < br.h) {
+                  for (let k = 1; k <= 4; k++) {
+                    const py = br.y + (br.h * k) / 5;
+                    tctx.moveTo(br.x + 12, py);
+                    tctx.lineTo(br.x + br.w - 12, py);
+                  }
+                } else {
+                  for (let k = 1; k <= 4; k++) {
+                    const px = br.x + (br.w * k) / 5;
+                    tctx.moveTo(px, br.y + 12);
+                    tctx.lineTo(px, br.y + br.h - 12);
+                  }
+                }
+                tctx.stroke();
+              }
+            }
+            for (let i = 0; i < decalPool.length; i++) {
+              const dec = decalPool[i];
+              if (!dec.active) continue;
+              if (dec.x + dec.w > wx && dec.x < wx2 && dec.y + dec.h > wy && dec.y < wy2) {
+                tctx.save();
+                tctx.globalAlpha = dec.alpha;
+                tctx.fillStyle = dec.color;
+                tctx.fillRect(dec.x, dec.y, dec.w, dec.h);
+                tctx.restore();
+              }
+            }
+            for (let i = 0; i < LANDMARK_LAYOUT.length; i++) {
+              const lm = LANDMARK_LAYOUT[i];
+              if (lm.x + lm.w > wx && lm.x < wx2 && lm.y + lm.h > wy && lm.y < wy2) {
+                drawProceduralLandmark(tctx, lm);
+              }
+            }
+          }
+
+          if (this.chunks.size >= this.maxChunks) {
+            const oldestKey = this.chunks.keys().next().value;
+            this.chunks.delete(oldestKey);
+          }
+          this.chunks.set(key, off);
+          return off;
+        },
+
+        drawVisible(ctx, viewLeft, viewTop, viewRight, viewBottom) {
+          const size = this.chunkSize;
+          const maxChunkIdx = Math.ceil(ARENA_WIDTH / size) - 1;
+          const minCx = Math.max(0, Math.floor(viewLeft / size));
+          const maxCx = Math.min(maxChunkIdx, Math.floor(viewRight / size));
+          const minCy = Math.max(0, Math.floor(viewTop / size));
+          const maxCy = Math.min(maxChunkIdx, Math.floor(viewBottom / size));
+          for (let cy = minCy; cy <= maxCy; cy++) {
+            for (let cx = minCx; cx <= maxCx; cx++) {
+              const chunk = this.getChunk(cx, cy);
+              ctx.drawImage(chunk, cx * size, cy * size, size, size);
+            }
+          }
+        }
+      };
+
+      // ==========================================
+      // RENDERING PIPELINE (LOCKED 60 FPS MOBILE ENGINE)
       // ==========================================
       function renderCanvas() {
-        CTX.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        const isBlankMap = BIOME_ZONES.length === 0 && BEACH_LAYOUT.length === 0;
+        CTX.fillStyle = isBlankMap ? '#0F172A' : '#061B2E';
+        CTX.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
         Camera.apply(CTX);
 
-        // LAYER 0: Arena Base Ground (clean neutral canvas when reset, or Sea Base when biomes exist)
-        const isBlankMap = BIOME_ZONES.length === 0 && BEACH_LAYOUT.length === 0;
-        CTX.fillStyle = isBlankMap ? '#1E293B' : '#0B2D48';
-        CTX.fillRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
-
         const zoom = Camera.getZoom();
-        const halfW = (window.innerWidth / (2 * zoom)) + 400;
-        const halfH = (window.innerHeight / (2 * zoom * CAMERA_PITCH)) + 400;
+        const halfW = (window.innerWidth / (2 * zoom)) + VIEWPORT_CULL_MARGIN;
+        const halfH = (window.innerHeight / (2 * zoom * CAMERA_PITCH)) + VIEWPORT_CULL_MARGIN;
         const viewLeft = Camera.x - halfW;
         const viewRight = Camera.x + halfW;
         const viewTop = Camera.y - halfH;
         const viewBottom = Camera.y + halfH;
 
-        if (isBlankMap) {
-          const gridMinor = 500;
-          const startX = Math.max(0, Math.floor(viewLeft / gridMinor) * gridMinor);
-          const endX = Math.min(ARENA_WIDTH, Math.ceil(viewRight / gridMinor) * gridMinor);
-          const startY = Math.max(0, Math.floor(viewTop / gridMinor) * gridMinor);
-          const endY = Math.min(ARENA_HEIGHT, Math.ceil(viewBottom / gridMinor) * gridMinor);
+        // LAYER 0: Blit Offscreen Cached Static Terrain Chunks
+        TerrainCache.drawVisible(CTX, viewLeft, viewTop, viewRight, viewBottom);
 
+        // Glowing Forcefield Boundary (layered strokes, zero shadowBlur)
+        if (viewLeft < 32 || viewRight > ARENA_WIDTH - 32 || viewTop < 32 || viewBottom > ARENA_HEIGHT - 32) {
           CTX.save();
-          CTX.strokeStyle = 'rgba(148, 163, 184, 0.10)';
-          CTX.lineWidth = 2;
-          CTX.beginPath();
-          for (let gx = startX; gx <= endX; gx += gridMinor) {
-            if (gx % 2000 === 0) continue;
-            CTX.moveTo(gx, startY);
-            CTX.lineTo(gx, endY);
-          }
-          for (let gy = startY; gy <= endY; gy += gridMinor) {
-            if (gy % 2000 === 0) continue;
-            CTX.moveTo(startX, gy);
-            CTX.lineTo(endX, gy);
-          }
-          CTX.stroke();
+          CTX.strokeStyle = 'rgba(220, 38, 38, 0.28)';
+          CTX.lineWidth = 18;
+          CTX.strokeRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
+          CTX.strokeStyle = '#ef4444';
+          CTX.lineWidth = 6;
+          CTX.strokeRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
 
-          CTX.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+          const timePulse = Math.sin(Game.time * 6) * 0.3 + 0.7;
+          CTX.strokeStyle = `rgba(248, 113, 113, ${timePulse})`;
           CTX.lineWidth = 3;
-          CTX.beginPath();
-          const majorStartX = Math.max(0, Math.floor(viewLeft / 2000) * 2000);
-          const majorStartY = Math.max(0, Math.floor(viewTop / 2000) * 2000);
-          for (let gx = majorStartX; gx <= endX; gx += 2000) {
-            CTX.moveTo(gx, startY);
-            CTX.lineTo(gx, endY);
-          }
-          for (let gy = majorStartY; gy <= endY; gy += 2000) {
-            CTX.moveTo(startX, gy);
-            CTX.lineTo(endX, gy);
-          }
-          CTX.stroke();
+          CTX.strokeRect(8, 8, ARENA_WIDTH - 16, ARENA_HEIGHT - 16);
           CTX.restore();
         }
-
-        // LAYER 0.1: Coastal Beaches & Shoreline
-        for (let i = 0; i < BEACH_LAYOUT.length; i++) {
-          const b = BEACH_LAYOUT[i];
-          if (b.x + b.w > viewLeft && b.x < viewRight && b.y + b.h > viewTop && b.y < viewBottom) {
-            CTX.fillStyle = b.fill;
-            CTX.fillRect(b.x, b.y, b.w, b.h);
-            CTX.strokeStyle = b.edge;
-            CTX.lineWidth = 4;
-            CTX.strokeRect(b.x, b.y, b.w, b.h);
-          }
-        }
-
-        // LAYER 0.2: Viewport-Culled Static Biome Zones
-        for (let i = 0; i < BIOME_ZONES.length; i++) {
-          const z = BIOME_ZONES[i];
-          if (z.x + z.w > viewLeft && z.x < viewRight && z.y + z.h > viewTop && z.y < viewBottom) {
-            CTX.fillStyle = z.colorTop;
-            CTX.fillRect(z.x, z.y, z.w, z.h);
-          }
-        }
-
-        // LAYER 0.3: Static Island Paths
-        for (let i = 0; i < PATH_LAYOUT.length; i++) {
-          const pt = PATH_LAYOUT[i];
-          if (pt.x + pt.w > viewLeft && pt.x < viewRight && pt.y + pt.h > viewTop && pt.y < viewBottom) {
-            CTX.fillStyle = pt.fill;
-            CTX.fillRect(pt.x, pt.y, pt.w, pt.h);
-            CTX.strokeStyle = pt.edge;
-            CTX.lineWidth = 3;
-            CTX.strokeRect(pt.x, pt.y, pt.w, pt.h);
-          }
-        }
-
-        // LAYER 0.4: Four-Rectangle Castle Moat Water
-        for (let i = 0; i < WATER_LAYOUT.length; i++) {
-          const w = WATER_LAYOUT[i];
-          if (w.x + w.w > viewLeft && w.x < viewRight && w.y + w.h > viewTop && w.y < viewBottom) {
-            CTX.fillStyle = w.color;
-            CTX.fillRect(w.x, w.y, w.w, w.h);
-            CTX.strokeStyle = w.edge;
-            CTX.lineWidth = 4;
-            CTX.strokeRect(w.x + 2, w.y + 2, w.w - 4, w.h - 4);
-          }
-        }
-
-        // LAYER 0.5: Bridge Overlays (Capped <= 16 plank lines total across 4 bridges)
-        for (let i = 0; i < BRIDGE_LAYOUT.length; i++) {
-          const br = BRIDGE_LAYOUT[i];
-          if (br.x + br.w > viewLeft && br.x < viewRight && br.y + br.h > viewTop && br.y < viewBottom) {
-            CTX.save();
-            CTX.fillStyle = br.edge;
-            CTX.fillRect(br.x, br.y, br.w, br.h);
-            CTX.fillStyle = br.deck;
-            CTX.fillRect(br.x + 10, br.y + 10, br.w - 20, br.h - 20);
-            CTX.strokeStyle = br.highlight;
-            CTX.lineWidth = 3;
-            CTX.beginPath();
-            if (br.w < br.h) {
-              for (let k = 1; k <= 4; k++) {
-                const py = br.y + (br.h * k) / 5;
-                CTX.moveTo(br.x + 12, py);
-                CTX.lineTo(br.x + br.w - 12, py);
-              }
-            } else {
-              for (let k = 1; k <= 4; k++) {
-                const px = br.x + (br.w * k) / 5;
-                CTX.moveTo(px, br.y + 12);
-                CTX.lineTo(px, br.y + br.h - 12);
-              }
-            }
-            CTX.stroke();
-            CTX.restore();
-          }
-        }
-
-        // LAYER 0.6: Procedural Ground Accents & Landmarks
-        for (let i = 0; i < decalPool.length; i++) {
-          const dec = decalPool[i];
-          if (!dec.active) continue;
-          if (dec.x + dec.w > viewLeft && dec.x < viewRight && dec.y + dec.h > viewTop && dec.y < viewBottom) {
-            CTX.save();
-            CTX.globalAlpha = dec.alpha;
-            CTX.fillStyle = dec.color;
-            CTX.fillRect(dec.x, dec.y, dec.w, dec.h);
-            CTX.restore();
-          }
-        }
-
-        for (let i = 0; i < LANDMARK_LAYOUT.length; i++) {
-          const lm = LANDMARK_LAYOUT[i];
-          if (lm.x + lm.w > viewLeft && lm.x < viewRight && lm.y + lm.h > viewTop && lm.y < viewBottom) {
-            drawProceduralLandmark(CTX, lm);
-          }
-        }
-
-        // Glowing Forcefield Boundary
-        CTX.save();
-        CTX.strokeStyle = '#ef4444';
-        CTX.lineWidth = 6;
-        CTX.shadowColor = '#dc2626';
-        CTX.shadowBlur = 24;
-        CTX.strokeRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
-
-        const timePulse = Math.sin(Game.time * 6) * 0.3 + 0.7;
-        CTX.strokeStyle = `rgba(248, 113, 113, ${timePulse})`;
-        CTX.lineWidth = 3;
-        CTX.strokeRect(8, 8, ARENA_WIDTH - 16, ARENA_HEIGHT - 16);
-        CTX.restore();
 
         // LAYER 1: Ground Effects & Storm
         Game.storm.draw(CTX);
@@ -8737,16 +9407,13 @@
             CTX.fill();
           }
 
-          // Large faint bloom behind projectile using screen blend
-          CTX.globalCompositeOperation = 'screen';
+          // Pre-rendered GlowAtlas sprite bloom behind projectile (zero shadowBlur)
           if (p.isWave) {
             CTX.translate(p.x, p.y);
             const a = Math.atan2(p.vy, p.vx);
             CTX.rotate(a);
 
-            CTX.fillStyle = p.color;
-            CTX.globalAlpha = 0.35;
-            CTX.fillRect(-p.width / 2 - 8, -p.height / 2 - 8, p.width + 16, p.height + 16);
+            drawGlowSprite(CTX, resolveGlowTone(p.color), 0, 0, Math.max(p.width, p.height) * 0.85, 0.52);
 
             CTX.globalAlpha = 0.95;
             CTX.fillStyle = 'rgba(186, 230, 253, 0.95)';
@@ -8755,18 +9422,8 @@
             CTX.fillRect(-p.width / 2, -p.height / 2, p.width, p.height);
             CTX.strokeRect(-p.width / 2, -p.height / 2, p.width, p.height);
           } else {
-            CTX.beginPath();
-            CTX.arc(p.x, p.y, p.radius * 2.4, 0, Math.PI * 2);
-            CTX.fillStyle = p.color;
-            CTX.globalAlpha = 0.38;
-            CTX.fill();
+            drawGlowSprite(CTX, resolveGlowTone(p.color), p.x, p.y, p.radius * 2.6, 0.74);
 
-            CTX.beginPath();
-            CTX.arc(p.x, p.y, p.radius * 1.5, 0, Math.PI * 2);
-            CTX.globalAlpha = 0.65;
-            CTX.fill();
-
-            CTX.globalCompositeOperation = 'source-over';
             CTX.globalAlpha = 1.0;
             CTX.beginPath();
             CTX.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
@@ -8884,20 +9541,11 @@
           }
         }
 
-        // Player Light Halo (Part E.1)
+        // Player Light Halo (Pre-rendered GlowAtlas, zero per-frame gradient allocation)
         if (PlayerData.graphicsQuality === 'high') {
           const focusX = Game.player && Game.player.isAlive ? Game.player.x : Camera.x;
           const focusY = Game.player && Game.player.isAlive ? Game.player.y : Camera.y;
-          CTX.save();
-          CTX.globalCompositeOperation = 'lighter';
-          const haloGrad = CTX.createRadialGradient(focusX, focusY, 40, focusX, focusY, 260);
-          haloGrad.addColorStop(0, 'rgba(251, 191, 36, 0.12)');
-          haloGrad.addColorStop(1, 'rgba(251, 191, 36, 0)');
-          CTX.fillStyle = haloGrad;
-          CTX.beginPath();
-          CTX.arc(focusX, focusY, 260, 0, Math.PI * 2);
-          CTX.fill();
-          CTX.restore();
+          drawGlowSprite(CTX, 'gold', focusX, focusY, 240, 0.2);
         }
 
         // Sort entities in place
@@ -8920,16 +9568,16 @@
           drawWaypointBeacon(CTX);
         }
 
-        // LAYER 5: Floating Damage Numbers & Elimination Callouts
+        // LAYER 5: Floating Damage Numbers & Elimination Callouts (zero shadowBlur)
         CTX.textAlign = 'center';
         for (let i = 0; i < damageTextPool.length; i++) {
           const dt = damageTextPool[i];
           if (!dt.active || dt.x < viewLeft || dt.x > viewRight || dt.y < viewTop || dt.y > viewBottom) continue;
           CTX.save();
           CTX.globalAlpha = Math.max(0, dt.alpha);
+          CTX.lineJoin = 'round';
           if (dt.callout) {
             CTX.font = '900 15px system-ui, sans-serif';
-            CTX.lineJoin = 'round';
             CTX.strokeStyle = 'rgba(2, 6, 23, 0.92)';
             CTX.lineWidth = 4;
             CTX.strokeText(dt.text, dt.x, dt.y);
@@ -8937,9 +9585,10 @@
             CTX.fillText(dt.text, dt.x, dt.y);
           } else {
             CTX.font = 'bold 14px system-ui, sans-serif';
+            CTX.strokeStyle = 'rgba(2, 6, 23, 0.88)';
+            CTX.lineWidth = 3;
+            CTX.strokeText(dt.text, dt.x, dt.y);
             CTX.fillStyle = dt.color;
-            CTX.shadowColor = 'rgba(0,0,0,0.85)';
-            CTX.shadowBlur = 4;
             CTX.fillText(dt.text, dt.x, dt.y);
           }
           CTX.restore();
@@ -8949,30 +9598,56 @@
         WeatherSystem.drawScreenOverlay(CTX);
         drawWaypointEdgeIndicator();
 
-        // Section 5: Aiming Line Indicator (Screen space)
-        if (isAiming && Game.state === "PLAYING" && !PlayerData.autoAimEnabled) {
+        // Section 5: Aiming Line & Drag-to-Cancel Reticle Indicator (Screen space, zero shadowBlur)
+        if (isAiming && Game.state === "PLAYING" && Game.player && Game.player.isAlive) {
           CTX.save();
           const guideZoom = Camera.getZoom();
           const cx = window.innerWidth / 2 + (Game.player.x - Camera.x) * guideZoom;
           const cy = window.innerHeight / 2 + (Game.player.y - Camera.y) * guideZoom * CAMERA_PITCH - (Game.player.z || 0) * guideZoom;
-          const targetX = cx + Math.cos(aimAngle) * 300;
-          const targetY = cy + Math.sin(aimAngle) * 300 * CAMERA_PITCH;
+          const aimSpan = Math.min(260, Math.max(150, window.innerWidth * 0.28));
+          const targetX = cx + Math.cos(aimAngle) * aimSpan;
+          const targetY = cy + Math.sin(aimAngle) * aimSpan * CAMERA_PITCH;
+          const cancelMode = isCancelAimHovered;
+          const outerStroke = cancelMode ? 'rgba(239, 68, 68, 0.34)' : 'rgba(56, 189, 248, 0.32)';
+          const coreStroke = cancelMode ? '#ef4444' : '#38bdf8';
 
-          // Bright neon line
-          CTX.strokeStyle = '#38bdf8';
-          CTX.lineWidth = 3;
-          CTX.shadowColor = '#06b6d4';
-          CTX.shadowBlur = 12;
+          // Soft halo line + crisp core line
+          if (cancelMode) CTX.setLineDash([8, 6]);
+          CTX.strokeStyle = outerStroke;
+          CTX.lineWidth = 8;
           CTX.beginPath();
           CTX.moveTo(cx, cy);
           CTX.lineTo(targetX, targetY);
           CTX.stroke();
 
-          // Reticle head
+          CTX.strokeStyle = coreStroke;
+          CTX.lineWidth = 3;
           CTX.beginPath();
-          CTX.arc(targetX, targetY, 5, 0, Math.PI * 2);
-          CTX.fillStyle = '#38bdf8';
+          CTX.moveTo(cx, cy);
+          CTX.lineTo(targetX, targetY);
+          CTX.stroke();
+          CTX.setLineDash([]);
+
+          // Reticle head with GlowAtlas sprite
+          drawGlowSprite(CTX, cancelMode ? 'crimson' : 'cyan', targetX, targetY, 16, 0.65);
+          CTX.beginPath();
+          CTX.arc(targetX, targetY, cancelMode ? 8 : 6, 0, Math.PI * 2);
+          CTX.fillStyle = cancelMode ? 'rgba(148, 163, 184, 0.85)' : '#38bdf8';
           CTX.fill();
+          CTX.strokeStyle = cancelMode ? '#ef4444' : '#ffffff';
+          CTX.lineWidth = 2;
+          CTX.stroke();
+
+          if (cancelMode) {
+            CTX.font = '900 11px system-ui, sans-serif';
+            CTX.textAlign = 'center';
+            CTX.lineJoin = 'round';
+            CTX.strokeStyle = 'rgba(2, 6, 23, 0.92)';
+            CTX.lineWidth = 3;
+            CTX.strokeText('✕ CANCEL CAST', cx, cy - 58);
+            CTX.fillStyle = '#fca5a5';
+            CTX.fillText('✕ CANCEL CAST', cx, cy - 58);
+          }
           CTX.restore();
         }
 
@@ -9111,11 +9786,13 @@
             CTX.font = `800 ${Math.max(9, Math.min(12, mapSize / 48))}px system-ui, sans-serif`;
             CTX.textAlign = 'center';
             CTX.textBaseline = 'middle';
-            CTX.shadowColor = 'rgba(0,0,0,0.95)';
-            CTX.shadowBlur = 4;
+            CTX.lineJoin = 'round';
+            CTX.strokeStyle = 'rgba(2, 6, 23, 0.92)';
+            CTX.lineWidth = 3;
             for (const region of MAP_REGIONS) {
               const rx = mapX + region.x * mapSize;
               const ry = mapY + region.y * mapSize;
+              CTX.strokeText(region.label, rx, ry);
               CTX.fillStyle = 'rgba(255,255,255,0.92)';
               CTX.fillText(region.label, rx, ry);
             }
@@ -9183,10 +9860,9 @@
             const pulse = PlayerData.reducedMotion ? 0 : Math.sin(performance.now() / 170) * (isMapExpanded ? 4 : 2);
             const pinRadius = (isMapExpanded ? 8 : 5) + pulse;
             CTX.save();
+            drawGlowSprite(CTX, 'cyan', pingPoint.x, pingPoint.y, Math.max(8, pinRadius + 9), 0.52);
             CTX.strokeStyle = '#67e8f9';
             CTX.fillStyle = '#22d3ee';
-            CTX.shadowColor = '#06b6d4';
-            CTX.shadowBlur = isMapExpanded ? 14 : 7;
             CTX.lineWidth = isMapExpanded ? 2.5 : 1.5;
             CTX.beginPath();
             CTX.arc(pingPoint.x, pingPoint.y, Math.max(3, pinRadius + 5), 0, Math.PI * 2);
@@ -9201,32 +9877,42 @@
 
           CTX.restore();
           CTX.save();
+          CTX.strokeStyle = isMapExpanded ? 'rgba(103, 232, 249, 0.28)' : 'rgba(168, 85, 247, 0.25)';
+          CTX.lineWidth = isMapExpanded ? 6 : 4;
+          CTX.strokeRect(mapX, mapY, mapSize, mapSize);
           CTX.strokeStyle = isMapExpanded ? '#67e8f9' : '#a855f7';
           CTX.lineWidth = isMapExpanded ? 2.5 : 1.5;
-          CTX.shadowColor = CTX.strokeStyle;
-          CTX.shadowBlur = isMapExpanded ? 12 : 6;
           CTX.strokeRect(mapX, mapY, mapSize, mapSize);
           if (!isMapExpanded && Game.player) {
-            CTX.shadowBlur = 3;
-            CTX.fillStyle = '#e2e8f0';
+            const regionLabel = getRegionName(Game.player.x, Game.player.y).toUpperCase();
             CTX.font = '800 9px system-ui, sans-serif';
             CTX.textAlign = 'left';
-            CTX.fillText(getRegionName(Game.player.x, Game.player.y).toUpperCase(), mapX, mapY + mapSize + 13);
+            CTX.lineJoin = 'round';
+            CTX.strokeStyle = 'rgba(2, 6, 23, 0.9)';
+            CTX.lineWidth = 2.5;
+            CTX.strokeText(regionLabel, mapX, mapY + mapSize + 13);
+            CTX.fillStyle = '#e2e8f0';
+            CTX.fillText(regionLabel, mapX, mapY + mapSize + 13);
           }
           CTX.restore();
         }
 
-        // Dropping banner UI in canvas
+        // Dropping banner UI in canvas (zero shadowBlur)
         if (Game.state === "DROPPING" && Game.player) {
           CTX.save();
           const alt = Math.max(0, Math.round(Game.player.z));
+          const dropTitle = `🪂 DROPPING INTO ARENA — ALTITUDE: ${alt}m`;
           CTX.font = '900 16px system-ui, sans-serif';
           CTX.textAlign = 'center';
+          CTX.lineJoin = 'round';
+          CTX.strokeStyle = 'rgba(2, 6, 23, 0.92)';
+          CTX.lineWidth = 4;
+          CTX.strokeText(dropTitle, window.innerWidth / 2, 34);
           CTX.fillStyle = '#fbbf24';
-          CTX.shadowColor = 'rgba(0,0,0,0.85)';
-          CTX.shadowBlur = 8;
-          CTX.fillText(`🪂 DROPPING INTO ARENA — ALTITUDE: ${alt}m`, window.innerWidth / 2, 34);
+          CTX.fillText(dropTitle, window.innerWidth / 2, 34);
           CTX.font = '700 11px system-ui, sans-serif';
+          CTX.lineWidth = 3;
+          CTX.strokeText('STEER WITH JOYSTICK OR WASD', window.innerWidth / 2, 52);
           CTX.fillStyle = '#cbd5e1';
           CTX.fillText('STEER WITH JOYSTICK OR WASD', window.innerWidth / 2, 52);
           if (!PlayerData.reducedMotion) {
@@ -9247,7 +9933,7 @@
       }
 
       // ==========================================
-      // MAIN GAME LOOP & DELTATIME
+      // MAIN GAME LOOP & DELTATIME (50ms MAX CLAMP)
       // ==========================================
       let lastTime = performance.now();
       let frameCount = 0;
@@ -9259,7 +9945,7 @@
       function gameLoop(currentTime) {
         const rawDelta = Math.max(0, (currentTime - lastTime) / 1000);
         lastTime = currentTime;
-        const deltaTime = Math.min(rawDelta, 0.1);
+        const deltaTime = Math.min(rawDelta, 0.05);
         const active = Game.state === 'PLAYING' || Game.state === 'DROPPING';
 
         if (!active && currentTime - lastIdleRender < 200) {
@@ -9481,10 +10167,6 @@
         const traceColor = data.color || '#ef4444';
         if (sampled.visiblePoints.length >= 2) {
           ctx.save();
-          ctx.strokeStyle = traceColor;
-          ctx.shadowColor = traceColor;
-          ctx.shadowBlur = 14;
-          ctx.lineWidth = 4;
           ctx.lineCap = 'round';
           ctx.lineJoin = 'round';
           ctx.beginPath();
@@ -9494,6 +10176,12 @@
             const sp = toScreen(sampled.visiblePoints[i].x, sampled.visiblePoints[i].y);
             ctx.lineTo(sp.x, sp.y);
           }
+          ctx.globalAlpha = 0.28;
+          ctx.strokeStyle = traceColor;
+          ctx.lineWidth = 10;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.lineWidth = 4;
           ctx.stroke();
           ctx.restore();
         }
@@ -9521,12 +10209,11 @@
         ctx.fillStyle = '#fde68a';
         ctx.fillText('YOU', victimPt.x, Math.min(h - 6, victimPt.y + 18));
 
-        // Moving projectile orb along slowed trajectory
+        // Moving projectile orb along slowed trajectory (GlowAtlas, zero shadowBlur)
         if (sampled.head) {
           const hp = toScreen(sampled.head.x, sampled.head.y);
+          drawGlowSprite(ctx, resolveGlowTone(traceColor), hp.x, hp.y, 16, 0.72);
           ctx.fillStyle = traceColor;
-          ctx.shadowColor = traceColor;
-          ctx.shadowBlur = 16;
           ctx.beginPath();
           ctx.arc(hp.x, hp.y, 7, 0, Math.PI * 2);
           ctx.fill();
@@ -10378,33 +11065,6 @@
         DeviceOptimizer.apply(true);
       }
 
-      function setDeviceMode(mode) {
-        if (!['auto', 'mobile', 'tablet', 'desktop'].includes(mode)) return;
-        PlayerData.deviceMode = mode;
-        const cfg = DeviceOptimizer.apply(true);
-        PlayerData.save();
-        const modeLabel = mode === 'auto'
-          ? `Auto (${DeviceOptimizer.formatProfileLabel(cfg.profile)})`
-          : DeviceOptimizer.formatProfileLabel(cfg.profile);
-        showToast(`📱 Display optimized for ${modeLabel}`, false);
-      }
-
-      function cycleDeviceMode() {
-        const order = ['auto', 'mobile', 'tablet', 'desktop'];
-        const cur = order.indexOf(PlayerData.deviceMode || 'auto');
-        const next = order[(cur + 1) % order.length];
-        setDeviceMode(next);
-      }
-
-      function setTouchControlsMode(mode) {
-        if (!['auto', 'on', 'off'].includes(mode)) return;
-        PlayerData.touchControlsMode = mode;
-        DeviceOptimizer.apply(false);
-        PlayerData.save();
-        const label = mode === 'auto' ? 'Auto' : (mode === 'on' ? 'Always Show' : 'Hidden');
-        showToast(`🎮 Touch Controls: ${label}`, false);
-      }
-
       function onControlScaleChange(val) {
         const parsed = parseFloat(val);
         if (!Number.isFinite(parsed)) return;
@@ -10414,24 +11074,6 @@
 
       function updateDeviceModeUI() {
         const cfg = DeviceOptimizer.current;
-        const mode = PlayerData.deviceMode || 'auto';
-        const touch = PlayerData.touchControlsMode || 'auto';
-
-        ['auto', 'mobile', 'tablet', 'desktop'].forEach(k => {
-          const b = document.getElementById('mode-btn-' + k);
-          if (b) {
-            b.classList.toggle('active', k === mode);
-            b.setAttribute('aria-pressed', String(k === mode));
-          }
-        });
-        ['auto', 'on', 'off'].forEach(k => {
-          const b = document.getElementById('touch-btn-' + k);
-          if (b) {
-            b.classList.toggle('active', k === touch);
-            b.setAttribute('aria-pressed', String(k === touch));
-          }
-        });
-
         const scaleSlider = document.getElementById('slider-control-scale');
         if (scaleSlider) scaleSlider.value = String(PlayerData.controlScale || 1);
         const scaleVal = document.getElementById('control-scale-val');
@@ -10439,22 +11081,10 @@
 
         const statusEl = document.getElementById('settings-device-status');
         if (statusEl) {
-          const activeLabel = DeviceOptimizer.formatProfileLabel(cfg.profile);
-          statusEl.textContent = mode === 'auto'
-            ? `Auto-Optimized: ${activeLabel}`
-            : `Manual: ${activeLabel} (Detected ${DeviceOptimizer.formatProfileLabel(cfg.detectedProfile)})`;
+          statusEl.textContent = `Mobile Mode · ${DeviceOptimizer.formatProfileLabel(cfg.profile)}`;
         }
         const vpEl = document.getElementById('settings-viewport-size');
         if (vpEl) vpEl.textContent = `${cfg.width || window.innerWidth}×${cfg.height || window.innerHeight}`;
-
-        const lobbyBtn = document.getElementById('btn-device-mode');
-        if (lobbyBtn) {
-          const icon = cfg.profile === 'desktop' ? '💻' : (cfg.profile === 'tablet' ? '📲' : '📱');
-          const shortName = mode === 'auto'
-            ? `Auto (${cfg.profile === 'desktop' ? 'Desktop' : (cfg.profile === 'tablet' ? 'Tablet' : 'Mobile')})`
-            : (mode.charAt(0).toUpperCase() + mode.slice(1));
-          lobbyBtn.textContent = `${icon} ${shortName}`;
-        }
       }
 
       function updateQualityButtonsUI() {
@@ -10516,7 +11146,6 @@
           this.manaBar = document.getElementById('mana-bar-fill');
           this.hpText = document.getElementById('hp-text');
           this.manaText = document.getElementById('mana-text');
-          this.aliveBadge = document.getElementById('alive-badge');
           this.stormBadge = document.getElementById('storm-badge');
           this.cdSword = document.getElementById('cd-sword');
           this.cdSpell = document.getElementById('cd-spell');
@@ -10580,8 +11209,6 @@
             weatherBadge.textContent = '';
           }
         }
-
-        if (UI_ELEMENTS.aliveBadge) UI_ELEMENTS.aliveBadge.textContent = '⚔️ ' + Game.aliveCount + ' ALIVE';
 
         if (UI_ELEMENTS.stormBadge) {
           const matchTime = Game.time;
@@ -10839,6 +11466,7 @@
             Camera.zoomMode = 'auto';
             UIController.showHUD();
             updateHUD();
+            showFirstMatchMinimapTip();
           }
         } else if (!PlayerData.playerName || PlayerData.playerName === "Player") {
           document.body.dataset.state = 'login';
