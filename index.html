@@ -2767,16 +2767,7 @@
         checkTutorial();
       }
 
-      const MAP_REGIONS = [
-        { name: 'Frostpeak', label: 'FROSTPEAK', x: 0.51, y: 0.08 },
-        { name: 'Moonruins', label: 'MOONRUINS', x: 0.47, y: 0.20 },
-        { name: 'Whispering Woods', label: 'WHISPERING WOODS', x: 0.18, y: 0.25 },
-        { name: 'Ruined City', label: 'RUINED CITY', x: 0.75, y: 0.28 },
-        { name: 'Arcane Keep', label: 'ARCANE KEEP', x: 0.50, y: 0.47 },
-        { name: 'Crystal Quarry', label: 'CRYSTAL QUARRY', x: 0.19, y: 0.75 },
-        { name: 'Emberport', label: 'EMBERPORT', x: 0.73, y: 0.77 },
-        { name: 'South Docks', label: 'SOUTH DOCKS', x: 0.90, y: 0.86 }
-      ];
+      const MAP_REGIONS = [];
       const MINIMAP_VIEW = { x: 0, y: 0, size: 0, scale: 0 };
       let activePing = null;
 
@@ -2835,7 +2826,7 @@
 
       function getRegionName(worldX, worldY) {
         const nearest = getMapRegion(worldX, worldY);
-        return nearest.distance <= 4000 && nearest.region ? nearest.region.name : 'Island Wilds';
+        return nearest.distance <= 4000 && nearest.region ? nearest.region.name : 'Open Arena';
       }
 
       function formatWorldDistance(distance) {
@@ -3235,8 +3226,7 @@
           { key: 'sprite_SHADOW', type: 'img', path: 'assets/Image/Sheets/shadow_sheet.webp' },
           { key: 'portrait_BERSERKER', type: 'img', path: 'assets/Image/UI/portrait_berserker.webp' },
           { key: 'portrait_TIDECALLER', type: 'img', path: 'assets/Image/UI/portrait_tidecaller.webp' },
-          { key: 'portrait_SHADOW', type: 'img', path: 'assets/Image/UI/portrait_shadow.webp' },
-          { key: 'map', type: 'img', path: 'assets/Image/ground.webp' }
+          { key: 'portrait_SHADOW', type: 'img', path: 'assets/Image/UI/portrait_shadow.webp' }
         ],
 
         load(onProgress) {
@@ -3794,74 +3784,20 @@
         });
       }
 
-      const MAP_LAYOUT = [
-        {id:'forest_nw',type:'zone',biome:'forest',x:500,y:500,w:6000,h:6000,zHeight:0,colorTop:'#28563A',colorFront:'#1C3F2C',colorSide:'#142D20',solid:false},
-        {id:'snow_n',type:'zone',biome:'snow',x:6500,y:500,w:7000,h:6000,zHeight:0,colorTop:'#DCE7EF',colorFront:'#9AAFC0',colorSide:'#687D90',solid:false},
-        {id:'ruins_ne',type:'zone',biome:'ruins',x:13500,y:500,w:6000,h:6000,zHeight:0,colorTop:'#77766D',colorFront:'#4C4B49',colorSide:'#333331',solid:false},
-        {id:'meadow_w',type:'zone',biome:'meadow',x:500,y:6500,w:6000,h:7000,zHeight:0,colorTop:'#71964A',colorFront:'#496C35',colorSide:'#304A25',solid:false},
-        {id:'keep_center',type:'zone',biome:'meadow',x:6500,y:6500,w:7000,h:7000,zHeight:0,colorTop:'#668B45',colorFront:'#405E30',colorSide:'#2D4323',solid:false},
-        {id:'village_e',type:'zone',biome:'village',x:13500,y:6500,w:6000,h:7000,zHeight:0,colorTop:'#8B795D',colorFront:'#5A4939',colorSide:'#3E3329',solid:false},
-        {id:'quarry_sw',type:'zone',biome:'quarry',x:500,y:13500,w:6000,h:6000,zHeight:0,colorTop:'#77716B',colorFront:'#484541',colorSide:'#302E2B',solid:false},
-        {id:'meadow_s',type:'zone',biome:'meadow',x:6500,y:13500,w:7000,h:6000,zHeight:0,colorTop:'#71964A',colorFront:'#496C35',colorSide:'#304A25',solid:false},
-        {id:'harbour_se',type:'zone',biome:'harbour',x:13500,y:13500,w:6000,h:6000,zHeight:0,colorTop:'#806B52',colorFront:'#493A32',colorSide:'#30251F',solid:false},
-        {id:'castle_n_wall',type:'obstacle',biome:'castle',x:9000,y:9000,w:780,h:150,zHeight:95,colorTop:'#A9A7A0',colorFront:'#62616A',colorSide:'#41414B',solid:true},
-        {id:'castle_ne_wall',type:'obstacle',biome:'castle',x:10220,y:9000,w:780,h:150,zHeight:95,colorTop:'#A9A7A0',colorFront:'#62616A',colorSide:'#41414B',solid:true},
-        {id:'castle_sw_wall',type:'obstacle',biome:'castle',x:9000,y:10850,w:780,h:150,zHeight:95,colorTop:'#A9A7A0',colorFront:'#62616A',colorSide:'#41414B',solid:true},
-        {id:'castle_s_wall',type:'obstacle',biome:'castle',x:10220,y:10850,w:780,h:150,zHeight:95,colorTop:'#A9A7A0',colorFront:'#62616A',colorSide:'#41414B',solid:true},
-        {id:'castle_w_wall_n',type:'obstacle',biome:'castle',x:9000,y:9150,w:150,h:630,zHeight:95,colorTop:'#A9A7A0',colorFront:'#62616A',colorSide:'#41414B',solid:true},
-        {id:'castle_w_wall_s',type:'obstacle',biome:'castle',x:9000,y:10220,w:150,h:630,zHeight:95,colorTop:'#A9A7A0',colorFront:'#62616A',colorSide:'#41414B',solid:true},
-        {id:'castle_e_wall_n',type:'obstacle',biome:'castle',x:10850,y:9150,w:150,h:630,zHeight:95,colorTop:'#A9A7A0',colorFront:'#62616A',colorSide:'#41414B',solid:true},
-        {id:'castle_e_wall_s',type:'obstacle',biome:'castle',x:10850,y:10220,w:150,h:630,zHeight:95,colorTop:'#A9A7A0',colorFront:'#62616A',colorSide:'#41414B',solid:true},
-        {id:'obs_forest_ridge',type:'obstacle',biome:'forest',x:2200,y:2400,w:650,h:320,zHeight:56,colorTop:'#477A45',colorFront:'#285236',colorSide:'#193A29',solid:true},
-        {id:'obs_snow_spire',type:'obstacle',biome:'snow',x:9600,y:2100,w:800,h:340,zHeight:82,colorTop:'#E7F1F7',colorFront:'#9AAFC0',colorSide:'#667D91',solid:true},
-        {id:'obs_ruins_arch',type:'obstacle',biome:'ruins',x:15800,y:2600,w:720,h:240,zHeight:68,colorTop:'#A6A095',colorFront:'#68665F',colorSide:'#45443F',solid:true},
-        {id:'obs_meadow_w_rock',type:'obstacle',biome:'meadow',x:3100,y:9400,w:480,h:360,zHeight:26,colorTop:'#8B9D77',colorFront:'#5B6B4D',colorSide:'#3E4A34',solid:true},
-        {id:'obs_village_hall',type:'obstacle',biome:'village',x:15600,y:9200,w:680,h:380,zHeight:64,colorTop:'#B58B61',colorFront:'#76543A',colorSide:'#4B3528',solid:true},
-        {id:'obs_quarry_crystal',type:'obstacle',biome:'quarry',x:3200,y:16200,w:440,h:440,zHeight:58,colorTop:'#B9A0F5',colorFront:'#7549B8',colorSide:'#4C2B7A',solid:true},
-        {id:'obs_meadow_s_outcrop',type:'obstacle',biome:'meadow',x:9600,y:16400,w:760,h:280,zHeight:24,colorTop:'#8B9D77',colorFront:'#5B6B4D',colorSide:'#3E4A34',solid:true},
-        {id:'obs_harbour_warehouse',type:'obstacle',biome:'harbour',x:15800,y:15800,w:740,h:340,zHeight:60,colorTop:'#A88762',colorFront:'#6D5039',colorSide:'#493526',solid:true}
-      ];
+      // Clean blank map slate — ready to build a new map from scratch
+      const MAP_LAYOUT = [];
 
       const BIOME_ZONES = MAP_LAYOUT.filter(record => record.type === 'zone');
 
-      const WATER_LAYOUT = [
-        {id:'moat_north',x:9000,y:8700,w:2000,h:300,color:'#176B91',edge:'#63C5D8',solid:true},
-        {id:'moat_south',x:9000,y:11000,w:2000,h:300,color:'#176B91',edge:'#63C5D8',solid:true},
-        {id:'moat_west',x:8700,y:9000,w:300,h:2000,color:'#176B91',edge:'#63C5D8',solid:true},
-        {id:'moat_east',x:11000,y:9000,w:300,h:2000,color:'#176B91',edge:'#63C5D8',solid:true}
-      ];
+      const WATER_LAYOUT = [];
 
-      const BRIDGE_LAYOUT = [
-        {id:'bridge_north',x:9890,y:8700,w:220,h:300,deck:'#8B6848',edge:'#4D382B',highlight:'#C49A6C',zHeight:8},
-        {id:'bridge_south',x:9890,y:11000,w:220,h:300,deck:'#8B6848',edge:'#4D382B',highlight:'#C49A6C',zHeight:8},
-        {id:'bridge_west',x:8700,y:9890,w:300,h:220,deck:'#8B6848',edge:'#4D382B',highlight:'#C49A6C',zHeight:8},
-        {id:'bridge_east',x:11000,y:9890,w:300,h:220,deck:'#8B6848',edge:'#4D382B',highlight:'#C49A6C',zHeight:8}
-      ];
+      const BRIDGE_LAYOUT = [];
 
-      const BEACH_LAYOUT = [
-        {id:'beach_north',x:320,y:260,w:19360,h:280,fill:'#D8C28A',edge:'#B59B64'},
-        {id:'beach_south',x:320,y:19460,w:19360,h:280,fill:'#D8C28A',edge:'#B59B64'},
-        {id:'beach_west',x:260,y:320,w:280,h:19360,fill:'#D8C28A',edge:'#B59B64'},
-        {id:'beach_east',x:19460,y:320,w:280,h:19360,fill:'#D8C28A',edge:'#B59B64'}
-      ];
+      const BEACH_LAYOUT = [];
 
-      const PATH_LAYOUT = [
-        {id:'path_north_south',x:9920,y:2500,w:160,h:15000,fill:'#B79A68',edge:'#765E3E'},
-        {id:'path_west_east',x:2500,y:9920,w:15000,h:160,fill:'#B79A68',edge:'#765E3E'},
-        {id:'path_nw_spur',x:3200,y:3200,w:3600,h:130,fill:'#B79A68',edge:'#765E3E'},
-        {id:'path_ne_spur',x:13200,y:3200,w:3400,h:130,fill:'#B79A68',edge:'#765E3E'},
-        {id:'path_sw_spur',x:3400,y:16400,w:3400,h:130,fill:'#B79A68',edge:'#765E3E'},
-        {id:'path_se_spur',x:13200,y:16400,w:3400,h:130,fill:'#B79A68',edge:'#765E3E'}
-      ];
+      const PATH_LAYOUT = [];
 
-      const LANDMARK_LAYOUT = [
-        {id:'lm_observatory',kind:'observatory',x:9200,y:1600,w:1600,h:1400},
-        {id:'lm_forest_canopy',kind:'forest',x:1600,y:1600,w:3800,h:3800},
-        {id:'lm_ruins_plaza',kind:'ruins',x:14800,y:1800,w:3200,h:3200},
-        {id:'lm_central_keep',kind:'keep',x:9150,y:9150,w:1700,h:1700},
-        {id:'lm_crystal_quarry',kind:'quarry',x:1800,y:14800,w:3400,h:3400},
-        {id:'lm_burning_harbour',kind:'harbour',x:14800,y:14800,w:4200,h:4200}
-      ];
+      const LANDMARK_LAYOUT = [];
 
       // ==========================================
       // PSEUDO-3D (2.5D) PROJECTION & SHADOW SYSTEM
@@ -4069,7 +4005,6 @@
         MAP_LAYOUT.forEach(r => checkRect(r, 'MAP_LAYOUT'));
         WATER_LAYOUT.forEach(r => checkRect(r, 'WATER_LAYOUT'));
         BRIDGE_LAYOUT.forEach(r => checkRect(r, 'BRIDGE_LAYOUT'));
-        if (WATER_LAYOUT.length !== 4) console.warn('[MapValidation] WATER_LAYOUT must have 4 moat rectangles');
         for (let i = 0; i < BIOME_ZONES.length; i++) {
           for (let j = i + 1; j < BIOME_ZONES.length; j++) {
             const a = BIOME_ZONES[i], b = BIOME_ZONES[j];
@@ -4191,16 +4126,8 @@
       }
 
       function spawnDecals() {
-        const colors = ['#1C3F2C', '#9AAFC0', '#4C4B49', '#496C35', '#484541', '#493A32'];
         for (let i = 0; i < MAX_DECALS; i++) {
-          const d = decalPool[i];
-          d.active = true;
-          d.x = 1200 + ((i * 3793) % 17600);
-          d.y = 1200 + ((i * 6151) % 17600);
-          d.w = 80 + (i % 4) * 28;
-          d.h = 48 + (i % 3) * 22;
-          d.color = colors[i % colors.length];
-          d.alpha = 0.32;
+          decalPool[i].active = false;
         }
       }
 
@@ -7392,8 +7319,9 @@
 
         Camera.apply(CTX);
 
-        // LAYER 0: Sea Base (#0B2D48)
-        CTX.fillStyle = '#0B2D48';
+        // LAYER 0: Arena Base Ground (clean neutral canvas when reset, or Sea Base when biomes exist)
+        const isBlankMap = BIOME_ZONES.length === 0 && BEACH_LAYOUT.length === 0;
+        CTX.fillStyle = isBlankMap ? '#1E293B' : '#0B2D48';
         CTX.fillRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
 
         const zoom = Camera.getZoom();
@@ -7403,6 +7331,46 @@
         const viewRight = Camera.x + halfW;
         const viewTop = Camera.y - halfH;
         const viewBottom = Camera.y + halfH;
+
+        if (isBlankMap) {
+          const gridMinor = 500;
+          const startX = Math.max(0, Math.floor(viewLeft / gridMinor) * gridMinor);
+          const endX = Math.min(ARENA_WIDTH, Math.ceil(viewRight / gridMinor) * gridMinor);
+          const startY = Math.max(0, Math.floor(viewTop / gridMinor) * gridMinor);
+          const endY = Math.min(ARENA_HEIGHT, Math.ceil(viewBottom / gridMinor) * gridMinor);
+
+          CTX.save();
+          CTX.strokeStyle = 'rgba(148, 163, 184, 0.10)';
+          CTX.lineWidth = 2;
+          CTX.beginPath();
+          for (let gx = startX; gx <= endX; gx += gridMinor) {
+            if (gx % 2000 === 0) continue;
+            CTX.moveTo(gx, startY);
+            CTX.lineTo(gx, endY);
+          }
+          for (let gy = startY; gy <= endY; gy += gridMinor) {
+            if (gy % 2000 === 0) continue;
+            CTX.moveTo(startX, gy);
+            CTX.lineTo(endX, gy);
+          }
+          CTX.stroke();
+
+          CTX.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+          CTX.lineWidth = 3;
+          CTX.beginPath();
+          const majorStartX = Math.max(0, Math.floor(viewLeft / 2000) * 2000);
+          const majorStartY = Math.max(0, Math.floor(viewTop / 2000) * 2000);
+          for (let gx = majorStartX; gx <= endX; gx += 2000) {
+            CTX.moveTo(gx, startY);
+            CTX.lineTo(gx, endY);
+          }
+          for (let gy = majorStartY; gy <= endY; gy += 2000) {
+            CTX.moveTo(startX, gy);
+            CTX.lineTo(endX, gy);
+          }
+          CTX.stroke();
+          CTX.restore();
+        }
 
         // LAYER 0.1: Coastal Beaches & Shoreline
         for (let i = 0; i < BEACH_LAYOUT.length; i++) {
@@ -7809,6 +7777,8 @@
             CTX.imageSmoothingQuality = 'high';
             CTX.drawImage(mapImage, mapX, mapY, mapSize, mapSize);
           } else {
+            CTX.fillStyle = BIOME_ZONES.length === 0 ? '#1E293B' : '#0B2D48';
+            CTX.fillRect(mapX, mapY, mapSize, mapSize);
             for (let i = 0; i < BIOME_ZONES.length; i++) {
               const z = BIOME_ZONES[i];
               CTX.fillStyle = z.colorTop;
@@ -8737,7 +8707,7 @@
           context.imageSmoothingQuality = 'high';
           context.drawImage(mapImage, 0, 0, size, size);
         } else {
-          context.fillStyle = '#0B2D48';
+          context.fillStyle = BIOME_ZONES.length === 0 ? '#1E293B' : '#0B2D48';
           context.fillRect(0, 0, size, size);
           for (const beach of BEACH_LAYOUT) {
             context.fillStyle = beach.fill;
