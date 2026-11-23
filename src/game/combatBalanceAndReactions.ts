@@ -152,7 +152,7 @@ export function evaluateElementalHit(
       return {
         triggered: true,
         reaction,
-        label: 'STEAM ERUPTION!',
+        label: 'VAPORIZE!',
         bonusDamage: burst,
         aoeRadius: 110,
         pullDistance: 0,

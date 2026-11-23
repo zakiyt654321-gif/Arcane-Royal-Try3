@@ -21,7 +21,6 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
     <meta property="og:site_name" content="Arcane Royale" />
-    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <style>
       * {
@@ -3512,20 +3511,24 @@
       }
       .split-sidebar-wallet {
         display: flex;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
-        gap: 6px;
+        gap: 4px 6px;
         padding: 5px 8px;
         border-radius: 8px;
         background: rgba(15, 23, 42, 0.85);
         border: 1px solid rgba(148, 163, 184, 0.14);
-        font-size: 11px;
+        font-size: 10.5px;
         font-weight: 800;
         color: #e2e8f0;
         font-variant-numeric: tabular-nums;
-        white-space: nowrap;
+      }
+      #settings-device-status {
         overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
       }
       .split-tab-list {
         display: flex;
@@ -3576,6 +3579,10 @@
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 12px !important;
         width: 100%;
+      }
+      .split-pane-grid-3.hidden,
+      .split-pane-grid-2.hidden {
+        display: none !important;
       }
       .split-modal-pane .shop-item-card {
         padding: 12px !important;
@@ -4044,6 +4051,102 @@
         min-height: 44px !important;
         padding: 10px 14px !important;
       }
+
+      /* Daily Missions Rewarded Reroll Button */
+      .dm-reroll-btn {
+        background: rgba(56, 189, 248, 0.16);
+        border: 1px solid rgba(56, 189, 248, 0.45);
+        color: #bae6fd;
+        border-radius: 7px;
+        padding: 3px 8px;
+        font-size: 10px;
+        font-weight: 800;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: transform 0.12s, background 0.15s;
+      }
+      .dm-reroll-btn:active { transform: scale(0.96); }
+      .dm-reroll-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+      /* Victory / Results 2X Rewarded Ad CTA */
+      .btn-double-rewards {
+        width: 100%;
+        min-height: 44px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(251, 191, 36, 0.72);
+        background: linear-gradient(135deg, #b45309, #f59e0b 55%, #fbbf24);
+        color: #090d16;
+        font-size: 12.5px;
+        font-weight: 900;
+        letter-spacing: 0.4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        box-shadow: 0 6px 18px rgba(245, 158, 11, 0.28);
+        transition: transform 0.12s, filter 0.15s;
+      }
+      .btn-double-rewards:active { transform: scale(0.97); }
+      .btn-double-rewards.claimed, .btn-double-rewards:disabled {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(52, 211, 153, 0.55);
+        color: #a7f3d0;
+        box-shadow: none;
+        cursor: default;
+      }
+
+      /* Strict Online / Ad-Blocker / Simulated Ad Modals (Landscape Safe) */
+      .guard-modal-box {
+        width: min(440px, 90vw);
+        max-height: 86dvh;
+        background: rgba(11, 16, 32, 0.97);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 18px;
+        padding: 18px 22px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 10px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.78);
+      }
+      .guard-modal-icon { font-size: 30px; line-height: 1; }
+      .guard-modal-title { font-size: 17px; font-weight: 900; letter-spacing: 0.6px; margin: 0; }
+      .guard-modal-desc { font-size: 12.5px; color: #cbd5e1; line-height: 1.45; margin: 0; }
+      .ad-preview-bar-track {
+        width: 100%;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(30, 41, 59, 0.95);
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+      }
+      .ad-preview-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #38bdf8, #a855f7, #fbbf24);
+        transition: width 0.1s linear;
+      }
+      .ad-preview-badge {
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.9px;
+        color: #fde68a;
+        background: rgba(245, 158, 11, 0.16);
+        border: 1px solid rgba(251, 191, 36, 0.45);
+        border-radius: 999px;
+        padding: 3px 10px;
+        text-transform: uppercase;
+      }
+      .vault-ad-btn.on-cooldown, .vault-ad-btn:disabled {
+        background: rgba(30, 41, 59, 0.9) !important;
+        color: #94a3b8 !important;
+        border: 1px solid rgba(148, 163, 184, 0.3) !important;
+        cursor: not-allowed;
+        opacity: 0.85;
+      }
     </style>
   </head>
   <body>
@@ -4061,8 +4164,8 @@
       <h2>ROTATE TO LANDSCAPE</h2>
       <p>Arcane Royale is optimized for two-thumb landscape battle royale combat. Force landscape works in your browser—no app required.</p>
       <div class="rotate-prompt-actions">
-        <button type="button" class="btn-rotate-force" onclick="forceLandscapeView()">↻ Force landscape</button>
-        <button type="button" class="btn-rotate-dismiss" onclick="dismissLandscapePrompt()">Play in portrait anyway</button>
+        <button type="button" class="btn-rotate-force" data-ar-click="forceLandscapeView">↻ Force landscape</button>
+        <button type="button" class="btn-rotate-dismiss" data-ar-click="dismissLandscapePrompt">Play in portrait anyway</button>
       </div>
     </div>
 
@@ -4116,20 +4219,20 @@
                 <span class="hud-pill-sep">|</span>
                 <span>ALIVE: <strong id="hud-alive-compact">50</strong></span>
               </div>
-              <button type="button" id="btn-pause" class="interactive hud-tool" onclick="togglePause()" aria-label="Pause game">⏸</button>
+              <button type="button" id="btn-pause" class="interactive hud-tool" data-ar-click="togglePause" aria-label="Pause game">⏸</button>
             </div>
             <div class="hud-map-actions">
               <div id="fps-counter" style="font-size: 10px; font-weight: 700; color: #64748b; align-self: center; margin-right: 2px;">60 FPS</div>
-              <button type="button" id="btn-zoom-toggle" class="interactive hud-tool" onclick="toggleZoom()" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🔍 Auto</button>
-              <button type="button" id="btn-expand-map" class="interactive hud-tool" onclick="toggleMapExpand()" aria-expanded="false" aria-label="Expand island map" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🗺️ Map</button>
-              <button type="button" id="btn-ping" class="interactive hud-tool" onclick="pingAtAim()" aria-label="Place waypoint ahead" title="Ping ahead">📍 Ping</button>
+              <button type="button" id="btn-zoom-toggle" class="interactive hud-tool" data-ar-click="toggleZoom" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🔍 Auto</button>
+              <button type="button" id="btn-expand-map" class="interactive hud-tool" data-ar-click="toggleMapExpand" aria-expanded="false" aria-label="Expand island map" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🗺️ Map</button>
+              <button type="button" id="btn-ping" class="interactive hud-tool" data-ar-click="pingAtAim" aria-label="Place waypoint ahead" title="Ping ahead">📍 Ping</button>
             </div>
           </div>
         </div>
 
         <div id="waypoint-hud" class="waypoint-hud hidden" role="group" aria-label="Current waypoint">
           <span id="waypoint-text">📍 Waypoint</span>
-          <button type="button" id="btn-clear-ping" class="interactive" onclick="clearMapPing()" aria-label="Clear waypoint" title="Clear waypoint">×</button>
+          <button type="button" id="btn-clear-ping" class="interactive" data-ar-click="clearMapPing" aria-label="Clear waypoint" title="Clear waypoint">×</button>
         </div>
         <div id="kill-feed" role="log" aria-live="polite" aria-relevant="additions" aria-label="Elimination feed"></div>
         <div id="art-banner" aria-hidden="true">CRIMSON CLEAVE!</div>
@@ -4204,22 +4307,22 @@
         <!-- Unified Mobile Match Inventory: Quick-Use Loot Button + Expandable 5-Slot Fan -->
         <div id="quick-use-wrap" role="group" aria-label="Match inventory">
           <div id="inventory-hud" class="quick-use-fanout" role="group" aria-label="Expanded inventory slots">
-            <button type="button" class="inventory-slot" data-item="MEDKIT" onclick="useInventoryItem('MEDKIT')" aria-label="Use Medkit"><span class="slot-rarity-dot" id="rarity-dot-MEDKIT"></span><span class="slot-icon">✚</span><span class="slot-name">MEDKIT</span><span class="slot-count" id="count-MEDKIT">0/5</span><span class="slot-cooldown hidden" id="cd-item-MEDKIT"></span></button>
-            <button type="button" class="inventory-slot" data-item="MANA" onclick="useInventoryItem('MANA')" aria-label="Use Mana Potion"><span class="slot-rarity-dot" id="rarity-dot-MANA"></span><span class="slot-icon">◆</span><span class="slot-name">MANA</span><span class="slot-count" id="count-MANA">0/4</span><span class="slot-cooldown hidden" id="cd-item-MANA"></span></button>
-            <button type="button" class="inventory-slot" data-item="SHIELD" onclick="useInventoryItem('SHIELD')" aria-label="Use Shield Tonic"><span class="slot-rarity-dot" id="rarity-dot-SHIELD"></span><span class="slot-icon">⬡</span><span class="slot-name">SHIELD</span><span class="slot-count" id="count-SHIELD">0/3</span><span class="slot-cooldown hidden" id="cd-item-SHIELD"></span></button>
-            <button type="button" class="inventory-slot" data-item="HASTE" onclick="useInventoryItem('HASTE')" aria-label="Use Haste Elixir"><span class="slot-rarity-dot" id="rarity-dot-HASTE"></span><span class="slot-icon">➤</span><span class="slot-name">HASTE</span><span class="slot-count" id="count-HASTE">0/2</span><span class="slot-cooldown hidden" id="cd-item-HASTE"></span></button>
-            <button type="button" class="inventory-slot" data-item="BOMB" onclick="useInventoryItem('BOMB')" aria-label="Throw Arcane Bomb"><span class="slot-rarity-dot" id="rarity-dot-BOMB"></span><span class="slot-icon">✹</span><span class="slot-name">BOMB</span><span class="slot-count" id="count-BOMB">0/2</span><span class="slot-cooldown hidden" id="cd-item-BOMB"></span></button>
-            <button type="button" id="btn-inventory-info" onclick="toggleItemDetails()" aria-label="Toggle item details" aria-expanded="false" title="Item details">i</button>
+            <button type="button" class="inventory-slot" data-item="MEDKIT" data-ar-click="useInventoryItem" data-ar-arg="MEDKIT" aria-label="Use Medkit"><span class="slot-rarity-dot" id="rarity-dot-MEDKIT"></span><span class="slot-icon">✚</span><span class="slot-name">MEDKIT</span><span class="slot-count" id="count-MEDKIT">0/5</span><span class="slot-cooldown hidden" id="cd-item-MEDKIT"></span></button>
+            <button type="button" class="inventory-slot" data-item="MANA" data-ar-click="useInventoryItem" data-ar-arg="MANA" aria-label="Use Mana Potion"><span class="slot-rarity-dot" id="rarity-dot-MANA"></span><span class="slot-icon">◆</span><span class="slot-name">MANA</span><span class="slot-count" id="count-MANA">0/4</span><span class="slot-cooldown hidden" id="cd-item-MANA"></span></button>
+            <button type="button" class="inventory-slot" data-item="SHIELD" data-ar-click="useInventoryItem" data-ar-arg="SHIELD" aria-label="Use Shield Tonic"><span class="slot-rarity-dot" id="rarity-dot-SHIELD"></span><span class="slot-icon">⬡</span><span class="slot-name">SHIELD</span><span class="slot-count" id="count-SHIELD">0/3</span><span class="slot-cooldown hidden" id="cd-item-SHIELD"></span></button>
+            <button type="button" class="inventory-slot" data-item="HASTE" data-ar-click="useInventoryItem" data-ar-arg="HASTE" aria-label="Use Haste Elixir"><span class="slot-rarity-dot" id="rarity-dot-HASTE"></span><span class="slot-icon">➤</span><span class="slot-name">HASTE</span><span class="slot-count" id="count-HASTE">0/2</span><span class="slot-cooldown hidden" id="cd-item-HASTE"></span></button>
+            <button type="button" class="inventory-slot" data-item="BOMB" data-ar-click="useInventoryItem" data-ar-arg="BOMB" aria-label="Throw Arcane Bomb"><span class="slot-rarity-dot" id="rarity-dot-BOMB"></span><span class="slot-icon">✹</span><span class="slot-name">BOMB</span><span class="slot-count" id="count-BOMB">0/2</span><span class="slot-cooldown hidden" id="cd-item-BOMB"></span></button>
+            <button type="button" id="btn-inventory-info" data-ar-click="toggleItemDetails" aria-label="Toggle item details" aria-expanded="false" title="Item details">i</button>
           </div>
-          <button type="button" id="btn-quick-use-expand" onclick="toggleQuickUseFanout()" aria-expanded="false" aria-label="Expand 5 inventory slots" title="Expand all 5 loot slots">▲</button>
-          <button type="button" id="btn-quick-use" class="empty" onclick="useQuickUseItem()" aria-label="Quick-use loot item">
+          <button type="button" id="btn-quick-use-expand" data-ar-click="toggleQuickUseFanout" aria-expanded="false" aria-label="Expand 5 inventory slots" title="Expand all 5 loot slots">▲</button>
+          <button type="button" id="btn-quick-use" class="empty" data-ar-click="useQuickUseItem" aria-label="Quick-use loot item">
             <span class="quick-use-icon" id="quick-use-icon">✚</span>
             <span class="quick-use-label" id="quick-use-label">LOOT</span>
             <span id="quick-use-badge">0</span>
             <span id="quick-use-cd" class="hidden" aria-hidden="true"></span>
           </button>
         </div>
-        <div id="item-details" class="hidden" role="status"><button type="button" id="btn-close-item-details" onclick="toggleItemDetails(false)" aria-label="Close item details">×</button><span id="item-details-text"></span></div>
+        <div id="item-details" class="hidden" role="status"><button type="button" id="btn-close-item-details" data-ar-click="closeItemDetails" aria-label="Close item details">×</button><span id="item-details-text"></span></div>
         <div id="item-channel" class="hidden" role="status" aria-live="polite"><span id="item-channel-label"></span><div class="channel-track"><div id="item-channel-fill"></div></div></div>
       </div>
 
@@ -4235,14 +4338,14 @@
             <div class="drop-info-top">
               <div class="drop-info-head">
                 <h2 id="drop-title">SELECT DROP ZONE</h2>
-                <button type="button" class="modal-back-btn" style="width: auto; min-height: 40px; padding: 0 12px;" onclick="cancelDropScreen()" aria-label="Back to lobby">← BACK</button>
+                <button type="button" class="modal-back-btn" style="width: auto; min-height: 40px; padding: 0 12px;" data-ar-click="cancelDropScreen" aria-label="Back to lobby">← BACK</button>
               </div>
               <p class="drop-hint-text">Tap the island to pick your landing zone. Steer with your left joystick while descending.</p>
               <div id="drop-coords" aria-live="polite">No deployment point selected</div>
             </div>
             <div class="drop-actions-col">
-              <button type="button" id="btn-random-drop" class="btn-lobby-sec" onclick="selectRandomDrop()">⚄ Random Drop</button>
-              <button type="button" id="btn-confirm-drop" class="btn-lobby-main" onclick="confirmDrop()" disabled>⚔ DEPLOY</button>
+              <button type="button" id="btn-random-drop" class="btn-lobby-sec" data-ar-click="selectRandomDrop">⚄ Random Drop</button>
+              <button type="button" id="btn-confirm-drop" class="btn-lobby-main" data-ar-click="confirmDrop" disabled>⚔ DEPLOY</button>
             </div>
           </div>
         </div>
@@ -4261,21 +4364,21 @@
           <h2 id="login-title" style="color: #fbbf24; margin-bottom: 12px; font-weight: 900; letter-spacing: 1px;">ENTER YOUR NAME</h2>
           <p style="font-size: 12px; color: #94a3b8; margin-bottom: 15px;"><span id="name-help">Choose your arcane identity for the arena. Up to 12 characters.</span></p>
           <label class="field-label" for="name-input">Champion name</label>
-          <input type="text" id="name-input" class="text-field" autocomplete="nickname" enterkeyhint="play" aria-describedby="name-help" maxlength="12" onkeydown="if(event.key==='Enter') submitName()" style="width: 100%; padding: 12px; margin-bottom: 18px; border-radius: 8px; border: 1px solid #a855f7; background: rgba(15,23,42,0.85); color: white; text-align: center; font-weight: bold; font-size: 16px; outline: none;" placeholder="PLAYER NAME">
-          <button type="button" class="btn-lobby-main" onclick="submitName()" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px;">PLAY</button>
+          <input type="text" id="name-input" class="text-field" autocomplete="nickname" enterkeyhint="play" aria-describedby="name-help" maxlength="12" data-ar-enter="submitName" style="width: 100%; padding: 12px; margin-bottom: 18px; border-radius: 8px; border: 1px solid #a855f7; background: rgba(15,23,42,0.85); color: white; text-align: center; font-weight: bold; font-size: 16px; outline: none;" placeholder="PLAYER NAME">
+          <button type="button" id="btn-submit-name" class="btn-lobby-main" data-ar-click="submitName" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px;">PLAY</button>
         </div>
       </div>
 
-      <!-- DEMO SANDBOX -->
+      <!-- DEMO SUPPLY DROP -->
       <div id="operator-modal" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="demo-title" style="z-index: 200; background: rgba(0,0,0,0.85);">
-        <div class="gameover-box" style="max-width: 360px; padding: 24px;">
-          <div class="eyebrow">HTML5 sandbox</div>
-          <h2 id="demo-title" style="color: #c9a5ff; margin: 10px 0; font-weight: 900;">DEMO SUPPLY DROP</h2>
-          <p class="demo-notice">This is a local single-player demo. Claiming supplies costs nothing and never starts a payment.</p>
-          <p style="margin: 16px 0; color: #f8fafc; font-size: 14px; line-height: 1.7;">+2,500 🪙 &nbsp; +2,500 🔮 &nbsp; +250 ⚡ XP<br><span style="color: #a7b4ca; font-size: 11px;">Enough to explore every champion, drop trail, and stat upgrade.</span></p>
+        <div class="gameover-box" style="max-width: 390px; padding: 22px;">
+          <div class="eyebrow">Arcane Vault Stash</div>
+          <h2 id="demo-title" style="color: #c9a5ff; margin: 8px 0; font-weight: 900;">DEMO SUPPLY DROP</h2>
+          <p class="demo-notice">Claim a full test grant to try every champion, arcane rune, drop trail, and permanent stat tier.</p>
+          <p id="demo-supply-summary" style="margin: 14px 0; color: #f8fafc; font-size: 13.5px; font-weight: 800; line-height: 1.7;">+9,999 🪙 · +9,999 🔮 · +9,999 💎 · +9,999 ⚡ XP<br><span style="color: #a7b4ca; font-size: 11px; font-weight: 600;">Instant sandbox supply boost across all four currencies.</span></p>
           <div style="display: flex; gap: 10px; width: 100%;">
-            <button type="button" class="btn-lobby-sec" onclick="closeOperatorModal()" style="flex: 1; justify-content: center;">Cancel</button>
-            <button type="button" class="btn-lobby-main" onclick="claimDemoSupplies()" style="flex: 1; padding: 10px; font-size: 13px;">Claim supplies</button>
+            <button type="button" class="btn-lobby-sec" data-ar-click="closeOperatorModal" style="flex: 1; justify-content: center;">Cancel</button>
+            <button type="button" id="btn-claim-demo" class="btn-lobby-main" data-ar-click="claimDemoSupplies" style="flex: 1; padding: 10px; font-size: 13px;">Claim Supplies</button>
           </div>
         </div>
       </div>
@@ -4306,9 +4409,9 @@
           </div>
 
           <div class="lobby-topbar-actions">
-            <button type="button" id="btn-combat-guide" class="lobby-icon-btn" onclick="openCombatGuide()" title="Combat Guide" aria-label="Open Combat Guide">📜</button>
-            <button type="button" id="btn-settings" class="lobby-icon-btn" onclick="openSettings()" title="Settings" aria-label="Open Settings">⚙️</button>
-            <button type="button" id="btn-operator" class="lobby-icon-btn" onclick="triggerOperatorAccess()" title="Demo Supplies" aria-label="Open Demo Supplies">✨</button>
+            <button type="button" id="btn-combat-guide" class="lobby-icon-btn" data-ar-click="openCombatGuide" title="Combat Guide" aria-label="Open Combat Guide">📜</button>
+            <button type="button" id="btn-settings" class="lobby-icon-btn" data-ar-click="openSettings" title="Settings" aria-label="Open Settings">⚙️</button>
+            <button type="button" id="btn-operator" class="lobby-icon-btn" data-ar-click="triggerOperatorAccess" title="Demo Supplies" aria-label="Open Demo Supplies">✨</button>
           </div>
         </header>
 
@@ -4319,7 +4422,7 @@
             <div id="daily-missions-panel" class="daily-missions-panel">
               <div class="daily-missions-head">
                 <span>Daily Missions</span>
-                <span id="daily-missions-reset" style="font-size: 10.5px; color: #94a3b8; font-weight: 600;">Rotates Daily</span>
+                <button type="button" id="btn-reroll-mission" class="dm-reroll-btn" data-ar-click="rerollDailyMissionAd" aria-label="Watch ad to reroll a daily mission">📺 Reroll Mission</button>
               </div>
               <div id="daily-missions-list" class="daily-missions-list"></div>
             </div>
@@ -4335,11 +4438,11 @@
           <!-- Center Stage (40%): Open Uncluttered Champion Showcase -->
           <section id="champion-stage" class="lobby-center-stage" aria-label="Champion Showcase">
             <div class="showcase-carousel-row">
-              <button type="button" id="btn-prev-hero" class="showcase-arrow-btn" onclick="cycleLobbyHero(-1)" aria-label="Previous champion">&lsaquo;</button>
+              <button type="button" id="btn-prev-hero" class="showcase-arrow-btn" data-ar-click="cycleLobbyHero" data-ar-arg="-1" aria-label="Previous champion">&lsaquo;</button>
               <div class="showcase-avatar-ring" id="hero-showcase-bg">
                 <canvas id="heroPreviewCanvas" width="240" height="240"></canvas>
               </div>
-              <button type="button" id="btn-next-hero" class="showcase-arrow-btn" onclick="cycleLobbyHero(1)" aria-label="Next champion">&rsaquo;</button>
+              <button type="button" id="btn-next-hero" class="showcase-arrow-btn" data-ar-click="cycleLobbyHero" data-ar-arg="1" aria-label="Next champion">&rsaquo;</button>
             </div>
             <div class="showcase-identity">
               <h2 id="showcase-hero-name">The Berserker</h2>
@@ -4349,29 +4452,29 @@
                 <span id="showcase-hero-role">Fire Juggernaut</span>
               </div>
               <div id="showcase-hero-art">Signature: Crimson Cleave</div>
-              <button type="button" id="showcase-lock-cta" class="hidden" onclick="openShop('characters')">Unlock in Arcane Shop</button>
+              <button type="button" id="showcase-lock-cta" class="hidden" data-ar-click="openShop" data-ar-arg="characters">Unlock in Arcane Shop</button>
             </div>
             <div id="hero-stats" class="hidden" aria-hidden="true"></div>
             <div class="showcase-dots" role="tablist" aria-label="Select champion">
-              <button type="button" class="showcase-dot active" data-hero-dot="BERSERKER" onclick="previewLobbyHero('BERSERKER')" aria-label="The Berserker"></button>
-              <button type="button" class="showcase-dot" data-hero-dot="TIDECALLER" onclick="previewLobbyHero('TIDECALLER')" aria-label="The Tidecaller"></button>
-              <button type="button" class="showcase-dot" data-hero-dot="SHADOW" onclick="previewLobbyHero('SHADOW')" aria-label="The Shadow"></button>
+              <button type="button" class="showcase-dot active" data-hero-dot="BERSERKER" data-ar-click="previewLobbyHero" data-ar-arg="BERSERKER" aria-label="The Berserker"></button>
+              <button type="button" class="showcase-dot" data-hero-dot="TIDECALLER" data-ar-click="previewLobbyHero" data-ar-arg="TIDECALLER" aria-label="The Tidecaller"></button>
+              <button type="button" class="showcase-dot" data-hero-dot="SHADOW" data-ar-click="previewLobbyHero" data-ar-arg="SHADOW" aria-label="The Shadow"></button>
             </div>
           </section>
 
           <!-- Right Action Dock (30%): Thumb-Aligned Actions + Anchored PLAY -->
           <aside class="lobby-right-dock" aria-label="Primary actions">
             <div class="lobby-dock-secondary">
-              <button type="button" class="lobby-dock-btn" onclick="openShop('characters')">
+              <button type="button" id="btn-open-shop" class="lobby-dock-btn" data-ar-click="openShop" data-ar-arg="characters">
                 <span>🛒 ARCANE SHOP</span>
                 <span class="lobby-dock-btn-sub">Heroes · Runes</span>
               </button>
-              <button type="button" id="btn-open-upgrades" class="lobby-dock-btn" onclick="openStatsUpgrades()">
+              <button type="button" id="btn-open-upgrades" class="lobby-dock-btn" data-ar-click="openStatsUpgrades">
                 <span>⚡ FIGHTER UPGRADES</span>
                 <span class="lobby-dock-btn-sub">Stats · Career</span>
               </button>
             </div>
-            <button type="button" id="btn-lobby-play" class="lobby-play-cta" onclick="startBattle()">
+            <button type="button" id="btn-lobby-play" class="lobby-play-cta" data-ar-click="startBattle">
               <span>⚔️</span>
               <span>PLAY</span>
             </button>
@@ -4383,7 +4486,7 @@
       <div id="shop-screen" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="shop-title">
         <div class="split-modal-shell">
           <aside class="split-modal-sidebar">
-            <button type="button" class="modal-back-btn" onclick="closeShop()" aria-label="Back to lobby">← BACK</button>
+            <button type="button" class="modal-back-btn" data-ar-click="closeShop" aria-label="Back to lobby">← BACK</button>
             <h2 id="shop-title" class="split-sidebar-title">ARCANE SHOP</h2>
             <div class="split-sidebar-wallet" aria-label="Shop currencies">
               <span>🪙 <span id="shop-gold">0</span></span>
@@ -4391,10 +4494,10 @@
               <span>💎 <span id="shop-gems">0</span></span>
             </div>
             <div class="split-tab-list" role="tablist" aria-label="Shop categories">
-              <button type="button" id="tab-btn-chars" class="split-tab-btn active" onclick="switchShopTab('characters')" role="tab" aria-selected="true" aria-controls="shop-content-chars">🧙 Champions</button>
-              <button type="button" id="tab-btn-runes" class="split-tab-btn" onclick="switchShopTab('runes')" role="tab" aria-selected="false" aria-controls="shop-content-runes">⚡ Runes</button>
-              <button type="button" id="tab-btn-drops" class="split-tab-btn" onclick="switchShopTab('drops')" role="tab" aria-selected="false" aria-controls="shop-content-drops">🪂 Trails</button>
-              <button type="button" id="tab-btn-crystals" class="split-tab-btn" onclick="switchShopTab('crystals')" role="tab" aria-selected="false" aria-controls="shop-content-crystals">🔮 Vault</button>
+              <button type="button" id="tab-btn-chars" class="split-tab-btn active" data-ar-click="switchShopTab" data-ar-arg="characters" role="tab" aria-selected="true" aria-controls="shop-content-chars">🧙 Champions</button>
+              <button type="button" id="tab-btn-runes" class="split-tab-btn" data-ar-click="switchShopTab" data-ar-arg="runes" role="tab" aria-selected="false" aria-controls="shop-content-runes">⚡ Runes</button>
+              <button type="button" id="tab-btn-drops" class="split-tab-btn" data-ar-click="switchShopTab" data-ar-arg="drops" role="tab" aria-selected="false" aria-controls="shop-content-drops">🪂 Trails</button>
+              <button type="button" id="tab-btn-crystals" class="split-tab-btn" data-ar-click="switchShopTab" data-ar-arg="crystals" role="tab" aria-selected="false" aria-controls="shop-content-crystals">🔮 Vault</button>
             </div>
           </aside>
 
@@ -4435,30 +4538,30 @@
             <!-- Drop Trails Tab -->
             <div id="shop-content-drops" class="split-pane-grid-2 hidden" role="tabpanel"></div>
 
-            <!-- Vault Tab (Crystals + Gem Info consolidated cleanly) -->
+            <!-- Vault Tab (Rewarded Video Ad Claims with Cooldown Timers) -->
             <div id="shop-content-crystals" class="split-pane-grid-3 hidden" role="tabpanel">
               <div class="shop-item-card" style="text-align: center;">
                 <div style="font-size: 26px;">🔮</div>
                 <strong style="color: #c084fc;">Pouch of Crystals</strong>
-                <p>100 Astral Crystals for drop trails and cosmetics.</p>
-                <button type="button" class="btn-buy" onclick="claimDemoCrystals(100)" style="background: linear-gradient(135deg, #7e22ce, #a855f7);">Grant +100 🔮</button>
+                <p>+150 Astral Crystals for drop trails and cosmetics (60s cooldown).</p>
+                <button type="button" id="btn-vault-ad-vault_crystals_sm" class="btn-buy vault-ad-btn" data-ar-click="claimVaultRewardedAd" data-ar-arg="vault_crystals_sm" style="background: linear-gradient(135deg, #7e22ce, #a855f7);">📺 Watch Ad · +150 🔮</button>
               </div>
               <div class="shop-item-card" style="text-align: center; border-color: rgba(56, 189, 248, 0.5) !important;">
                 <div style="font-size: 26px;">🔮✨</div>
                 <strong style="color: #38bdf8;">Chest of Crystals</strong>
-                <p>500 Astral Crystals for fast cosmetic unlocks.</p>
-                <button type="button" class="btn-buy" onclick="claimDemoCrystals(500)" style="background: linear-gradient(135deg, #0284c7, #38bdf8);">Grant +500 🔮</button>
+                <p>+400 Astral Crystals for rapid cosmetic unlocks (2m cooldown).</p>
+                <button type="button" id="btn-vault-ad-vault_crystals_lg" class="btn-buy vault-ad-btn" data-ar-click="claimVaultRewardedAd" data-ar-arg="vault_crystals_lg" style="background: linear-gradient(135deg, #0284c7, #38bdf8);">📺 Watch Ad · +400 🔮</button>
               </div>
               <div class="shop-item-card" style="text-align: center; border-color: rgba(251, 191, 36, 0.5) !important;">
-                <div style="font-size: 26px;">👑🔮</div>
-                <strong style="color: #fbbf24;">Vault of Crystals</strong>
-                <p>1,200 Astral Crystals — maximum sandbox stash.</p>
-                <button type="button" class="btn-buy" onclick="claimDemoCrystals(1200)" style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #090d16;">Grant +1200 🔮</button>
+                <div style="font-size: 26px;">💎👑</div>
+                <strong style="color: #fbbf24;">Arcane Gem Crate</strong>
+                <p>+15 Arcane Gems to unlock elite champions faster (90s cooldown).</p>
+                <button type="button" id="btn-vault-ad-vault_gems_pack" class="btn-buy vault-ad-btn" data-ar-click="claimVaultRewardedAd" data-ar-arg="vault_gems_pack" style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #090d16;">📺 Watch Ad · +15 💎</button>
               </div>
               <div class="shop-item-card" style="grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px;">
                 <div>
-                  <strong style="color: #7dd3fc;">💎 Arcane Gem Rewards (No Purchases)</strong>
-                  <p style="margin-top: 4px !important;">1st Place = +5 Gems · 2nd Place = +2 Gems · 3rd Place = +1 Gem · Local single-player edition.</p>
+                  <strong style="color: #7dd3fc;">🏆 Arena Placement Gem Rewards</strong>
+                  <p style="margin-top: 4px !important;">1st Place = +5 Gems · 2nd Place = +2 Gems · 3rd Place = +1 Gem · Watch rewarded videos above for bonus vault drops.</p>
                 </div>
               </div>
             </div>
@@ -4472,15 +4575,15 @@
       <div id="stats-upgrades-screen" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="stats-upgrades-title" style="z-index: 205;">
         <div class="split-modal-shell">
           <aside class="split-modal-sidebar">
-            <button type="button" class="modal-back-btn" onclick="closeStatsUpgrades()" aria-label="Back to lobby">← BACK</button>
+            <button type="button" class="modal-back-btn" data-ar-click="closeStatsUpgrades" aria-label="Back to lobby">← BACK</button>
             <h2 id="stats-upgrades-title" class="split-sidebar-title">UPGRADES</h2>
             <div class="split-sidebar-wallet">
               <span>⚡ <span id="upgrades-spendable-xp">0</span> XP</span>
               <span class="lvl-pill" style="display:inline-flex; align-items:center; gap:4px; background:none; border:none; padding:0; min-width:auto;">⭐ <span id="upgrades-level">LVL 1</span><span id="upgrades-xp-fill" class="hidden"></span></span>
             </div>
             <div class="split-tab-list" role="tablist" aria-label="Upgrade sections">
-              <button type="button" id="tab-up-upgrades" class="split-tab-btn active" onclick="switchUpgradesTab('upgrades')" role="tab" aria-selected="true">⚡ Stat Tiers</button>
-              <button type="button" id="tab-up-career" class="split-tab-btn" onclick="switchUpgradesTab('career')" role="tab" aria-selected="false">📊 Career Stats</button>
+              <button type="button" id="tab-up-upgrades" class="split-tab-btn active" data-ar-click="switchUpgradesTab" data-ar-arg="upgrades" role="tab" aria-selected="true">⚡ Stat Tiers</button>
+              <button type="button" id="tab-up-career" class="split-tab-btn" data-ar-click="switchUpgradesTab" data-ar-arg="career" role="tab" aria-selected="false">📊 Career Stats</button>
             </div>
           </aside>
 
@@ -4531,7 +4634,7 @@
             <div id="killcam-box" style="display: none;">
               <div id="killcam-header">
                 <span class="killcam-badge">ELIMINATION CAM · 2.0S SLOW-MO</span>
-                <button type="button" id="btn-killcam-replay" class="killcam-replay-btn" onclick="restartKillcamReplay()">↻ Replay</button>
+                <button type="button" id="btn-killcam-replay" class="killcam-replay-btn" data-ar-click="restartKillcamReplay">↻ Replay</button>
               </div>
               <canvas id="killCamCanvas" width="520" height="280"></canvas>
               <div class="killcam-progress-track"><div id="killcam-progress-fill" class="killcam-progress-fill"></div></div>
@@ -4572,10 +4675,11 @@
             </div>
 
             <div class="go-actions-stack">
-              <button type="button" id="btn-go-upgrades" class="btn-lobby-sec" onclick="openStatsUpgradesFromGameOver()" style="width: 100%; justify-content: center;">⚡ Spend XP on Fighter Upgrades</button>
+              <button type="button" id="btn-double-rewards" class="btn-double-rewards" data-ar-click="doubleMatchRewardsAd">📺 WATCH AD · 2X MATCH REWARDS</button>
+              <button type="button" id="btn-go-upgrades" class="btn-lobby-sec" data-ar-click="openStatsUpgradesFromGameOver" style="width: 100%; justify-content: center;">⚡ Spend XP on Fighter Upgrades</button>
               <div class="gameover-actions-row">
-                <button type="button" class="btn-lobby-sec" onclick="returnToLobby()" style="justify-content: center;">LOBBY</button>
-                <button type="button" class="btn-lobby-main" onclick="startBattle()">PLAY AGAIN</button>
+                <button type="button" id="btn-go-lobby" class="btn-lobby-sec" data-ar-click="postMatchReturnToLobby" style="justify-content: center;">LOBBY</button>
+                <button type="button" id="btn-go-play-again" class="btn-lobby-main" data-ar-click="postMatchPlayAgain">PLAY AGAIN</button>
               </div>
             </div>
           </div>
@@ -4588,9 +4692,9 @@
           <div class="eyebrow">Battle suspended</div>
           <h2 id="pause-title" class="go-title" style="color: #f8fafc;">PAUSED</h2>
           <p style="color: #a7b4ca; font-size: 13px; line-height: 1.5;">The arena and storm are frozen until you return.</p>
-          <button type="button" class="btn-lobby-main" onclick="resumeGame()" style="width: 100%; min-height: 48px;">▶ Resume Battle</button>
-          <button type="button" class="btn-lobby-sec" onclick="openSettings()" style="width: 100%; min-height: 44px; justify-content: center;">⚙️ Settings &amp; Controls</button>
-          <button type="button" class="btn-lobby-sec" onclick="returnToLobby(true)" style="width: 100%; min-height: 44px; justify-content: center; color: #ff9aa6;">Leave Match</button>
+          <button type="button" class="btn-lobby-main" data-ar-click="resumeGame" style="width: 100%; min-height: 48px;">▶ Resume Battle</button>
+          <button type="button" class="btn-lobby-sec" data-ar-click="openSettings" style="width: 100%; min-height: 44px; justify-content: center;">⚙️ Settings &amp; Controls</button>
+          <button type="button" class="btn-lobby-sec" data-ar-click="leaveMatchToLobby" style="width: 100%; min-height: 44px; justify-content: center; color: #ff9aa6;">Leave Match</button>
         </div>
       </div>
 
@@ -4598,17 +4702,17 @@
       <div id="settings-screen" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title" style="z-index: 220;">
         <div class="split-modal-shell">
           <aside class="split-modal-sidebar">
-            <button type="button" class="modal-back-btn" onclick="closeSettings()" aria-label="Save and close settings">← BACK</button>
+            <button type="button" class="modal-back-btn" data-ar-click="closeSettings" aria-label="Save and close settings">← BACK</button>
             <h2 id="settings-title" class="split-sidebar-title">SETTINGS</h2>
             <div class="split-sidebar-wallet" style="font-size: 11px; color: #7dd3fc;">
               <span id="settings-device-status">Mobile Landscape</span>
               <span id="settings-viewport-size">--</span>
             </div>
             <div class="split-tab-list" role="tablist" aria-label="Settings categories">
-              <button type="button" id="tab-set-audio" class="split-tab-btn active" onclick="switchSettingsTab('audio')" role="tab" aria-selected="true">🔊 Audio</button>
-              <button type="button" id="tab-set-controls" class="split-tab-btn" onclick="switchSettingsTab('controls')" role="tab" aria-selected="false">🎮 Controls</button>
-              <button type="button" id="tab-set-display" class="split-tab-btn" onclick="switchSettingsTab('display')" role="tab" aria-selected="false">🖥️ Display</button>
-              <button type="button" id="tab-set-data" class="split-tab-btn" onclick="switchSettingsTab('data')" role="tab" aria-selected="false">💾 App &amp; Save</button>
+              <button type="button" id="tab-set-audio" class="split-tab-btn active" data-ar-click="switchSettingsTab" data-ar-arg="audio" role="tab" aria-selected="true">🔊 Audio</button>
+              <button type="button" id="tab-set-controls" class="split-tab-btn" data-ar-click="switchSettingsTab" data-ar-arg="controls" role="tab" aria-selected="false">🎮 Controls</button>
+              <button type="button" id="tab-set-display" class="split-tab-btn" data-ar-click="switchSettingsTab" data-ar-arg="display" role="tab" aria-selected="false">🖥️ Display</button>
+              <button type="button" id="tab-set-data" class="split-tab-btn" data-ar-click="switchSettingsTab" data-ar-arg="data" role="tab" aria-selected="false">💾 Save Data</button>
             </div>
           </aside>
 
@@ -4620,7 +4724,7 @@
                   <label class="settings-tile-label" for="slider-music">Music Volume</label>
                 </div>
                 <span class="settings-tile-desc">Arena soundtrack and lobby ambience.</span>
-                <input type="range" min="0" max="1" step="0.05" id="slider-music" class="settings-slider" oninput="onMusicVolumeChange(this.value)">
+                <input type="range" min="0" max="1" step="0.05" id="slider-music" class="settings-slider" data-ar-input="onMusicVolumeChange">
               </div>
 
               <div class="settings-tile">
@@ -4628,7 +4732,7 @@
                   <label class="settings-tile-label" for="slider-sfx">SFX Volume</label>
                 </div>
                 <span class="settings-tile-desc">Sword impacts, arcane spells, and pickups.</span>
-                <input type="range" min="0" max="1" step="0.05" id="slider-sfx" class="settings-slider" oninput="onSfxVolumeChange(this.value)">
+                <input type="range" min="0" max="1" step="0.05" id="slider-sfx" class="settings-slider" data-ar-input="onSfxVolumeChange">
               </div>
 
               <div class="settings-tile">
@@ -4636,13 +4740,13 @@
                   <label class="settings-tile-label" for="slider-voice">Announcer Voice</label>
                 </div>
                 <span class="settings-tile-desc">Kill streaks, storm warnings, and victory calls.</span>
-                <input type="range" min="0" max="1" step="0.05" id="slider-voice" class="settings-slider" oninput="onVoiceVolumeChange(this.value)">
+                <input type="range" min="0" max="1" step="0.05" id="slider-voice" class="settings-slider" data-ar-input="onVoiceVolumeChange">
               </div>
 
               <div class="settings-tile">
                 <div class="settings-tile-head">
                   <label class="settings-tile-label" for="toggle-haptics">Haptic Feedback</label>
-                  <input type="checkbox" id="toggle-haptics" style="accent-color: #a855f7;" onchange="onHapticsToggle(this.checked)">
+                  <input type="checkbox" id="toggle-haptics" style="accent-color: #a855f7;" data-ar-change="onHapticsToggle">
                 </div>
                 <span class="settings-tile-desc">Tactile vibration pulses on spell hits and launches.</span>
               </div>
@@ -4656,13 +4760,13 @@
                   <span id="control-scale-val" class="settings-scale-value" style="font-size: 13px; color: #7dd3fc;">100%</span>
                 </div>
                 <span class="settings-tile-desc">Resize thumb joystick and combat buttons.</span>
-                <input type="range" min="0.75" max="1.25" step="0.05" id="slider-control-scale" class="settings-slider" oninput="onControlScaleChange(this.value)">
+                <input type="range" min="0.75" max="1.25" step="0.05" id="slider-control-scale" class="settings-slider" data-ar-input="onControlScaleChange">
               </div>
 
               <div class="settings-tile">
                 <div class="settings-tile-head">
                   <label class="settings-tile-label" for="toggle-autoloot">Auto-Loot &amp; Auto-Upgrade</label>
-                  <input type="checkbox" id="toggle-autoloot" style="accent-color: #38bdf8;" onchange="onAutoLootToggle(this.checked)">
+                  <input type="checkbox" id="toggle-autoloot" style="accent-color: #38bdf8;" data-ar-change="onAutoLootToggle">
                 </div>
                 <span class="settings-tile-desc">Automatically pick up potions and swap to higher rarities.</span>
               </div>
@@ -4672,7 +4776,7 @@
                   <span class="settings-tile-label">Target Auto-Aim</span>
                 </div>
                 <span class="settings-tile-desc">Snap tap-casts toward the nearest enemy in range.</span>
-                <button type="button" id="btn-autoaim" class="btn-lobby-sec" onclick="toggleAutoAim()" style="width: 100%; justify-content: center;">🎯 Auto-Aim: ON</button>
+                <button type="button" id="btn-autoaim" class="btn-lobby-sec" data-ar-click="toggleAutoAim" style="width: 100%; justify-content: center;">🎯 Auto-Aim: ON</button>
               </div>
 
               <div class="settings-tile">
@@ -4680,7 +4784,7 @@
                   <span class="settings-tile-label">Custom Mobile HUD</span>
                 </div>
                 <span class="settings-tile-desc">Drag, scale, and adjust opacity of every HUD cluster.</span>
-                <button type="button" id="btn-customize-hud" class="btn-lobby-sec" onclick="openHudEditor()" style="width: 100%; justify-content: center; border-color: rgba(56, 189, 248, 0.55); color: #bae6fd;">🎛️ Customize HUD</button>
+                <button type="button" id="btn-customize-hud" class="btn-lobby-sec" data-ar-click="openHudEditor" style="width: 100%; justify-content: center; border-color: rgba(56, 189, 248, 0.55); color: #bae6fd;">🎛️ Customize HUD</button>
               </div>
             </div>
 
@@ -4692,16 +4796,16 @@
                 </div>
                 <span class="settings-tile-desc">Balance particle density and ambient embers for your device.</span>
                 <div class="settings-quality-group" role="group" aria-label="Graphics quality">
-                  <button type="button" id="qual-btn-low" class="quality-btn" onclick="setGraphicsQuality('low')">Low</button>
-                  <button type="button" id="qual-btn-medium" class="quality-btn" onclick="setGraphicsQuality('medium')">Medium</button>
-                  <button type="button" id="qual-btn-high" class="quality-btn" onclick="setGraphicsQuality('high')">High</button>
+                  <button type="button" id="qual-btn-low" class="quality-btn" data-ar-click="setGraphicsQuality" data-ar-arg="low">Low</button>
+                  <button type="button" id="qual-btn-medium" class="quality-btn" data-ar-click="setGraphicsQuality" data-ar-arg="medium">Medium</button>
+                  <button type="button" id="qual-btn-high" class="quality-btn" data-ar-click="setGraphicsQuality" data-ar-arg="high">High</button>
                 </div>
               </div>
 
               <div class="settings-tile">
                 <div class="settings-tile-head">
                   <label class="settings-tile-label" for="toggle-battery30">30 FPS Battery Saver</label>
-                  <input type="checkbox" id="toggle-battery30" style="accent-color: #fbbf24;" onchange="onBatterySaverToggle(this.checked)">
+                  <input type="checkbox" id="toggle-battery30" style="accent-color: #fbbf24;" data-ar-change="onBatterySaverToggle">
                 </div>
                 <span class="settings-tile-desc">Cap active match rendering at 30 FPS for longer battery life.</span>
               </div>
@@ -4709,7 +4813,7 @@
               <div class="settings-tile">
                 <div class="settings-tile-head">
                   <label class="settings-tile-label" for="toggle-motion">Reduce Motion &amp; Flashes</label>
-                  <input type="checkbox" id="toggle-motion" style="accent-color: #a855f7;" onchange="onReducedMotionToggle(this.checked)">
+                  <input type="checkbox" id="toggle-motion" style="accent-color: #a855f7;" data-ar-change="onReducedMotionToggle">
                 </div>
                 <span class="settings-tile-desc">Disable screen shakes, damage flashes, and UI pulses.</span>
               </div>
@@ -4717,30 +4821,22 @@
               <div class="settings-tile span-2">
                 <div class="settings-tile-head">
                   <span class="settings-tile-label">Landscape Orientation Lock</span>
-                  <button type="button" class="btn-lobby-sec" onclick="forceLandscapeView()" style="padding: 0 14px;">↻ Force Landscape</button>
+                  <button type="button" class="btn-lobby-sec" data-ar-click="forceLandscapeView" style="padding: 0 14px;">↻ Force Landscape</button>
                 </div>
                 <span class="settings-tile-desc">Rotate browser view to landscape if orientation lock is disabled.</span>
               </div>
             </div>
 
-            <!-- App & Save Data Tab -->
+            <!-- Save Data Tab (Strict Online Mode — Offline PWA Removed) -->
             <div id="settings-pane-data" class="settings-pane-section hidden" role="tabpanel">
-              <div class="settings-tile">
-                <div class="settings-tile-head">
-                  <span class="settings-tile-label">Full-Screen Mobile App</span>
-                </div>
-                <span class="settings-tile-desc">Install Arcane Royale to your home screen for offline play.</span>
-                <button type="button" id="btn-pwa-install" class="btn-lobby-sec" onclick="triggerPwaInstall()" style="width: 100%; justify-content: center; border-color: rgba(52, 211, 153, 0.55); color: #a7f3d0;">📲 Install App (Full-Screen)</button>
-              </div>
-
-              <div class="settings-tile">
+              <div class="settings-tile span-2">
                 <div class="settings-tile-head">
                   <span class="settings-tile-label">Save Backup Transfer</span>
                 </div>
-                <span class="settings-tile-desc">Copy or restore your Level 100 progress across browsers.</span>
+                <span class="settings-tile-desc">Copy or restore your Level 100 progress across browsers using a signed backup code.</span>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                  <button type="button" id="btn-export-save" class="btn-lobby-sec" onclick="exportSaveCode()" style="justify-content: center; border-color: rgba(251, 191, 36, 0.45); color: #fde68a;">📤 Export</button>
-                  <button type="button" id="btn-import-save-toggle" class="btn-lobby-sec" onclick="toggleImportSavePanel()" style="justify-content: center; border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff;">📥 Import</button>
+                  <button type="button" id="btn-export-save" class="btn-lobby-sec" data-ar-click="exportSaveCode" style="justify-content: center; border-color: rgba(251, 191, 36, 0.45); color: #fde68a;">📤 Export</button>
+                  <button type="button" id="btn-import-save-toggle" class="btn-lobby-sec" data-ar-click="toggleImportSavePanel" style="justify-content: center; border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff;">📥 Import</button>
                 </div>
               </div>
 
@@ -4748,8 +4844,8 @@
                 <label for="save-code-input" class="settings-tile-label" style="font-size: 12px; color: #94a3b8;">SAVE BACKUP CODE (BASE64)</label>
                 <textarea id="save-code-input" rows="2" placeholder="Paste your Arcane Royale save code here..." style="width: 100%; background: rgba(2, 6, 23, 0.9); color: #e2e8f0; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 10px; padding: 8px 10px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12px; resize: none; user-select: text; -webkit-user-select: text;"></textarea>
                 <div style="display: flex; gap: 8px;">
-                  <button type="button" id="btn-apply-import-save" class="btn-lobby-main" onclick="applyImportSaveCode()" style="flex: 1;">Restore Save</button>
-                  <button type="button" class="btn-lobby-sec" onclick="toggleImportSavePanel(false)" style="padding: 0 18px;">Cancel</button>
+                  <button type="button" id="btn-apply-import-save" class="btn-lobby-main" data-ar-click="applyImportSaveCode" style="flex: 1;">Restore Save</button>
+                  <button type="button" class="btn-lobby-sec" data-ar-click="closeImportSavePanel" style="padding: 0 18px;">Cancel</button>
                 </div>
               </div>
 
@@ -4759,7 +4855,7 @@
                     <span class="settings-tile-label" style="color: #fca5a5;">Reset Local Progress</span>
                     <div class="settings-tile-desc">Clears saved champions, currencies, runes, and rank on this device.</div>
                   </div>
-                  <button type="button" class="btn-lobby-sec" onclick="resetPlayerProgress()" style="color: #f87171; border-color: rgba(239, 68, 68, 0.45); padding: 0 16px;">⚠️ Reset</button>
+                  <button type="button" class="btn-lobby-sec" data-ar-click="resetPlayerProgress" style="color: #f87171; border-color: rgba(239, 68, 68, 0.45); padding: 0 16px;">⚠️ Reset</button>
                 </div>
               </div>
             </div>
@@ -4767,30 +4863,50 @@
         </div>
       </div>
 
-      <!-- iOS SAFARI ADD TO HOME SCREEN GUIDE -->
-      <div id="ios-install-modal" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="ios-install-title" style="z-index: 260;">
-        <div class="gameover-box" style="max-width: 360px; padding: 18px; gap: 10px; text-align: left;">
-          <h3 id="ios-install-title" style="font-size: 16px; font-weight: 900; color: #67e8f9; letter-spacing: 0.8px;">📲 INSTALL ARCANE ROYALE</h3>
-          <p id="ios-install-desc" style="font-size: 13px; color: #cbd5e1; line-height: 1.45;">Play full-screen without a browser URL bar:<br/>1. Tap the browser <strong>Share</strong> or <strong>Menu (⋮)</strong> button.<br/>2. Choose <strong>Add to Home Screen</strong> or <strong>Install App</strong>.<br/>3. Launch Arcane Royale from your home screen in landscape!</p>
-          <button type="button" class="btn-lobby-main" onclick="closeIosInstallModal()" style="width: 100%; min-height: 44px; font-size: 13px;">Got It</button>
+      <!-- STRICT ONLINE CONNECTION LOST MODAL (NON-DISMISSIBLE) -->
+      <div id="connection-lost-modal" class="overlay-screen hidden" role="alertdialog" aria-modal="true" aria-labelledby="conn-lost-title" style="z-index: 960; background: rgba(2, 6, 23, 0.94);">
+        <div class="guard-modal-box" style="border-color: rgba(239, 68, 68, 0.55);">
+          <div class="guard-modal-icon" aria-hidden="true">📡</div>
+          <h2 id="conn-lost-title" class="guard-modal-title" style="color: #fca5a5;">CONNECTION LOST</h2>
+          <p id="conn-lost-status" class="guard-modal-desc">Reconnecting to Arcane Servers... Active internet access is required to play Arcane Royale.</p>
+          <button type="button" id="btn-retry-connection" class="btn-lobby-main" data-ar-click="retryOnlineConnection" style="width: 100%; min-height: 46px; font-size: 13.5px;">↻ Retry Connection</button>
         </div>
       </div>
 
-      <!-- OFFLINE INDICATOR TOAST -->
-      <div id="offline-indicator" class="hidden" role="status" aria-live="polite" style="position: fixed; bottom: 10px; left: 10px; z-index: 280; background: rgba(180, 83, 9, 0.92); color: #fef3c7; border: 1px solid rgba(251, 191, 36, 0.65); border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.4px; pointer-events: none;">⚡ Offline Mode · Cached Arena Ready</div>
+      <!-- AD-BLOCKER DETECTED NOTICE MODAL -->
+      <div id="adblock-modal" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="adblock-title" style="z-index: 940; background: rgba(2, 6, 23, 0.92);">
+        <div class="guard-modal-box" style="border-color: rgba(251, 191, 36, 0.5);">
+          <div class="guard-modal-icon" aria-hidden="true">🛡️</div>
+          <h2 id="adblock-title" class="guard-modal-title" style="color: #fde68a;">AD-BLOCKER DETECTED</h2>
+          <p class="guard-modal-desc">Please disable your ad-blocker to support free online play and unlock matchmaking in Arcane Royale.</p>
+          <button type="button" id="btn-recheck-adblock" class="btn-lobby-main" data-ar-click="recheckAdBlocker" style="width: 100%; min-height: 46px; font-size: 13.5px;">↻ I've Disabled It · Recheck</button>
+        </div>
+      </div>
+
+      <!-- SIMULATED H5 AD PREVIEW FALLBACK OVERLAY -->
+      <div id="ad-preview-modal" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="ad-preview-title" style="z-index: 950; background: rgba(2, 6, 23, 0.95);">
+        <div class="guard-modal-box" style="border-color: rgba(56, 189, 248, 0.5);">
+          <span id="ad-preview-badge" class="ad-preview-badge">REWARDED AD PREVIEW</span>
+          <h2 id="ad-preview-title" class="guard-modal-title" style="color: #e0f2fe;">ARCANE SPONSOR BREAK</h2>
+          <p id="ad-preview-desc" class="guard-modal-desc">Watching sponsored video preview... Reward unlocks automatically when playback completes.</p>
+          <div class="ad-preview-bar-track"><div id="ad-preview-bar-fill" class="ad-preview-bar-fill"></div></div>
+          <div id="ad-preview-timer" style="font-size: 12px; font-weight: 800; color: #7dd3fc;">Completing in 3s...</div>
+          <button type="button" id="btn-ad-cancel" class="btn-lobby-sec hidden" data-ar-click="cancelActiveAdPreview" style="width: 100%; min-height: 40px; justify-content: center; color: #fca5a5;">✕ Close Early (No Reward)</button>
+        </div>
+      </div>
 
       <!-- TUTORIAL / COMBAT GUIDE OVERLAY (LANDSCAPE 2-COLUMN) -->
       <div id="tutorial-overlay" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="tutorial-title" style="z-index: 230;">
         <div class="tutorial-card">
           <div class="tutorial-head">
             <h2 id="tutorial-title" style="font-size: 18px; font-weight: 900; color: #38bdf8; letter-spacing: 0.04em; margin: 0;">📜 ARCANE COMBAT GUIDE</h2>
-            <button type="button" class="modal-back-btn" style="width: auto; min-height: 40px; padding: 0 14px;" onclick="dismissTutorial()">← BACK</button>
+            <button type="button" class="modal-back-btn" style="width: auto; min-height: 40px; padding: 0 14px;" data-ar-click="dismissTutorial">← BACK</button>
           </div>
           <div class="tutorial-grid">
             <div class="tutorial-item"><strong>Move &amp; steer</strong><span>Slide your thumb on the left joystick to move and steer.</span></div>
             <div class="tutorial-item"><strong>Aim &amp; cancel cast</strong><span>Hold and drag any attack button to aim, then release. Drag onto the red <strong>✕ CANCEL</strong> zone to abort without spending MP or cooldown.</span></div>
             <div class="tutorial-item"><strong>Dash &amp; Jump Pads</strong><span>Tap <strong>DASH</strong> to burst forward with brief invulnerability, or step onto glowing cyan <strong>Arcane Jump Pads</strong> on island ridges to launch airborne.</span></div>
-            <div class="tutorial-item"><strong>Elemental Reactions</strong><span>Combine <strong>Fire</strong>, <strong>Water</strong>, and <strong>Dark</strong> abilities within 4s to trigger Steam Eruption, Shadowflame, and Abyssal Undertow combos.</span></div>
+            <div class="tutorial-item"><strong>Elemental Reactions</strong><span>Combine <strong>Fire</strong>, <strong>Water</strong>, and <strong>Dark</strong> abilities within 4s to trigger Vaporize, Shadowflame, and Abyssal Undertow combos.</span></div>
             <div class="tutorial-item"><strong>Quick-Use &amp; inventory fan</strong><span>Tap Quick-Use (auto-prioritizes Heal &lt;70% HP or Mana &lt;40% MP) or tap <strong>▲</strong> to fan out all 5 loot items.</span></div>
             <div class="tutorial-item"><strong>Sprint &amp; Bounty Crown</strong><span>Move for 1.5s to auto-sprint free, or hold <strong>SPRINT</strong>. Fighters with 3+ elims wear a golden <strong>👑</strong> crown worth 2x Coins &amp; +75 XP.</span></div>
             <div class="tutorial-item"><strong>Minimap &amp; quick-pings</strong><span>Double-tap the minimap to quick-ping · Tap <strong>Map</strong> then tap the island to pin · Tap <strong>×</strong> on the waypoint bar to clear.</span></div>
@@ -4810,21 +4926,21 @@
         </div>
         <div id="hud-editor-toolbar" role="toolbar" aria-label="HUD Editor Actions">
           <span class="hud-ed-title">HUD EDITOR</span>
-          <button type="button" id="btn-hud-snap" class="hud-ed-btn active" onclick="toggleHudEditorSnap()" aria-pressed="true">⊞ Snap: ON</button>
-          <button type="button" id="btn-hud-reset" class="hud-ed-btn danger" onclick="resetHudEditorLayout()">↺ Reset to Default</button>
-          <button type="button" id="btn-hud-cancel" class="hud-ed-btn" onclick="cancelHudEditor()">Cancel</button>
-          <button type="button" id="btn-hud-save" class="hud-ed-btn primary" onclick="saveHudEditorLayout()">✓ Save Layout</button>
+          <button type="button" id="btn-hud-snap" class="hud-ed-btn active" data-ar-click="toggleHudEditorSnap" aria-pressed="true">⊞ Snap: ON</button>
+          <button type="button" id="btn-hud-reset" class="hud-ed-btn danger" data-ar-click="resetHudEditorLayout">↺ Reset to Default</button>
+          <button type="button" id="btn-hud-cancel" class="hud-ed-btn" data-ar-click="cancelHudEditor">Cancel</button>
+          <button type="button" id="btn-hud-save" class="hud-ed-btn primary" data-ar-click="saveHudEditorLayout">✓ Save Layout</button>
         </div>
         <div id="hud-editor-inspector" role="group" aria-label="Selected HUD Control Settings">
           <span id="hud-ed-selected-label" class="hud-ed-selected-name">Combat Cluster</span>
           <label class="hud-ed-slider-group" for="hud-ed-scale">
             <span>Size</span>
-            <input type="range" id="hud-ed-scale" min="75" max="135" step="5" value="100" oninput="onHudEditorScaleInput(this.value)">
+            <input type="range" id="hud-ed-scale" min="75" max="135" step="5" value="100" data-ar-input="onHudEditorScaleInput">
             <span id="hud-ed-scale-val" class="hud-ed-slider-val">100%</span>
           </label>
           <label class="hud-ed-slider-group" for="hud-ed-opacity">
             <span>Opacity</span>
-            <input type="range" id="hud-ed-opacity" min="40" max="100" step="5" value="100" oninput="onHudEditorOpacityInput(this.value)">
+            <input type="range" id="hud-ed-opacity" min="40" max="100" step="5" value="100" data-ar-input="onHudEditorOpacityInput">
             <span id="hud-ed-opacity-val" class="hud-ed-slider-val">100%</span>
           </label>
         </div>
@@ -4996,10 +5112,150 @@
       })();
     </script>
     <script type="text/plain" id="arcane-game-source">
+      (() => {
+      'use strict';
       /**
        * ARCANE ROYALE - Mobile Optimized Battle Royale Engine
        * 60FPS Pure Canvas + Progressive Economy System
        */
+
+      // ==========================================
+      // PRODUCTION SECURITY, ANTI-TAMPER & MONETIZATION CONSTANTS
+      // ==========================================
+      const DEMO_SUPPLY_GRANT = Object.freeze({
+        gold: 9999,
+        astralCrystals: 9999,
+        gems: 9999,
+        xp: 9999
+      });
+      const STORAGE_SIG_KEY = 'arcane_royale_sig_v3';
+      const SAVE_INTEGRITY_SALT = 'AR_v3_9f4b2c7e_sig_salt_#8129';
+      const PROTECTED_SAVE_FIELDS = Object.freeze([
+        'gold', 'gems', 'astralCrystals', 'level', 'xp', 'spendableXp', 'totalXpEarned',
+        'statUpgrades', 'unlockedFighters', 'unlockedDropSkins', 'unlockedRunes',
+        'totalMatches', 'totalWins', 'totalKills'
+      ]);
+      const DEFAULT_ECONOMY_RESET = Object.freeze({
+        gold: 500, gems: 50, astralCrystals: 500,
+        level: 1, xp: 0, spendableXp: 0, totalXpEarned: 0,
+        statUpgrades: Object.freeze({ maxHealth: 0, movementSpeed: 0, attackPower: 0 }),
+        unlockedFighters: Object.freeze(['BERSERKER']),
+        unlockedDropSkins: Object.freeze(['RIFT']),
+        unlockedRunes: Object.freeze([]),
+        selectedFighter: 'BERSERKER',
+        selectedDropSkin: 'RIFT',
+        equippedRune: null
+      });
+      function canonicalizeSaveValue(value) {
+        if (value === null || value === undefined) return 'null';
+        if (typeof value === 'number') return Number.isFinite(value) ? String(Math.floor(value)) : '0';
+        if (typeof value === 'boolean') return value ? '1' : '0';
+        if (typeof value === 'string') return value;
+        if (Array.isArray(value)) return '[' + value.map(canonicalizeSaveValue).join(',') + ']';
+        if (typeof value === 'object') {
+          const keys = Object.keys(value).sort();
+          return '{' + keys.map(k => `${k}:${canonicalizeSaveValue(value[k])}`).join(',') + '}';
+        }
+        return String(value);
+      }
+      function computeSaveChecksum(saveData) {
+        const parts = [SAVE_INTEGRITY_SALT];
+        for (let i = 0; i < PROTECTED_SAVE_FIELDS.length; i++) {
+          const key = PROTECTED_SAVE_FIELDS[i];
+          parts.push(`${key}=${canonicalizeSaveValue(saveData[key])}`);
+        }
+        const payload = parts.join('|');
+        let h1 = 0x811c9dc5;
+        let h2 = 0x01000193;
+        for (let i = 0; i < payload.length; i++) {
+          const ch = payload.charCodeAt(i);
+          h1 ^= ch;
+          h1 = Math.imul(h1, 0x01000193) >>> 0;
+          h2 ^= (ch + ((i + 1) * 31));
+          h2 = Math.imul(h2, 0x85ebca6b) >>> 0;
+          h2 = ((h2 << 13) | (h2 >>> 19)) >>> 0;
+        }
+        h1 = Math.imul(h1 ^ (h1 >>> 16), 0x85ebca6b) >>> 0;
+        h2 = Math.imul(h2 ^ (h2 >>> 13), 0xc2b2ae35) >>> 0;
+        return `${h1.toString(16).padStart(8, '0')}${h2.toString(16).padStart(8, '0')}`;
+      }
+      function verifyAndRecoverSave(parsed, companionSig = null) {
+        const embeddedSig = typeof parsed._sig === 'string' ? parsed._sig : null;
+        const expectedSig = computeSaveChecksum(parsed);
+        if (!embeddedSig && !companionSig) {
+          return { valid: true, tampered: false, sanitized: { ...parsed } };
+        }
+        const embeddedMatches = embeddedSig === expectedSig;
+        const companionMatches = !companionSig || companionSig === expectedSig;
+        if (embeddedSig && embeddedMatches && companionMatches) {
+          return { valid: true, tampered: false, sanitized: { ...parsed } };
+        }
+        return {
+          valid: false,
+          tampered: true,
+          sanitized: {
+            ...parsed,
+            gold: DEFAULT_ECONOMY_RESET.gold,
+            gems: DEFAULT_ECONOMY_RESET.gems,
+            astralCrystals: DEFAULT_ECONOMY_RESET.astralCrystals,
+            level: DEFAULT_ECONOMY_RESET.level,
+            xp: DEFAULT_ECONOMY_RESET.xp,
+            spendableXp: DEFAULT_ECONOMY_RESET.spendableXp,
+            totalXpEarned: DEFAULT_ECONOMY_RESET.totalXpEarned,
+            statUpgrades: { ...DEFAULT_ECONOMY_RESET.statUpgrades },
+            unlockedFighters: [...DEFAULT_ECONOMY_RESET.unlockedFighters],
+            unlockedDropSkins: [...DEFAULT_ECONOMY_RESET.unlockedDropSkins],
+            unlockedRunes: [...DEFAULT_ECONOMY_RESET.unlockedRunes],
+            selectedFighter: DEFAULT_ECONOMY_RESET.selectedFighter,
+            selectedDropSkin: DEFAULT_ECONOMY_RESET.selectedDropSkin,
+            equippedRune: DEFAULT_ECONOMY_RESET.equippedRune
+          }
+        };
+      }
+      const BLOCKED_NAME_TERMS = Object.freeze([
+        'fuck', 'fck', 'fuk', 'shit', 'sht', 'bitch', 'btch', 'cunt', 'dick', 'cock', 'pussy', 'whore', 'slut',
+        'bastard', 'asshole', 'nigger', 'nigga', 'faggot', 'fag', 'retard', 'kike',
+        'chink', 'spic', 'tranny', 'nazi', 'hitler', 'rape', 'porn', 'penis', 'vagina'
+      ]);
+      function sanitizePlayerName(raw, fallback = 'Player') {
+        const str = typeof raw === 'string' ? raw : '';
+        const withoutTags = str.replace(/<[^>]*>/g, '');
+        const safeChars = withoutTags.replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, ' ').trim();
+        if (!safeChars) return fallback;
+        const normalized = safeChars
+          .toLowerCase()
+          .replace(/0/g, 'o')
+          .replace(/[1!|]/g, 'i')
+          .replace(/3/g, 'e')
+          .replace(/[4@]/g, 'a')
+          .replace(/[5$]/g, 's')
+          .replace(/7/g, 't')
+          .replace(/[^a-z]/g, '');
+        for (let i = 0; i < BLOCKED_NAME_TERMS.length; i++) {
+          if (normalized.includes(BLOCKED_NAME_TERMS[i])) return fallback;
+        }
+        const trimmed = safeChars.slice(0, 12).trim();
+        return trimmed || fallback;
+      }
+      const VAULT_AD_OFFERS = Object.freeze({
+        vault_crystals_sm: Object.freeze({ id: 'vault_crystals_sm', currency: 'astralCrystals', amount: 150, cooldownSec: 60, label: '📺 Watch Ad · +150 🔮', toast: '+150 🔮 Astral Crystals' }),
+        vault_crystals_lg: Object.freeze({ id: 'vault_crystals_lg', currency: 'astralCrystals', amount: 400, cooldownSec: 120, label: '📺 Watch Ad · +400 🔮', toast: '+400 🔮 Astral Crystals' }),
+        vault_gems_pack: Object.freeze({ id: 'vault_gems_pack', currency: 'gems', amount: 15, cooldownSec: 90, label: '📺 Watch Ad · +15 💎', toast: '+15 💎 Arcane Gems' })
+      });
+      function shouldShowPostMatchInterstitial(completedMatches) {
+        return completedMatches > 0 && completedMatches % 2 === 0;
+      }
+      function getVaultCooldownRemainingSec(cooldownMap, offerId, nowMs) {
+        const readyAt = Number(cooldownMap[offerId] || 0);
+        if (!Number.isFinite(readyAt) || readyAt <= nowMs) return 0;
+        return Math.ceil((readyAt - nowMs) / 1000);
+      }
+      let isPaused = false;
+      let saveIntegrityResetNotice = false;
+      let completedMatchesSession = 0;
+      let interstitialShownForMatch = false;
+      let lastMatchRewards = null;
+      const vaultAdCooldowns = {};
 
       // ==========================================
       // PERSISTENT DATA & ECONOMY
@@ -5436,14 +5692,24 @@
 
         load() {
           let data = null;
+          let companionSig = null;
           try {
+            companionSig = localStorage.getItem(STORAGE_SIG_KEY);
             const keys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
             for (const key of keys) {
               const raw = localStorage.getItem(key);
               if (!raw) continue;
               const parsed = JSON.parse(raw);
               if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                data = parsed;
+                if (key === STORAGE_KEY) {
+                  const verified = verifyAndRecoverSave(parsed, companionSig);
+                  data = verified.sanitized;
+                  if (verified.tampered) {
+                    saveIntegrityResetNotice = true;
+                  }
+                } else {
+                  data = parsed;
+                }
                 break;
               }
             }
@@ -5452,7 +5718,6 @@
           }
 
           const source = data || {};
-          const text = (value, fallback, max = 12) => typeof value === 'string' ? value.trim().slice(0, max) : fallback;
           const finite = (value, fallback, min = 0, max = 999999999) => {
             const number = Number(value);
             return Number.isFinite(number) ? Math.max(min, Math.min(max, number)) : fallback;
@@ -5463,7 +5728,7 @@
           const skinKeys = ['RIFT', 'WYRM', 'CITADEL', 'ASTRAL'];
           const runeKeys = Object.keys(ARCANE_RUNES);
 
-          this.playerName = text(source.playerName, 'Player') || 'Player';
+          this.playerName = sanitizePlayerName(source.playerName, 'Player');
           this.autoAimEnabled = typeof source.autoAimEnabled === 'boolean' ? source.autoAimEnabled : true;
           this.gold = integer(source.gold, 500);
           this.gems = integer(source.gems, 50);
@@ -5555,8 +5820,11 @@
         save() {
           const snapshot = {};
           for (const key of SAVE_FIELDS) snapshot[key] = this[key];
+          const sig = computeSaveChecksum(snapshot);
+          snapshot._sig = sig;
           try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+            localStorage.setItem(STORAGE_SIG_KEY, sig);
           } catch (error) {
             console.warn('[Save] Progress could not be persisted; continuing in memory.', error);
           }
@@ -5607,8 +5875,13 @@
       function submitName() {
         tryLockLandscape();
         const input = document.getElementById('name-input');
-        const val = input ? input.value.trim() : '';
-        PlayerData.playerName = val || "Player";
+        const rawVal = input ? input.value : '';
+        const sanitized = sanitizePlayerName(rawVal, 'Player');
+        if (input && rawVal.trim() && sanitized !== rawVal.trim()) {
+          input.value = sanitized;
+          showToast(`Name sanitized to "${sanitized}"`, '#fbbf24');
+        }
+        PlayerData.playerName = sanitized;
         PlayerData.save();
         AudioEngine.init();
         Music.start('lobby');
@@ -6503,10 +6776,11 @@
       }
 
       function claimDemoSupplies() {
-        PlayerData.gold = Math.min(999999999, PlayerData.gold + 2500);
-        PlayerData.astralCrystals = Math.min(999999999, PlayerData.astralCrystals + 2500);
-        PlayerData.spendableXp = Math.min(999999999, (PlayerData.spendableXp || 0) + 250);
-        PlayerData.totalXpEarned = Math.min(999999999, (PlayerData.totalXpEarned || 0) + 250);
+        PlayerData.gold = Math.min(999999999, (PlayerData.gold || 0) + DEMO_SUPPLY_GRANT.gold);
+        PlayerData.astralCrystals = Math.min(999999999, (PlayerData.astralCrystals || 0) + DEMO_SUPPLY_GRANT.astralCrystals);
+        PlayerData.gems = Math.min(999999999, (PlayerData.gems || 0) + DEMO_SUPPLY_GRANT.gems);
+        PlayerData.spendableXp = Math.min(999999999, (PlayerData.spendableXp || 0) + DEMO_SUPPLY_GRANT.xp);
+        PlayerData.totalXpEarned = Math.min(999999999, (PlayerData.totalXpEarned || 0) + DEMO_SUPPLY_GRANT.xp);
         PlayerData.save();
         renderShopCards();
         renderDropSkinCards();
@@ -6514,23 +6788,48 @@
         updateLobbyShowcase();
         AudioEngine.sfxPurchase();
         closeOperatorModal();
-        showToast('✓ Demo supplies claimed: +2,500 gold, +2,500 crystals, +250 XP', false);
+        showToast('✓ Demo Supply Drop: +9,999 🪙 · +9,999 🔮 · +9,999 💎 · +9,999 ⚡ XP', false);
       }
 
-      // Audio Engine (Web Audio API)
+      // Audio Engine (Web Audio API with ad/focus/offline external mute gating)
       const AudioEngine = {
         ctx: null,
+        externalMutes: new Set(),
+        isExternallyMuted() {
+          return this.externalMutes.size > 0;
+        },
+        setExternalMute(reason, muted) {
+          if (muted) this.externalMutes.add(reason);
+          else this.externalMutes.delete(reason);
+          const shouldMute = this.isExternallyMuted();
+          if (this.ctx) {
+            if (shouldMute && this.ctx.state === 'running') {
+              this.ctx.suspend().catch(() => {});
+            } else if (!shouldMute && this.ctx.state === 'suspended') {
+              this.ctx.resume().catch(() => {});
+            }
+          }
+          if (typeof Music !== 'undefined' && Music.currentGain && this.ctx) {
+            const targetVol = shouldMute
+              ? 0
+              : (Game && Game.state === 'PAUSED' ? PlayerData.musicVolume * 0.3 : PlayerData.musicVolume);
+            Music.setVolume(targetVol);
+          }
+          if (shouldMute && 'speechSynthesis' in window) {
+            try { window.speechSynthesis.cancel(); } catch (_) {}
+          }
+        },
         init() {
           if (!this.ctx) {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
             if (AudioCtx) this.ctx = new AudioCtx();
           }
-          if (this.ctx && this.ctx.state === 'suspended') {
+          if (this.ctx && this.ctx.state === 'suspended' && !this.isExternallyMuted()) {
             this.ctx.resume().catch(() => { /* A later user gesture will unlock audio. */ });
           }
         },
         playTone(frequency, type, duration, volume = 0.2, endFreq = null) {
-          if (!this.ctx || PlayerData.sfxVolume <= 0) return;
+          if (!this.ctx || PlayerData.sfxVolume <= 0 || this.isExternallyMuted()) return;
           try {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
@@ -6549,7 +6848,7 @@
           } catch(e) {}
         },
         playNoise(duration, volume = 0.15) {
-          if (!this.ctx || PlayerData.sfxVolume <= 0) return;
+          if (!this.ctx || PlayerData.sfxVolume <= 0 || this.isExternallyMuted()) return;
           try {
             const bufferSize = this.ctx.sampleRate * duration;
             const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
@@ -6569,6 +6868,7 @@
           } catch(e) {}
         },
         playSample(key, volume = 1, pitchVariation = 0, channel = 'sfx') {
+          if (this.isExternallyMuted()) return false;
           if (!this.ctx) this.init();
           if (!this.ctx) return false;
           if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => { /* Audio remains silent until unlocked. */ });
@@ -6839,7 +7139,8 @@
 
         setVolume(value) {
           if (this.currentGain && AudioEngine.ctx) {
-            this.currentGain.gain.setTargetAtTime(Math.max(0, Math.min(1, value)), AudioEngine.ctx.currentTime, 0.03);
+            const effective = AudioEngine.isExternallyMuted() ? 0 : Math.max(0, Math.min(1, value));
+            this.currentGain.gain.setTargetAtTime(effective, AudioEngine.ctx.currentTime, 0.03);
           }
         }
       };
@@ -6856,6 +7157,7 @@
           eliminated: 'You were eliminated.', match_start: 'Battle begins.', one_alive: 'One rival remains.', level_up: 'Level up!'
         },
         play(key, minGapMs = 1500) {
+          if (AudioEngine.isExternallyMuted()) return;
           const now = performance.now();
           if (this.lastPlayed[key] && now - this.lastPlayed[key] < minGapMs) return;
           this.lastPlayed[key] = now;
@@ -11265,7 +11567,7 @@
               }
             }
             if (involvedPlayer || isEntityInCameraView(target, 120)) {
-              spawnDamageText(target.x, target.y - 34, '💨 STEAM ERUPTION!', '#fef08a', true);
+              spawnDamageText(target.x, target.y - 34, '💨 VAPORIZE!', '#fef08a', true);
               AudioEngine.sfxSteamEruption();
             }
           } else if (reactionType === 'SHADOWFLAME_IGNITION') {
@@ -12605,6 +12907,8 @@
             }
           }
 
+          completedMatchesSession += 1;
+          interstitialShownForMatch = false;
           flushPlayerSave();
           clearMapPing(true);
           Input.reset();
@@ -13865,35 +14169,80 @@
           if (fpsElement) fpsElement.textContent = `${currentFps} FPS`;
         }
 
-        Game.update(deltaTime);
+        if (!isPaused) Game.update(deltaTime);
         renderCanvas();
         requestAnimationFrame(gameLoop);
       }
 
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          if (Game.state === 'PLAYING' || Game.state === 'DROPPING') pauseGame();
-          releaseScreenWakeLock();
-          Input.reset();
-          hiddenMusicMode = Music.currentTrack;
-          Music.stop();
-        } else {
-          lastTime = performance.now();
-          if (Game.state === 'PLAYING' || Game.state === 'DROPPING' || Game.state === 'PAUSED') {
-            acquireScreenWakeLock();
-          }
-          if (hiddenMusicMode) {
-            Music.start(hiddenMusicMode);
-            if (Game.state === 'PAUSED') Music.setVolume(PlayerData.musicVolume * 0.3);
-          }
-          hiddenMusicMode = null;
-        }
+      // First user gesture audio unlock
+      function unlockAudioOnGesture() {
+        AudioEngine.init();
+      }
+      window.addEventListener('pointerdown', unlockAudioOnGesture, { passive: true });
+      window.addEventListener('touchstart', unlockAudioOnGesture, { passive: true });
+      window.addEventListener('keydown', unlockAudioOnGesture, { passive: true });
+
+      // DevTools & viewport context-menu deterrence
+      document.addEventListener('contextmenu', (e) => {
+        const target = e.target;
+        if (target && (target.id === 'save-code-input' || target.id === 'name-input')) return;
+        e.preventDefault();
       });
+      window.addEventListener('keydown', (e) => {
+        const key = (e.key || '').toLowerCase();
+        const mod = e.ctrlKey || e.metaKey;
+        const isF12 = e.key === 'F12' || e.keyCode === 123;
+        const isDevShortcut = mod && e.shiftKey && (key === 'i' || key === 'j' || key === 'c');
+        const isMacOptDev = e.metaKey && e.altKey && (key === 'i' || key === 'j' || key === 'c');
+        const isViewSource = mod && key === 'u';
+        if (isF12 || isDevShortcut || isMacOptDev || isViewSource) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          return false;
+        }
+      }, true);
+
+      // Focus & visibility safety: auto-pause active matches and mute Web Audio/Music
+      function handleFocusLoss() {
+        if (Game.state === 'PLAYING' || Game.state === 'DROPPING') pauseGame();
+        releaseScreenWakeLock();
+        Input.reset();
+        if (!hiddenMusicMode && Music.currentTrack) {
+          hiddenMusicMode = Music.currentTrack;
+        }
+        AudioEngine.setExternalMute('focus', true);
+      }
+
+      function handleFocusRestore() {
+        lastTime = performance.now();
+        AudioEngine.setExternalMute('focus', false);
+        if (Game.state === 'PLAYING' || Game.state === 'DROPPING' || Game.state === 'PAUSED') {
+          acquireScreenWakeLock();
+        }
+        if (hiddenMusicMode && !AudioEngine.isExternallyMuted()) {
+          if (!Music.currentTrack) Music.start(hiddenMusicMode);
+          Music.setVolume(Game.state === 'PAUSED' ? PlayerData.musicVolume * 0.3 : PlayerData.musicVolume);
+        }
+        hiddenMusicMode = null;
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) handleFocusLoss();
+        else handleFocusRestore();
+      });
+      window.addEventListener('blur', handleFocusLoss);
+      window.addEventListener('focus', handleFocusRestore);
 
       // ==========================================
       // UI CONTROLLER & SCREEN TRANSITIONS
       // ==========================================
       function closeTopOverlay() {
+        const connLost = document.getElementById('connection-lost-modal');
+        if (connLost && !connLost.classList.contains('hidden')) return true;
+        const adModal = document.getElementById('ad-preview-modal');
+        if (adModal && !adModal.classList.contains('hidden')) return true;
+        const adBlockModal = document.getElementById('adblock-modal');
+        if (adBlockModal && !adBlockModal.classList.contains('hidden')) return true;
         const settings = document.getElementById('settings-screen');
         if (!settings.classList.contains('hidden')) { closeSettings(); return true; }
         const statsUpgrades = document.getElementById('stats-upgrades-screen');
@@ -13909,21 +14258,27 @@
         return false;
       }
 
-      function pauseGame() {
+      function pauseGame(silentOverlay = false) {
         if (Game.state !== 'PLAYING' && Game.state !== 'DROPPING') return;
         Game.previousState = Game.state;
         Game.state = 'PAUSED';
+        isPaused = true;
         document.body.dataset.state = 'paused';
         Input.reset();
         Music.setVolume(PlayerData.musicVolume * 0.3);
-        document.getElementById('pause-screen').classList.remove('hidden');
+        if (!silentOverlay) {
+          document.getElementById('pause-screen').classList.remove('hidden');
+        }
       }
 
       function resumeGame() {
         if (Game.state !== 'PAUSED') return;
+        if (typeof OnlineGuard !== 'undefined' && OnlineGuard.isOffline) return;
+        if (typeof AdController !== 'undefined' && AdController.isShowing) return;
         document.getElementById('pause-screen').classList.add('hidden');
         document.getElementById('settings-screen').classList.add('hidden');
         Game.state = Game.previousState || 'PLAYING';
+        isPaused = false;
         document.body.dataset.state = Game.state === 'DROPPING' ? 'dropping' : 'playing';
         Game.previousState = null;
         Music.setVolume(PlayerData.musicVolume);
@@ -14240,6 +14595,19 @@
               desc.textContent = killerNote;
             }
 
+            lastMatchRewards = {
+              gold: Math.max(0, Math.floor(Number(goldEarned) || 0)),
+              crystals: Math.max(0, Math.floor(Number(crystalsEarned) || 0)),
+              gems: Math.max(0, Math.floor(Number(gemsEarned) || 0)),
+              xp: Math.max(0, Math.floor(Number(xpEarned) || 0)),
+              doubled: false
+            };
+            const dblBtn = document.getElementById('btn-double-rewards');
+            if (dblBtn) {
+              dblBtn.disabled = false;
+              dblBtn.textContent = '📺 WATCH AD · 2X MATCH REWARDS';
+            }
+
             document.getElementById('rw-gold').textContent = `+${goldEarned} 🪙`;
             const rwCrystals = document.getElementById('rw-crystals');
             if (rwCrystals) {
@@ -14403,7 +14771,7 @@
           if (dm.claimed) {
             btnHtml = `<button type="button" class="dm-compact-btn done" disabled>✓ Done</button>`;
           } else if (isReady) {
-            btnHtml = `<button type="button" class="dm-compact-btn claimable" data-claim-mission="${dm.id}" onclick="claimDailyMissionReward('${dm.id}')">CLAIM</button>`;
+            btnHtml = `<button type="button" class="dm-compact-btn claimable" data-claim-mission="${dm.id}" data-ar-click="claimDailyMissionReward" data-ar-arg="${dm.id}">CLAIM</button>`;
           } else {
             btnHtml = `<button type="button" class="dm-compact-btn" disabled>${prog}/${dm.target}</button>`;
           }
@@ -14422,6 +14790,47 @@
             </div>
           `;
         }).join('');
+
+        const rerollBtn = document.getElementById('btn-reroll-mission');
+        if (rerollBtn) {
+          const hasRerollable = Array.isArray(PlayerData.dailyMissions) && PlayerData.dailyMissions.some(m => m && !m.claimed);
+          rerollBtn.disabled = !hasRerollable;
+        }
+      }
+
+      async function rerollDailyMissionAd() {
+        AudioEngine.init();
+        if (!Array.isArray(PlayerData.dailyMissions) || !PlayerData.dailyMissions.length) return;
+        let idx = PlayerData.dailyMissions.findIndex(m => m && !m.claimed && (m.progress || 0) < m.target);
+        if (idx < 0) idx = PlayerData.dailyMissions.findIndex(m => m && !m.claimed);
+        if (idx < 0) {
+          showToast('All daily missions are already claimed!', '#fbbf24');
+          return;
+        }
+        const activeIds = new Set(PlayerData.dailyMissions.map(m => m && m.id));
+        const candidates = DAILY_MISSION_TEMPLATES.filter(t => !activeIds.has(t.id));
+        if (!candidates.length) {
+          showToast('No alternate daily missions available right now.', '#fbbf24');
+          return;
+        }
+        await AdController.showRewarded('daily_mission_reroll', () => {
+          const picked = candidates[Math.floor(Math.random() * candidates.length)];
+          PlayerData.dailyMissions[idx] = {
+            id: picked.id,
+            title: picked.title,
+            metric: picked.metric,
+            target: picked.target,
+            progress: 0,
+            rewardGold: picked.rewardGold,
+            rewardCrystals: picked.rewardCrystals,
+            rewardXp: picked.rewardXp,
+            claimed: false
+          };
+          PlayerData.save();
+          AudioEngine.sfxPurchase();
+          renderDailyMissions();
+          showToast(`📺 Mission rerolled: ${picked.title}`, '#67e8f9');
+        });
       }
 
       function claimDailyMissionReward(missionId) {
@@ -14545,7 +14954,7 @@
               : `<div class="upgrade-next-row"><span>${curBonusText} <span class="next-arrow">→</span> ${nextBonusText}</span><span style="color:#67e8f9;">${cost} ⚡ XP</span></div>`;
             const btnHtml = isMax
               ? `<button type="button" class="btn-select active" disabled>MAXED (TIER ${def.maxRank}/${def.maxRank})</button>`
-              : `<button type="button" class="btn-buy" data-upgrade-key="${def.key}" onclick="upgradeFighterStat('${def.key}')" ${canAfford ? '' : 'style="opacity:0.65"'}>UPGRADE · ${cost} ⚡ XP</button>`;
+              : `<button type="button" class="btn-buy" data-upgrade-key="${def.key}" data-ar-click="upgradeFighterStat" data-ar-arg="${def.key}" ${canAfford ? '' : 'style="opacity:0.65"'}>UPGRADE · ${cost} ⚡ XP</button>`;
             return `
               <div class="shop-item-card" id="upgrade-card-${def.key}">
                 <div class="shop-item-top">
@@ -14733,9 +15142,11 @@
         UIController.showLobby();
       }
 
-      function startBattle() {
+      async function startBattle() {
         tryLockLandscape();
         AudioEngine.init();
+        if (!(await OnlineGuard.ensureOnline())) return;
+        if (!AdBlockerGuard.ensureAllowed()) return;
         if (!PlayerData.unlockedFighters.includes(PlayerData.selectedFighter)) {
           PlayerData.selectedFighter = 'BERSERKER';
         }
@@ -14852,14 +15263,80 @@
         AudioEngine.sfxSword();
       });
 
-      function confirmDrop() {
+      async function confirmDrop() {
         if (!Number.isFinite(selectedDropX) || !Number.isFinite(selectedDropY)) return;
+        if (!(await OnlineGuard.ensureOnline())) return;
         tryLockLandscape();
         acquireScreenWakeLock();
         transitionTo(() => {
           document.getElementById('drop-screen').classList.add('hidden');
+          isPaused = false;
           Game.init(selectedDropX, selectedDropY);
         });
+      }
+
+      async function doubleMatchRewardsAd() {
+        AudioEngine.init();
+        if (!lastMatchRewards || lastMatchRewards.doubled) return;
+        const dblBtn = document.getElementById('btn-double-rewards');
+        if (dblBtn) dblBtn.disabled = true;
+        const completed = await AdController.showRewarded('double_match_rewards', () => {
+          if (!lastMatchRewards || lastMatchRewards.doubled) return;
+          lastMatchRewards.doubled = true;
+          const bonusGold = lastMatchRewards.gold;
+          const bonusCrystals = lastMatchRewards.crystals;
+          const bonusXp = lastMatchRewards.xp;
+
+          PlayerData.gold = Math.min(999999999, (PlayerData.gold || 0) + bonusGold);
+          PlayerData.astralCrystals = Math.min(999999999, (PlayerData.astralCrystals || 0) + bonusCrystals);
+          PlayerData.spendableXp = Math.min(999999999, (PlayerData.spendableXp || 0) + bonusXp);
+          PlayerData.totalXpEarned = Math.min(999999999, (PlayerData.totalXpEarned || 0) + bonusXp);
+
+          if (bonusXp > 0) {
+            const prog = applyPlayerLevelProgression(PlayerData.level || 1, PlayerData.xp || 0, bonusXp);
+            PlayerData.level = prog.level;
+            PlayerData.xp = prog.xp;
+            PlayerData.gold += prog.bonusCoins;
+            PlayerData.astralCrystals += prog.bonusCrystals;
+            PlayerData.gems += prog.bonusGems;
+          }
+          PlayerData.save();
+          AudioEngine.sfxPurchase();
+
+          const rwGold = document.getElementById('rw-gold');
+          if (rwGold) rwGold.textContent = `+${bonusGold * 2} 🪙 (2X)`;
+          const rwCrystals = document.getElementById('rw-crystals');
+          if (rwCrystals && bonusCrystals > 0) {
+            rwCrystals.style.display = 'inline';
+            rwCrystals.textContent = `+${bonusCrystals * 2} 🔮 (2X)`;
+          }
+          const rwXp = document.getElementById('rw-xp');
+          if (rwXp) rwXp.textContent = `+${bonusXp * 2} ⚡ XP (2X)`;
+          if (dblBtn) {
+            dblBtn.disabled = true;
+            dblBtn.textContent = '✓ 2X MATCH REWARDS CLAIMED';
+          }
+          showToast(`📺 2X Rewards Claimed: +${bonusGold}🪙 +${bonusCrystals}🔮 +${bonusXp}⚡ XP!`, '#fde68a');
+        });
+        if (!completed && dblBtn && lastMatchRewards && !lastMatchRewards.doubled) {
+          dblBtn.disabled = false;
+        }
+      }
+
+      async function postMatchReturnToLobby() {
+        if (shouldShowPostMatchInterstitial(completedMatchesSession) && !interstitialShownForMatch) {
+          interstitialShownForMatch = true;
+          await AdController.showInterstitial('post_match');
+        }
+        returnToLobby(false);
+      }
+
+      async function postMatchPlayAgain() {
+        if (shouldShowPostMatchInterstitial(completedMatchesSession) && !interstitialShownForMatch) {
+          interstitialShownForMatch = true;
+          await AdController.showInterstitial('post_match');
+        }
+        await startBattle();
       }
 
       function returnToLobby(fromMatch = false) {
@@ -14962,6 +15439,7 @@
         if (normalizedTab === 'characters') renderShopCards();
         else if (normalizedTab === 'runes') renderRuneCards();
         else if (normalizedTab === 'drops') renderDropSkinCards();
+        else if (normalizedTab === 'crystals') updateVaultAdButtons();
       }
 
       function renderRuneCards() {
@@ -14974,12 +15452,12 @@
           const isEquipped = equipped === rune.id;
           let btnHtml = '';
           if (isEquipped) {
-            btnHtml = `<button type="button" class="btn-select active" onclick="equipArcaneRune(null)">EQUIPPED (TAP TO UNEQUIP)</button>`;
+            btnHtml = `<button type="button" class="btn-select active" data-ar-click="equipArcaneRune" data-ar-arg="null">EQUIPPED (TAP TO UNEQUIP)</button>`;
           } else if (isOwned) {
-            btnHtml = `<button type="button" class="btn-select" onclick="equipArcaneRune('${rune.id}')">EQUIP RUNE</button>`;
+            btnHtml = `<button type="button" class="btn-select" data-ar-click="equipArcaneRune" data-ar-arg="${rune.id}">EQUIP RUNE</button>`;
           } else {
             const canAfford = (PlayerData.gold || 0) >= rune.costGold;
-            btnHtml = `<button type="button" class="btn-buy" data-buy-rune="${rune.id}" onclick="buyArcaneRune('${rune.id}')" ${canAfford ? '' : 'style="opacity:0.65"'}>UNLOCK (${rune.costGold} 🪙)</button>`;
+            btnHtml = `<button type="button" class="btn-buy" data-buy-rune="${rune.id}" data-ar-click="buyArcaneRune" data-ar-arg="${rune.id}" ${canAfford ? '' : 'style="opacity:0.65"'}>UNLOCK (${rune.costGold} 🪙)</button>`;
           }
           const badgeHtml = isEquipped
             ? ''
@@ -15043,16 +15521,51 @@
         return true;
       }
 
-      function claimDemoCrystals(amount) {
-        const grant = Math.max(0, Math.min(1200, Math.floor(Number(amount) || 0)));
-        if (!grant) return;
-        AudioEngine.init();
-        PlayerData.astralCrystals = Math.min(999999999, PlayerData.astralCrystals + grant);
-        PlayerData.save();
-        AudioEngine.sfxPurchase();
-        showToast(`✓ Demo grant claimed: +${grant} Astral Crystals`, false);
-        renderDropSkinCards();
+      function updateVaultAdButtons() {
+        const now = Date.now();
+        Object.values(VAULT_AD_OFFERS).forEach(offer => {
+          const btn = document.getElementById(`btn-vault-ad-${offer.id}`);
+          if (!btn) return;
+          const remSec = getVaultCooldownRemainingSec(vaultAdCooldowns, offer.id, now);
+          if (remSec > 0) {
+            btn.disabled = true;
+            btn.classList.add('on-cooldown');
+            btn.textContent = `⏳ Cooldown ${remSec}s`;
+          } else {
+            btn.disabled = false;
+            btn.classList.remove('on-cooldown');
+            btn.textContent = offer.label;
+          }
+        });
       }
+
+      async function claimVaultRewardedAd(offerId) {
+        const offer = VAULT_AD_OFFERS[offerId];
+        if (!offer) return;
+        AudioEngine.init();
+        const remSec = getVaultCooldownRemainingSec(vaultAdCooldowns, offer.id, Date.now());
+        if (remSec > 0) {
+          showToast(`⏳ Vault offer recharging (${remSec}s left)`, '#fbbf24');
+          return;
+        }
+        await AdController.showRewarded(`vault_${offer.id}`, () => {
+          PlayerData[offer.currency] = Math.min(999999999, (PlayerData[offer.currency] || 0) + offer.amount);
+          vaultAdCooldowns[offer.id] = Date.now() + offer.cooldownSec * 1000;
+          PlayerData.save();
+          AudioEngine.sfxPurchase();
+          renderDropSkinCards();
+          renderShopCards();
+          updateVaultAdButtons();
+          showToast(`📺 Vault Reward Claimed: ${offer.toast}!`, '#67e8f9');
+        });
+      }
+
+      setInterval(() => {
+        const shopEl = document.getElementById('shop-screen');
+        if (shopEl && !shopEl.classList.contains('hidden')) {
+          updateVaultAdButtons();
+        }
+      }, 1000);
 
       function renderDropSkinCards() {
         const container = document.getElementById('shop-content-drops');
@@ -15065,9 +15578,9 @@
           if (isEquipped) {
             btnHtml = `<button type="button" class="btn-select active" disabled>EQUIPPED</button>`;
           } else if (isUnlocked) {
-            btnHtml = `<button type="button" class="btn-select" onclick="equipDropSkin('${skin.id}')">SELECT</button>`;
+            btnHtml = `<button type="button" class="btn-select" data-ar-click="equipDropSkin" data-ar-arg="${skin.id}">SELECT</button>`;
           } else {
-            btnHtml = `<button type="button" class="btn-buy" onclick="buyDropSkin('${skin.id}', ${skin.cost})">UNLOCK (${skin.cost} 🔮)</button>`;
+            btnHtml = `<button type="button" class="btn-buy" data-ar-click="buyDropSkin" data-ar-arg="${skin.id}" data-ar-arg2="${skin.cost}">UNLOCK (${skin.cost} 🔮)</button>`;
           }
 
           return `
@@ -15140,16 +15653,16 @@
             btnSlot.innerHTML = `<button type="button" class="btn-select active" disabled>EQUIPPED</button>`;
           } else if (isUnlocked) {
             card.classList.remove('equipped');
-            btnSlot.innerHTML = `<button type="button" class="btn-select" onclick="selectFighter('${key}')">SELECT</button>`;
+            btnSlot.innerHTML = `<button type="button" class="btn-select" data-ar-click="selectFighter" data-ar-arg="${key}">SELECT</button>`;
           } else {
             card.classList.remove('equipped');
             if (key === 'TIDECALLER') {
-              btnSlot.innerHTML = `<button type="button" class="btn-buy" onclick="buyFighter('${key}', 500, 0)">UNLOCK (500 🪙)</button>`;
+              btnSlot.innerHTML = `<button type="button" class="btn-buy" data-ar-click="buyFighter" data-ar-arg="${key}" data-ar-arg2="500" data-ar-arg3="0">UNLOCK (500 🪙)</button>`;
             } else if (key === 'SHADOW') {
               btnSlot.innerHTML = `
                 <div style="display:flex; gap: 6px;">
-                  <button type="button" class="btn-buy" style="font-size: 10px; padding: 6px 10px;" onclick="buyFighter('${key}', 1000, 0)">1000 🪙</button>
-                  <button type="button" class="btn-buy" style="font-size: 10px; padding: 6px 10px; background: linear-gradient(135deg, #0284c7, #38bdf8);" onclick="buyFighter('${key}', 0, 50)">50 💎</button>
+                  <button type="button" class="btn-buy" style="font-size: 10px; padding: 6px 10px;" data-ar-click="buyFighter" data-ar-arg="${key}" data-ar-arg2="1000" data-ar-arg3="0">1000 🪙</button>
+                  <button type="button" class="btn-buy" style="font-size: 10px; padding: 6px 10px; background: linear-gradient(135deg, #0284c7, #38bdf8);" data-ar-click="buyFighter" data-ar-arg="${key}" data-ar-arg2="0" data-ar-arg3="50">50 💎</button>
                 </div>`;
             }
           }
@@ -15205,7 +15718,6 @@
         const cs = document.getElementById('slider-control-scale'); if (cs) cs.value = PlayerData.controlScale || 1;
         updateQualityButtonsUI();
         updateDeviceModeUI();
-        updatePwaInstallButtonUI();
         toggleImportSavePanel(false);
         switchSettingsTab(initialTab);
         screen.classList.remove('hidden');
@@ -15247,103 +15759,437 @@
       }
 
       // ==========================================
-      // PWA INSTALL, OFFLINE SW & SAVE BACKUP CODEC
+      // STRICT ONLINE MODE, AD-BLOCKER GUARD & H5 AD CONTROLLER
       // ==========================================
-      let deferredPwaPrompt = null;
-      const isPwaStandalone = () => (
-        (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches)
-        || window.navigator.standalone === true
-      );
+      const OnlineGuard = {
+        isOffline: false,
+        checking: false,
+        lastVerifiedOnlineAt: 0,
 
-      function updatePwaInstallButtonUI() {
-        const btn = document.getElementById('btn-pwa-install');
-        if (!btn) return;
-        if (isPwaStandalone()) {
-          btn.classList.add('hidden');
-          return;
-        }
-        btn.classList.remove('hidden');
-        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
-        if (deferredPwaPrompt) {
-          btn.textContent = '📲 Install App (Full-Screen)';
-        } else if (isIOS) {
-          btn.textContent = '📲 Install on iOS (Home Screen)';
-        } else {
-          btn.textContent = '📲 Install App (Add to Home Screen)';
-        }
-      }
-
-      async function triggerPwaInstall() {
-        if (isPwaStandalone()) {
-          showToast('✓ Already running in full-screen app mode!', '#34d399');
-          return;
-        }
-        if (deferredPwaPrompt) {
+        async checkConnectivity(force = false) {
+          if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+            this.lastVerifiedOnlineAt = 0;
+            return false;
+          }
+          if (!force && !this.isOffline && (Date.now() - this.lastVerifiedOnlineAt) < 5000) {
+            return true;
+          }
+          if (location.protocol === 'file:') {
+            const ok = navigator.onLine !== false;
+            if (ok) this.lastVerifiedOnlineAt = Date.now();
+            return ok;
+          }
+          const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+          const timer = ctrl ? setTimeout(() => ctrl.abort(), 3500) : null;
           try {
-            await deferredPwaPrompt.prompt();
-            const choice = await deferredPwaPrompt.userChoice;
-            if (choice && choice.outcome === 'accepted') {
-              deferredPwaPrompt = null;
-              showToast('📲 Arcane Royale installed to Home Screen!', '#34d399');
+            const resp = await fetch(`/?_ar_ping=${Date.now()}`, {
+              method: 'HEAD',
+              cache: 'no-store',
+              signal: ctrl ? ctrl.signal : undefined
+            });
+            if (timer) clearTimeout(timer);
+            const ok = Boolean(resp) && navigator.onLine !== false;
+            if (ok) this.lastVerifiedOnlineAt = Date.now();
+            return ok;
+          } catch (_) {
+            if (timer) clearTimeout(timer);
+            this.lastVerifiedOnlineAt = 0;
+            return false;
+          }
+        },
+
+        showOfflineModal(message) {
+          this.isOffline = true;
+          this.lastVerifiedOnlineAt = 0;
+          if (Game.state === 'PLAYING' || Game.state === 'DROPPING') {
+            pauseGame(true);
+          }
+          isPaused = true;
+          Input.reset();
+          AudioEngine.setExternalMute('offline', true);
+          const modal = document.getElementById('connection-lost-modal');
+          const status = document.getElementById('conn-lost-status');
+          if (status && message) status.textContent = message;
+          if (modal) modal.classList.remove('hidden');
+        },
+
+        hideOfflineModal() {
+          this.isOffline = false;
+          const modal = document.getElementById('connection-lost-modal');
+          if (modal) modal.classList.add('hidden');
+          AudioEngine.setExternalMute('offline', false);
+          if (Game.state === 'PAUSED' && !AdController.isShowing) {
+            const pauseEl = document.getElementById('pause-screen');
+            if (pauseEl && pauseEl.classList.contains('hidden')) {
+              resumeGame();
+            }
+          }
+        },
+
+        async ensureOnline(force = false) {
+          const ok = await this.checkConnectivity(force);
+          if (!ok) {
+            this.showOfflineModal('Reconnecting to Arcane Servers... Active internet access is required to play Arcane Royale.');
+            return false;
+          }
+          if (this.isOffline) this.hideOfflineModal();
+          return true;
+        },
+
+        init() {
+          // Actively strip any legacy Service Workers or Cache Storage entries
+          try {
+            if ('serviceWorker' in navigator && typeof navigator.serviceWorker.getRegistrations === 'function') {
+              navigator.serviceWorker.getRegistrations().then(regs => {
+                regs.forEach(reg => reg.unregister().catch(() => {}));
+              }).catch(() => {});
+            }
+            if ('caches' in window && typeof window.caches.keys === 'function') {
+              window.caches.keys().then(keys => {
+                keys.forEach(k => window.caches.delete(k).catch(() => {}));
+              }).catch(() => {});
             }
           } catch (_) {}
-          updatePwaInstallButtonUI();
-          return;
+
+          window.addEventListener('offline', () => {
+            this.showOfflineModal('Connection lost. Reconnecting to Arcane Servers...');
+          });
+          window.addEventListener('online', () => {
+            this.checkConnectivity(true).then(ok => {
+              if (ok && this.isOffline) {
+                this.hideOfflineModal();
+                showToast('✓ Reconnected to Arcane Servers!', '#34d399');
+              }
+            });
+          });
+          if (navigator.onLine === false) {
+            this.showOfflineModal('Offline detected. Reconnecting to Arcane Servers...');
+          } else {
+            this.checkConnectivity(true);
+          }
         }
-        const modal = document.getElementById('ios-install-modal');
-        if (modal) modal.classList.remove('hidden');
+      };
+
+      async function retryOnlineConnection() {
+        const btn = document.getElementById('btn-retry-connection');
+        const status = document.getElementById('conn-lost-status');
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = '↻ Checking Connection...';
+        }
+        if (status) status.textContent = 'Pinging Arcane Servers...';
+        const ok = await OnlineGuard.checkConnectivity(true);
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '↻ Retry Connection';
+        }
+        if (ok) {
+          OnlineGuard.hideOfflineModal();
+          showToast('✓ Reconnected to Arcane Servers!', '#34d399');
+        } else {
+          if (status) status.textContent = 'Still offline. Please check your Wi-Fi or mobile data and tap Retry Connection.';
+        }
       }
 
-      function closeIosInstallModal() {
-        const modal = document.getElementById('ios-install-modal');
-        if (modal) modal.classList.add('hidden');
+      const AdBlockerGuard = {
+        detected: false,
+
+        check() {
+          try {
+            const bait = document.createElement('div');
+            bait.className = 'adsbox ad-banner pub_300x250 text-ad';
+            bait.setAttribute('aria-hidden', 'true');
+            bait.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:10px;height:10px;pointer-events:none;visibility:visible;display:block;';
+            bait.innerHTML = '&nbsp;';
+            document.body.appendChild(bait);
+            const cs = window.getComputedStyle(bait);
+            const blocked = (
+              bait.offsetHeight === 0
+              || bait.clientHeight === 0
+              || cs.display === 'none'
+              || cs.visibility === 'hidden'
+              || cs.opacity === '0'
+            );
+            bait.remove();
+            this.detected = blocked;
+            return blocked;
+          } catch (_) {
+            this.detected = false;
+            return false;
+          }
+        },
+
+        showModal() {
+          const modal = document.getElementById('adblock-modal');
+          if (modal) modal.classList.remove('hidden');
+        },
+
+        hideModal() {
+          const modal = document.getElementById('adblock-modal');
+          if (modal) modal.classList.add('hidden');
+        },
+
+        ensureAllowed() {
+          if (this.check()) {
+            this.showModal();
+            return false;
+          }
+          this.hideModal();
+          return true;
+        },
+
+        init() {
+          setTimeout(() => {
+            if (this.check()) {
+              this.showModal();
+            }
+          }, 350);
+        }
+      };
+
+      function recheckAdBlocker() {
+        const blocked = AdBlockerGuard.check();
+        if (blocked) {
+          showToast('🛡️ Ad-Blocker still detected. Please disable it for this site.', '#fbbf24');
+        } else {
+          AdBlockerGuard.hideModal();
+          showToast('✓ Thank you for supporting free online play!', '#34d399');
+        }
       }
 
-      function initMobilePwaSupport() {
-        // Dynamic inline manifest fallback when served outside standard origin (e.g. file:// standalone)
-        if (location.protocol === 'file:' && !document.querySelector('link[rel="manifest"]')) {
-          const manifestObj = {
-            id: '/',
-            name: 'Arcane Royale — 50-Player Battle Royale',
-            short_name: 'ArcaneRoyale',
-            start_url: '/',
-            scope: '/',
-            display: 'standalone',
-            orientation: 'landscape',
-            theme_color: '#0b1020',
-            background_color: '#060913'
-          };
-          const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
-          const link = document.createElement('link');
-          link.rel = 'manifest';
-          link.href = URL.createObjectURL(blob);
-          document.head.appendChild(link);
+      // Private H5 Ad Controller (AdSense H5 Games, Poki, CrazyGames, GameDistribution + 3s preview fallback)
+      const AdController = (() => {
+        const VERIFIED_TOKEN = Symbol('verified_ad_completion');
+        let isShowing = false;
+        let activeCancelFn = null;
+        let wasPlayingBeforeAd = false;
+
+        function enterAdState() {
+          isShowing = true;
+          wasPlayingBeforeAd = (Game.state === 'PLAYING' || Game.state === 'DROPPING');
+          if (wasPlayingBeforeAd) {
+            pauseGame(true);
+          }
+          isPaused = true;
+          Input.reset();
+          AudioEngine.setExternalMute('ad', true);
         }
 
-        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        function exitAdState() {
+          isShowing = false;
+          activeCancelFn = null;
+          AudioEngine.setExternalMute('ad', false);
+          if (wasPlayingBeforeAd && !OnlineGuard.isOffline) {
+            wasPlayingBeforeAd = false;
+            resumeGame();
+          } else {
+            wasPlayingBeforeAd = false;
+            if (Game.state !== 'PAUSED' && !OnlineGuard.isOffline) {
+              isPaused = false;
+            }
+          }
         }
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-          e.preventDefault();
-          deferredPwaPrompt = e;
-          updatePwaInstallButtonUI();
-        });
-        window.addEventListener('appinstalled', () => {
-          deferredPwaPrompt = null;
-          updatePwaInstallButtonUI();
-          showToast('📲 Installed Arcane Royale!', '#34d399');
-        });
+        function runSimulatedPreview(kind, placement, allowCancel) {
+          return new Promise((resolve) => {
+            const modal = document.getElementById('ad-preview-modal');
+            const badge = document.getElementById('ad-preview-badge');
+            const title = document.getElementById('ad-preview-title');
+            const desc = document.getElementById('ad-preview-desc');
+            const fill = document.getElementById('ad-preview-bar-fill');
+            const timerEl = document.getElementById('ad-preview-timer');
+            const cancelBtn = document.getElementById('btn-ad-cancel');
 
-        const syncOnlineState = () => {
-          const ind = document.getElementById('offline-indicator');
-          if (!ind) return;
-          ind.classList.toggle('hidden', navigator.onLine !== false);
-        };
-        window.addEventListener('online', syncOnlineState);
-        window.addEventListener('offline', syncOnlineState);
-        syncOnlineState();
-        updatePwaInstallButtonUI();
+            if (!modal) {
+              resolve({ completed: true, token: VERIFIED_TOKEN });
+              return;
+            }
+
+            if (badge) badge.textContent = kind === 'rewarded' ? 'REWARDED AD PREVIEW' : 'INTERSTITIAL AD PREVIEW';
+            if (title) title.textContent = kind === 'rewarded' ? 'ARCANE SPONSOR REWARD' : 'ARCANE SPONSOR BREAK';
+            if (desc) {
+              desc.textContent = kind === 'rewarded'
+                ? 'Watching sponsored video preview... Reward unlocks automatically when playback finishes.'
+                : 'Returning to arena after a brief sponsor message...';
+            }
+            if (cancelBtn) {
+              cancelBtn.classList.toggle('hidden', !allowCancel);
+            }
+            if (fill) fill.style.width = '0%';
+            if (timerEl) timerEl.textContent = 'Completing in 3s...';
+            modal.classList.remove('hidden');
+
+            const durationMs = 3000;
+            const startedAt = performance.now();
+            let settled = false;
+            let rafId = null;
+
+            const cleanup = () => {
+              if (rafId !== null) cancelAnimationFrame(rafId);
+              rafId = null;
+              modal.classList.add('hidden');
+              activeCancelFn = null;
+            };
+
+            activeCancelFn = () => {
+              if (settled) return;
+              settled = true;
+              cleanup();
+              resolve({ completed: false, token: null });
+            };
+
+            const tick = (now) => {
+              if (settled) return;
+              const elapsed = now - startedAt;
+              const pct = Math.max(0, Math.min(100, (elapsed / durationMs) * 100));
+              const remSec = Math.max(1, Math.ceil((durationMs - elapsed) / 1000));
+              if (fill) fill.style.width = `${pct.toFixed(1)}%`;
+              if (timerEl) timerEl.textContent = elapsed >= durationMs ? 'Reward verified!' : `Completing in ${remSec}s...`;
+              if (elapsed >= durationMs) {
+                settled = true;
+                cleanup();
+                resolve({ completed: true, token: VERIFIED_TOKEN });
+                return;
+              }
+              rafId = requestAnimationFrame(tick);
+            };
+            rafId = requestAnimationFrame(tick);
+          });
+        }
+
+        function tryExternalInterstitial(placement) {
+          // 1. Google AdSense H5 Games API (adBreak)
+          if (typeof window.adBreak === 'function') {
+            return new Promise((resolve) => {
+              try {
+                window.adBreak({
+                  type: 'next',
+                  name: placement || 'post_match',
+                  beforeAd: () => {},
+                  afterAd: () => resolve(true),
+                  adBreakDone: () => resolve(true)
+                });
+              } catch (_) { resolve(false); }
+            });
+          }
+          // 2. Poki SDK
+          if (window.PokiSDK && typeof window.PokiSDK.commercialBreak === 'function') {
+            return window.PokiSDK.commercialBreak().then(() => true).catch(() => false);
+          }
+          // 3. CrazyGames SDK
+          if (window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.ad && typeof window.CrazyGames.SDK.ad.requestAd === 'function') {
+            return new Promise((resolve) => {
+              try {
+                window.CrazyGames.SDK.ad.requestAd('midgame', {
+                  adFinished: () => resolve(true),
+                  adError: () => resolve(false)
+                });
+              } catch (_) { resolve(false); }
+            });
+          }
+          // 4. GameDistribution SDK
+          if (window.gdsdk && typeof window.gdsdk.showAd === 'function') {
+            return window.gdsdk.showAd().then(() => true).catch(() => false);
+          }
+          return null;
+        }
+
+        function tryExternalRewarded(placement) {
+          // 1. Google AdSense H5 Games API (adBreak rewarded)
+          if (typeof window.adBreak === 'function') {
+            return new Promise((resolve) => {
+              let rewarded = false;
+              try {
+                window.adBreak({
+                  type: 'reward',
+                  name: placement || 'rewarded',
+                  beforeReward: (showAdFn) => { if (typeof showAdFn === 'function') showAdFn(); },
+                  adViewed: () => { rewarded = true; },
+                  adDismissed: () => { rewarded = false; },
+                  adBreakDone: () => resolve({ completed: rewarded, token: rewarded ? VERIFIED_TOKEN : null })
+                });
+              } catch (_) { resolve({ completed: false, token: null }); }
+            });
+          }
+          // 2. Poki SDK
+          if (window.PokiSDK && typeof window.PokiSDK.rewardedBreak === 'function') {
+            return window.PokiSDK.rewardedBreak()
+              .then(ok => ({ completed: Boolean(ok), token: ok ? VERIFIED_TOKEN : null }))
+              .catch(() => ({ completed: false, token: null }));
+          }
+          // 3. CrazyGames SDK
+          if (window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.ad && typeof window.CrazyGames.SDK.ad.requestAd === 'function') {
+            return new Promise((resolve) => {
+              try {
+                window.CrazyGames.SDK.ad.requestAd('rewarded', {
+                  adFinished: () => resolve({ completed: true, token: VERIFIED_TOKEN }),
+                  adError: () => resolve({ completed: false, token: null })
+                });
+              } catch (_) { resolve({ completed: false, token: null }); }
+            });
+          }
+          // 4. GameDistribution SDK
+          if (window.gdsdk && typeof window.gdsdk.showAd === 'function') {
+            return window.gdsdk.showAd('rewarded')
+              .then(() => ({ completed: true, token: VERIFIED_TOKEN }))
+              .catch(() => ({ completed: false, token: null }));
+          }
+          return null;
+        }
+
+        return Object.freeze({
+          get isShowing() { return isShowing; },
+
+          cancelPreview() {
+            if (typeof activeCancelFn === 'function') {
+              activeCancelFn();
+            }
+          },
+
+          async showInterstitial(placement = 'post_match') {
+            if (isShowing || OnlineGuard.isOffline) return false;
+            enterAdState();
+            try {
+              const ext = tryExternalInterstitial(placement);
+              if (ext) {
+                await ext;
+              } else {
+                await runSimulatedPreview('interstitial', placement, false);
+              }
+              return true;
+            } finally {
+              exitAdState();
+            }
+          },
+
+          async showRewarded(placement = 'reward', onReward = null) {
+            if (isShowing) return false;
+            if (!(await OnlineGuard.ensureOnline())) return false;
+            if (!AdBlockerGuard.ensureAllowed()) return false;
+            enterAdState();
+            let result = { completed: false, token: null };
+            try {
+              const ext = tryExternalRewarded(placement);
+              if (ext) {
+                result = await ext;
+              } else {
+                result = await runSimulatedPreview('rewarded', placement, true);
+              }
+            } finally {
+              exitAdState();
+            }
+            if (result && result.completed === true && result.token === VERIFIED_TOKEN) {
+              if (typeof onReward === 'function') onReward();
+              return true;
+            }
+            showToast('Ad closed early — reward not granted.', '#fca5a5');
+            return false;
+          }
+        });
+      })();
+
+      function cancelActiveAdPreview() {
+        AdController.cancelPreview();
       }
 
       function encodeSaveBackupString() {
@@ -15426,7 +16272,11 @@
           return false;
         }
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(res.payload.save));
+          const importedSave = { ...res.payload.save };
+          const importSig = computeSaveChecksum(importedSave);
+          importedSave._sig = importSig;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(importedSave));
+          localStorage.setItem(STORAGE_SIG_KEY, importSig);
           if (res.payload.hudLayout && typeof res.payload.hudLayout === 'object') {
             localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, JSON.stringify(res.payload.hudLayout));
             if (typeof HudEditor !== 'undefined' && typeof HudEditor.loadLayout === 'function') HudEditor.loadLayout();
@@ -15446,7 +16296,8 @@
         }
       }
 
-      initMobilePwaSupport();
+      OnlineGuard.init();
+      AdBlockerGuard.init();
 
       function onMusicVolumeChange(val) {
         PlayerData.musicVolume = parseFloat(val);
@@ -15518,6 +16369,7 @@
       function resetPlayerProgress() {
         if (confirm("Reset all unlocked fighters, gold, gems and rank?")) {
           localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(STORAGE_SIG_KEY);
           for (const key of LEGACY_STORAGE_KEYS) localStorage.removeItem(key);
           location.reload();
         }
@@ -15885,9 +16737,138 @@
           Music.start('lobby');
           checkTutorial();
         }
+        if (saveIntegrityResetNotice) {
+          saveIntegrityResetNotice = false;
+          showToast('🛡️ Save tamper detected — corrupted economy fields were reset.', '#fbbf24');
+        }
+      });
+
+      // ==========================================
+      // PRIVATE DELEGATED UI EVENT DISPATCHER (ZERO WINDOW GLOBALS)
+      // ==========================================
+      const UI_CLICK_ACTIONS = Object.freeze({
+        applyImportSaveCode: () => applyImportSaveCode(),
+        buyArcaneRune: (arg) => buyArcaneRune(arg),
+        buyDropSkin: (arg, arg2) => buyDropSkin(arg, Number(arg2)),
+        buyFighter: (arg, arg2, arg3) => buyFighter(arg, Number(arg2), Number(arg3)),
+        cancelActiveAdPreview: () => cancelActiveAdPreview(),
+        cancelDropScreen: () => cancelDropScreen(),
+        cancelHudEditor: () => cancelHudEditor(),
+        claimDailyMissionReward: (arg) => claimDailyMissionReward(arg),
+        claimDemoSupplies: () => claimDemoSupplies(),
+        claimVaultRewardedAd: (arg) => claimVaultRewardedAd(arg),
+        clearMapPing: () => clearMapPing(),
+        closeImportSavePanel: () => toggleImportSavePanel(false),
+        closeItemDetails: () => closeItemDetails(),
+        closeOperatorModal: () => closeOperatorModal(),
+        closeSettings: () => closeSettings(),
+        closeShop: () => closeShop(),
+        closeStatsUpgrades: () => closeStatsUpgrades(),
+        confirmDrop: () => confirmDrop(),
+        cycleLobbyHero: (arg) => cycleLobbyHero(Number(arg)),
+        dismissLandscapePrompt: () => dismissLandscapePrompt(),
+        dismissTutorial: () => dismissTutorial(),
+        doubleMatchRewardsAd: () => doubleMatchRewardsAd(),
+        equipArcaneRune: (arg) => equipArcaneRune(arg === 'null' ? null : arg),
+        equipDropSkin: (arg) => equipDropSkin(arg),
+        exportSaveCode: () => exportSaveCode(),
+        forceLandscapeView: () => forceLandscapeView(),
+        leaveMatchToLobby: () => returnToLobby(true),
+        openCombatGuide: () => openCombatGuide(),
+        openHudEditor: () => openHudEditor(),
+        openSettings: (arg) => openSettings(arg || 'audio'),
+        openShop: (arg) => openShop(arg || 'characters'),
+        openStatsUpgrades: (arg) => openStatsUpgrades(arg || 'upgrades'),
+        openStatsUpgradesFromGameOver: () => openStatsUpgradesFromGameOver(),
+        pingAtAim: () => pingAtAim(),
+        postMatchPlayAgain: () => postMatchPlayAgain(),
+        postMatchReturnToLobby: () => postMatchReturnToLobby(),
+        previewLobbyHero: (arg) => previewLobbyHero(arg),
+        recheckAdBlocker: () => recheckAdBlocker(),
+        rerollDailyMissionAd: () => rerollDailyMissionAd(),
+        resetHudEditorLayout: () => resetHudEditorLayout(),
+        resetPlayerProgress: () => resetPlayerProgress(),
+        restartKillcamReplay: () => restartKillcamReplay(),
+        resumeGame: () => resumeGame(),
+        retryOnlineConnection: () => retryOnlineConnection(),
+        saveHudEditorLayout: () => saveHudEditorLayout(),
+        selectFighter: (arg) => selectFighter(arg),
+        selectRandomDrop: () => selectRandomDrop(),
+        setGraphicsQuality: (arg) => setGraphicsQuality(arg),
+        startBattle: () => startBattle(),
+        submitName: () => submitName(),
+        switchSettingsTab: (arg) => switchSettingsTab(arg),
+        switchShopTab: (arg) => switchShopTab(arg),
+        switchUpgradesTab: (arg) => switchUpgradesTab(arg),
+        toggleAutoAim: () => toggleAutoAim(),
+        toggleHudEditorSnap: () => toggleHudEditorSnap(),
+        toggleImportSavePanel: () => toggleImportSavePanel(),
+        toggleItemDetails: () => toggleItemDetails(),
+        toggleMapExpand: () => toggleMapExpand(),
+        togglePause: () => togglePause(),
+        toggleQuickUseFanout: () => toggleQuickUseFanout(),
+        toggleZoom: () => toggleZoom(),
+        triggerOperatorAccess: () => triggerOperatorAccess(),
+        upgradeFighterStat: (arg) => upgradeFighterStat(arg),
+        useInventoryItem: (arg) => useInventoryItem(arg),
+        useQuickUseItem: () => useQuickUseItem()
+      });
+
+      const UI_CHANGE_ACTIONS = Object.freeze({
+        onAutoLootToggle: (el) => onAutoLootToggle(el.checked),
+        onBatterySaverToggle: (el) => onBatterySaverToggle(el.checked),
+        onHapticsToggle: (el) => onHapticsToggle(el.checked),
+        onReducedMotionToggle: (el) => onReducedMotionToggle(el.checked)
+      });
+
+      const UI_INPUT_ACTIONS = Object.freeze({
+        onControlScaleChange: (el) => onControlScaleChange(el.value),
+        onHudEditorOpacityInput: (el) => onHudEditorOpacityInput(el.value),
+        onHudEditorScaleInput: (el) => onHudEditorScaleInput(el.value),
+        onMusicVolumeChange: (el) => onMusicVolumeChange(el.value),
+        onSfxVolumeChange: (el) => onSfxVolumeChange(el.value),
+        onVoiceVolumeChange: (el) => onVoiceVolumeChange(el.value)
+      });
+
+      document.addEventListener('click', (event) => {
+        const target = event.target && event.target.closest ? event.target.closest('[data-ar-click]') : null;
+        if (!target || target.disabled) return;
+        const actionName = target.getAttribute('data-ar-click');
+        const handler = UI_CLICK_ACTIONS[actionName];
+        if (typeof handler === 'function') {
+          handler(
+            target.getAttribute('data-ar-arg'),
+            target.getAttribute('data-ar-arg2'),
+            target.getAttribute('data-ar-arg3')
+          );
+        }
+      });
+
+      document.addEventListener('change', (event) => {
+        const target = event.target && event.target.closest ? event.target.closest('[data-ar-change]') : null;
+        if (!target) return;
+        const handler = UI_CHANGE_ACTIONS[target.getAttribute('data-ar-change')];
+        if (typeof handler === 'function') handler(target);
+      });
+
+      document.addEventListener('input', (event) => {
+        const target = event.target && event.target.closest ? event.target.closest('[data-ar-input]') : null;
+        if (!target) return;
+        const handler = UI_INPUT_ACTIONS[target.getAttribute('data-ar-input')];
+        if (typeof handler === 'function') handler(target);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        const target = event.target && event.target.closest ? event.target.closest('[data-ar-enter]') : null;
+        if (!target) return;
+        if (target.getAttribute('data-ar-enter') === 'submitName') {
+          submitName();
+        }
       });
 
       requestAnimationFrame(gameLoop);
+      })();
     </script>
   </body>
 </html>

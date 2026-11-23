@@ -64,10 +64,11 @@ test('Elemental Reactions: 4s priming, all 3 combos, 2.5s reaction CD, and Lv35+
   assert.equal(primed.nextState.element, 'FIRE');
   assert.equal(primed.nextState.expiresAt, 10.0 + ELEMENTAL_PRIMING_DURATION);
 
-  // 2. Hit with WATER -> STEAM ERUPTION (18% max HP, capped at 45, 110px AoE, 2.5s -30% acc cloud)
+  // 2. Hit with WATER -> VAPORIZE! (18% max HP, capped at 45, 110px AoE, 2.5s -30% acc cloud)
   const steam = evaluateElementalHit(primed.nextState, 'WATER', 11.2, 140, 200, 18);
   assert.equal(steam.triggered, true);
   assert.equal(steam.reaction, 'STEAM_ERUPTION');
+  assert.equal(steam.label, 'VAPORIZE!');
   assert.equal(steam.bonusDamage, 36); // 18% of 200
   assert.equal(steam.aoeRadius, 110);
   assert.equal(steam.steamCloudDuration, 2.5);
