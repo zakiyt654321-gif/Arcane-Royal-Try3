@@ -23,7 +23,6 @@
     <meta property="og:site_name" content="Arcane Royale" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%231e1b4b'/%3E%3Cstop offset='100%25' stop-color='%23090d1a'/%3E%3C/linearGradient%3E%3ClinearGradient id='crys' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2367e8f9'/%3E%3Cstop offset='50%25' stop-color='%23a855f7'/%3E%3Cstop offset='100%25' stop-color='%236d28d9'/%3E%3C/linearGradient%3E%3ClinearGradient id='gold' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23fef08a'/%3E%3Cstop offset='100%25' stop-color='%23f59e0b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='128' height='128' rx='28' fill='url(%23bg)'/%3E%3Cpolygon points='64,12 102,52 64,116 26,52' fill='url(%23crys)' stroke='url(%23gold)' stroke-width='5' stroke-linejoin='round'/%3E%3Cpolygon points='64,12 102,52 64,62' fill='%23e0f2fe' opacity='0.45'/%3E%3Cpolygon points='64,12 26,52 64,62' fill='%23c4b5fd' opacity='0.35'/%3E%3Cline x1='64' y1='22' x2='64' y2='106' stroke='%23ffffff' stroke-width='3' opacity='0.65'/%3E%3Ccircle cx='64' cy='58' r='7' fill='%23fef08a'/%3E%3C/svg%3E" />
     <style>
       * {
         box-sizing: border-box;
@@ -4791,7 +4790,7 @@
             <div class="tutorial-item"><strong>Move &amp; steer</strong><span>Slide your thumb on the left joystick to move and steer.</span></div>
             <div class="tutorial-item"><strong>Aim &amp; cancel cast</strong><span>Hold and drag any attack button to aim, then release. Drag onto the red <strong>✕ CANCEL</strong> zone to abort without spending MP or cooldown.</span></div>
             <div class="tutorial-item"><strong>Dash &amp; Jump Pads</strong><span>Tap <strong>DASH</strong> to burst forward with brief invulnerability, or step onto glowing cyan <strong>Arcane Jump Pads</strong> on island ridges to launch airborne.</span></div>
-            <div class="tutorial-item"><strong>Elemental Reactions</strong><span>Combine <strong>Fire</strong>, <strong>Water</strong>, and <strong>Dark</strong> abilities within 4s to trigger Vaporize, Shadowflame, and Abyssal Undertow combos.</span></div>
+            <div class="tutorial-item"><strong>Elemental Reactions</strong><span>Combine <strong>Fire</strong>, <strong>Water</strong>, and <strong>Dark</strong> abilities within 4s to trigger Steam Eruption, Shadowflame, and Abyssal Undertow combos.</span></div>
             <div class="tutorial-item"><strong>Quick-Use &amp; inventory fan</strong><span>Tap Quick-Use (auto-prioritizes Heal &lt;70% HP or Mana &lt;40% MP) or tap <strong>▲</strong> to fan out all 5 loot items.</span></div>
             <div class="tutorial-item"><strong>Sprint &amp; Bounty Crown</strong><span>Move for 1.5s to auto-sprint free, or hold <strong>SPRINT</strong>. Fighters with 3+ elims wear a golden <strong>👑</strong> crown worth 2x Coins &amp; +75 XP.</span></div>
             <div class="tutorial-item"><strong>Minimap &amp; quick-pings</strong><span>Double-tap the minimap to quick-ping · Tap <strong>Map</strong> then tap the island to pin · Tap <strong>×</strong> on the waypoint bar to clear.</span></div>
@@ -4905,6 +4904,89 @@
           window.addEventListener('resize', layout);
           layout();
         };
+        const initDynamicFavicon = () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = 32;
+            c.height = 32;
+            const ctx = c.getContext('2d');
+            if (!ctx) return;
+            // Rounded dark arcane backdrop
+            const bg = ctx.createLinearGradient(0, 0, 32, 32);
+            bg.addColorStop(0, '#1e1b4b');
+            bg.addColorStop(1, '#090d1a');
+            ctx.fillStyle = bg;
+            ctx.beginPath();
+            const r = 7;
+            ctx.moveTo(r, 0);
+            ctx.lineTo(32 - r, 0);
+            ctx.quadraticCurveTo(32, 0, 32, r);
+            ctx.lineTo(32, 32 - r);
+            ctx.quadraticCurveTo(32, 32, 32 - r, 32);
+            ctx.lineTo(r, 32);
+            ctx.quadraticCurveTo(0, 32, 0, 32 - r);
+            ctx.lineTo(0, r);
+            ctx.quadraticCurveTo(0, 0, r, 0);
+            ctx.closePath();
+            ctx.fill();
+            // Arcane crystal body
+            const crys = ctx.createLinearGradient(6, 3, 26, 29);
+            crys.addColorStop(0, '#67e8f9');
+            crys.addColorStop(0.5, '#a855f7');
+            crys.addColorStop(1, '#6d28d9');
+            const gold = ctx.createLinearGradient(6, 3, 26, 29);
+            gold.addColorStop(0, '#fef08a');
+            gold.addColorStop(1, '#f59e0b');
+            ctx.beginPath();
+            ctx.moveTo(16, 3);
+            ctx.lineTo(25.5, 13);
+            ctx.lineTo(16, 29);
+            ctx.lineTo(6.5, 13);
+            ctx.closePath();
+            ctx.fillStyle = crys;
+            ctx.fill();
+            ctx.lineWidth = 1.6;
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = gold;
+            ctx.stroke();
+            // Facet highlights
+            ctx.fillStyle = 'rgba(224, 242, 254, 0.45)';
+            ctx.beginPath();
+            ctx.moveTo(16, 3);
+            ctx.lineTo(25.5, 13);
+            ctx.lineTo(16, 15.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = 'rgba(196, 181, 253, 0.35)';
+            ctx.beginPath();
+            ctx.moveTo(16, 3);
+            ctx.lineTo(6.5, 13);
+            ctx.lineTo(16, 15.5);
+            ctx.closePath();
+            ctx.fill();
+            // Center ridge & spark
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(16, 5.5);
+            ctx.lineTo(16, 26.5);
+            ctx.stroke();
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(16, 14.5, 2, 0, Math.PI * 2);
+            ctx.fill();
+            const href = c.toDataURL('image/png');
+            let link = document.querySelector('link[rel="icon"]');
+            if (!link) {
+              link = document.createElement('link');
+              link.rel = 'icon';
+              document.head.appendChild(link);
+            }
+            link.type = 'image/png';
+            link.href = href;
+          } catch (_) {}
+        };
+        initDynamicFavicon();
         if (rotation === 'cw' || rotation === 'ccw') {
           document.documentElement.classList.add('force-landscape-shell');
           document.addEventListener('DOMContentLoaded', () => startRotationShell(rotation), { once: true });
