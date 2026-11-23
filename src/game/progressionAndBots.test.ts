@@ -67,21 +67,24 @@ test('bot level assignment stays within +/-3 clamped to [1, 100] and scales smoo
   }
 
   const p1 = computeBotScaling(1);
-  assert.ok(Math.abs(p1.statMultiplier - 0.95) < 1e-6);
-  assert.ok(Math.abs(p1.reactionDelay - 0.38) < 1e-6);
-  assert.ok(Math.abs(p1.aimSpreadDeg - 9.0) < 1e-6);
+  assert.ok(Math.abs(p1.statMultiplier - 0.85) < 1e-6);
+  assert.ok(Math.abs(p1.reactionDelay - 0.55) < 1e-6);
+  assert.ok(Math.abs(p1.aimSpreadDeg - 14.0) < 1e-6);
   assert.equal(p1.shotLeadingEnabled, false);
+  assert.equal(p1.shotLeadFactor, 0);
   assert.equal(p1.artComboEnabled, false);
 
   const p25 = computeBotScaling(25);
   assert.equal(p25.shotLeadingEnabled, true);
+  assert.ok(p25.shotLeadFactor > 0 && p25.shotLeadFactor <= 0.5);
   assert.equal(p25.artComboEnabled, true);
 
   const p100 = computeBotScaling(100);
-  assert.ok(Math.abs(p100.statMultiplier - 1.35) < 1e-6);
-  assert.ok(Math.abs(p100.reactionDelay - 0.15) < 1e-6);
-  assert.ok(Math.abs(p100.aimSpreadDeg - 1.5) < 1e-6);
+  assert.ok(Math.abs(p100.statMultiplier - 1.12) < 1e-6);
+  assert.ok(Math.abs(p100.reactionDelay - 0.28) < 1e-6);
+  assert.ok(Math.abs(p100.aimSpreadDeg - 5.0) < 1e-6);
   assert.equal(p100.shotLeadingEnabled, true);
+  assert.ok(Math.abs(p100.shotLeadFactor - 0.5) < 1e-6);
   assert.equal(p100.artComboEnabled, true);
 });
 

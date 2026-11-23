@@ -139,17 +139,17 @@ export interface BotScalingProfile {
 export function computeBotScaling(botLevel: number): BotScalingProfile {
   const level = Math.max(1, Math.min(MAX_PLAYER_LEVEL, Math.floor(Number(botLevel) || 1)));
   const t = (level - 1) / (MAX_PLAYER_LEVEL - 1);
-  const statMultiplier = 0.95 + t * 0.4;
-  const reactionDelay = 0.38 - t * 0.23;
-  const aimSpreadDeg = 9.0 - t * 7.5;
+  const statMultiplier = 0.85 + t * 0.27;
+  const reactionDelay = 0.55 - t * 0.27;
+  const aimSpreadDeg = 14.0 - t * 9.0;
   const aimSpreadRad = aimSpreadDeg * (Math.PI / 180);
   const shotLeadingEnabled = level > 15;
   const shotLeadFactor = shotLeadingEnabled
-    ? Math.min(1, 0.35 + ((level - 15) / (MAX_PLAYER_LEVEL - 15)) * 0.65)
+    ? Math.min(0.5, 0.15 + ((level - 15) / (MAX_PLAYER_LEVEL - 15)) * 0.35)
     : 0;
   const artComboEnabled = level >= 25;
-  const dodgeChance = 0.28 + t * 0.44;
-  const aggression = 0.62 + t * 0.28;
+  const dodgeChance = 0.22 + t * 0.33;
+  const aggression = 0.58 + t * 0.24;
 
   return {
     level,
