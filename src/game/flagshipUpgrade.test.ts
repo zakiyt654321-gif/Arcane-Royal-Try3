@@ -28,6 +28,8 @@ import {
   resolveHudProfileKey,
   resolveAdaptiveMusicStem,
   damageDestructibleProp,
+  CHARACTER_REMOTE_ASSETS,
+  computeSpriteSliceRect,
   type GeothermVentState,
 } from './flagshipUpgrade';
 
@@ -293,4 +295,74 @@ test('Wall-Slam crush damage clamps cleanly at upper ceiling for extreme velocit
   assert.equal(mega.crushDamage, 75);
   assert.equal(mega.stunSeconds, WALL_SLAM_STUN_SECONDS);
 });
+
+test('Character remote asset manifest maps exact GitHub Pages PNG URLs, ./assets/Image fallbacks, grids, and The Berserker spelling', () => {
+  assert.equal(CHARACTER_REMOTE_ASSETS.BERSERKER.displayName, 'The Berserker');
+  assert.equal(
+    CHARACTER_REMOTE_ASSETS.BERSERKER.portraitUrl,
+    'https://zakiyt654321-gif.github.io/Arcane-Royal-Try3/assets/Image/Beserker_Portrait.png'
+  );
+  assert.equal(
+    CHARACTER_REMOTE_ASSETS.BERSERKER.spriteUrl,
+    'https://zakiyt654321-gif.github.io/Arcane-Royal-Try3/assets/Image/Beserker_Sprite.png'
+  );
+  assert.equal(CHARACTER_REMOTE_ASSETS.BERSERKER.portraitFallback, './assets/Image/Beserker_Portrait.png');
+  assert.equal(CHARACTER_REMOTE_ASSETS.BERSERKER.spriteFallback, './assets/Image/Beserker_Sprite.png');
+  assert.equal(CHARACTER_REMOTE_ASSETS.BERSERKER.cols, 5);
+  assert.equal(CHARACTER_REMOTE_ASSETS.BERSERKER.rows, 4);
+  assert.equal(CHARACTER_REMOTE_ASSETS.BERSERKER.frameCount, 20);
+
+  assert.equal(
+    CHARACTER_REMOTE_ASSETS.TIDECALLER.portraitUrl,
+    'https://zakiyt654321-gif.github.io/Arcane-Royal-Try3/assets/Image/Tidecaller_Portrait.png'
+  );
+  assert.equal(
+    CHARACTER_REMOTE_ASSETS.TIDECALLER.spriteUrl,
+    'https://zakiyt654321-gif.github.io/Arcane-Royal-Try3/assets/Image/Tidecaller_Sprite.png'
+  );
+  assert.equal(CHARACTER_REMOTE_ASSETS.TIDECALLER.portraitFallback, './assets/Image/Tidecaller_Portrait.png');
+  assert.equal(CHARACTER_REMOTE_ASSETS.TIDECALLER.spriteFallback, './assets/Image/Tidecaller_Sprite.png');
+  assert.equal(CHARACTER_REMOTE_ASSETS.TIDECALLER.cols, 5);
+  assert.equal(CHARACTER_REMOTE_ASSETS.TIDECALLER.rows, 6);
+  assert.equal(CHARACTER_REMOTE_ASSETS.TIDECALLER.frameCount, 30);
+
+  assert.equal(
+    CHARACTER_REMOTE_ASSETS.SHADOW.portraitUrl,
+    'https://zakiyt654321-gif.github.io/Arcane-Royal-Try3/assets/Image/Shadow_Portrait.png'
+  );
+  assert.equal(
+    CHARACTER_REMOTE_ASSETS.SHADOW.spriteUrl,
+    'https://zakiyt654321-gif.github.io/Arcane-Royal-Try3/assets/Image/Shadow_Sprite.png'
+  );
+  assert.equal(CHARACTER_REMOTE_ASSETS.SHADOW.portraitFallback, './assets/Image/Shadow_Portrait.png');
+  assert.equal(CHARACTER_REMOTE_ASSETS.SHADOW.spriteFallback, './assets/Image/Shadow_Sprite.png');
+  assert.equal(CHARACTER_REMOTE_ASSETS.SHADOW.cols, 5);
+  assert.equal(CHARACTER_REMOTE_ASSETS.SHADOW.rows, 4);
+  assert.equal(CHARACTER_REMOTE_ASSETS.SHADOW.frameCount, 20);
+});
+
+test('computeSpriteSliceRect calculates exact cell dimensions with zero frame bleeding and preserves aspect ratio', () => {
+  // Berserker 559x447 (5x4)
+  const bCell = computeSpriteSliceRect(559, 447, 5, 4, 4, 3, 74);
+  assert.ok(Math.abs(bCell.frameW - 111.8) < 1e-6);
+  assert.ok(Math.abs(bCell.frameH - 111.75) < 1e-6);
+  assert.ok(bCell.sx > 4 * bCell.frameW && bCell.sx + bCell.sw < 559);
+  assert.ok(bCell.sy > 3 * bCell.frameH && bCell.sy + bCell.sh < 447);
+
+  // Tidecaller 395x632 (5x6) -> 79 x 105.333 tall aspect ratio preserved
+  const tCell = computeSpriteSliceRect(395, 632, 5, 6, 2, 5, 74);
+  assert.equal(tCell.frameW, 79);
+  assert.ok(Math.abs(tCell.frameH - 632 / 6) < 1e-6);
+  assert.equal(tCell.drawH, 74);
+  assert.ok(Math.abs(tCell.drawW - 74 * (79 / (632 / 6))) < 1e-6);
+  assert.ok(tCell.sy + tCell.sh < 632);
+
+  // Shadow 1600x1280 (5x4) -> 320 x 320 exact square
+  const sCell = computeSpriteSliceRect(1600, 1280, 5, 4, 0, 0, 74);
+  assert.equal(sCell.frameW, 320);
+  assert.equal(sCell.frameH, 320);
+  assert.equal(sCell.drawW, 74);
+  assert.equal(sCell.drawH, 74);
+});
+
 

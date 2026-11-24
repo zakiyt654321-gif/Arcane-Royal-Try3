@@ -2,183 +2,105 @@
   "entities": {
     "UserProfile": {
       "title": "UserProfile",
-      "description": "Private player progression, currencies, unlocks, and dual-orientation HUD layouts owned strictly by the authenticated user.",
+      "description": "Authenticated player profile, currencies, unlocked items, career stats, dual-orientation HUD layouts, and Friend Code (zero PII).",
       "type": "object",
       "properties": {
-        "uid": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "playerName": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 12,
-          "pattern": "^[a-zA-Z0-9 _\\-]+$"
-        },
-        "level": {
-          "type": "integer",
-          "description": "Player level clamped between 1 and 100."
-        },
-        "xp": {
-          "type": "integer",
-          "description": "Current level progress XP."
-        },
-        "gold": {
-          "type": "integer",
-          "description": "Coins currency balance."
-        },
-        "astralCrystals": {
-          "type": "integer",
-          "description": "Astral Crystals currency balance."
-        },
-        "gems": {
-          "type": "integer",
-          "description": "Gems currency balance."
-        },
-        "selectedFighter": {
-          "type": "string",
-          "enum": ["BERSERKER", "TIDECALLER", "SHADOW"]
-        },
-        "unlockedFighters": {
-          "type": "array",
-          "description": "Bounded list of unlocked champion keys."
-        },
-        "wins": {
-          "type": "integer"
-        },
-        "eliminations": {
-          "type": "integer"
-        },
-        "matches": {
-          "type": "integer"
-        },
-        "hudLayoutLandscape": {
-          "type": "object",
-          "description": "Custom mobile landscape HUD layout map."
-        },
-        "hudLayoutPortrait": {
-          "type": "object",
-          "description": "Custom mobile portrait HUD layout map."
-        },
-        "saveDigest": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 64
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 3, "maxLength": 12, "pattern": "^[a-zA-Z0-9_]+$" },
+        "displayNameLower": { "type": "string", "minLength": 3, "maxLength": 12, "pattern": "^[a-z0-9_]+$" },
+        "friendCode": { "type": "string", "pattern": "^ARC-[A-HJ-NP-Z2-9]{4}$" },
+        "authProvider": { "type": "string", "enum": ["password", "google", "anonymous"] },
+        "isPublic": { "type": "boolean" },
+        "level": { "type": "integer" },
+        "xp": { "type": "integer" },
+        "coins": { "type": "integer" },
+        "crystals": { "type": "integer" },
+        "gems": { "type": "integer" },
+        "unlockedChampions": { "type": "array" },
+        "selectedChampion": { "type": "string", "enum": ["BERSERKER", "TIDECALLER", "SHADOW"] },
+        "unlockedRunes": { "type": "array" },
+        "equippedRune": { "type": ["string", "null"] },
+        "unlockedTrails": { "type": "array" },
+        "equippedTrail": { "type": "string" },
+        "statTiers": { "type": "object" },
+        "careerStats": { "type": "object" },
+        "hudLayouts": { "type": "object" },
+        "createdAtMs": { "type": "integer" },
+        "updatedAtMs": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": [
         "uid",
-        "playerName",
+        "displayName",
+        "displayNameLower",
+        "friendCode",
+        "authProvider",
+        "isPublic",
         "level",
         "xp",
-        "gold",
-        "astralCrystals",
+        "coins",
+        "crystals",
         "gems",
-        "selectedFighter",
-        "unlockedFighters",
-        "wins",
-        "eliminations",
-        "matches",
-        "saveDigest",
+        "unlockedChampions",
+        "selectedChampion",
+        "careerStats",
         "createdAt",
         "updatedAt"
       ]
     },
-    "LeaderboardEntry": {
-      "title": "LeaderboardEntry",
-      "description": "Public non-PII competitive leaderboard record validated by match telemetry bounds.",
+    "FriendCode": {
+      "title": "FriendCode",
+      "description": "Immutable unique ARC-XXXX code mapping to a player UID for instant friend lookup.",
       "type": "object",
       "properties": {
-        "uid": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "playerName": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 12,
-          "pattern": "^[a-zA-Z0-9 _\\-]+$"
-        },
-        "champion": {
-          "type": "string",
-          "enum": ["BERSERKER", "TIDECALLER", "SHADOW"]
-        },
-        "level": {
-          "type": "integer"
-        },
-        "wins": {
-          "type": "integer"
-        },
-        "eliminations": {
-          "type": "integer"
-        },
-        "matches": {
-          "type": "integer"
-        },
-        "isPublic": {
-          "type": "boolean"
-        },
-        "lastMatchDurationSec": {
-          "type": "number"
-        },
-        "lastMatchKills": {
-          "type": "integer"
-        },
-        "lastMatchMaxDps": {
-          "type": "number"
-        },
-        "telemetryDigest": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 64
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "displayName": { "type": "string", "minLength": 3, "maxLength": 12 },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "uid",
-        "playerName",
-        "champion",
-        "level",
-        "wins",
-        "eliminations",
-        "matches",
-        "isPublic",
-        "lastMatchDurationSec",
-        "lastMatchKills",
-        "lastMatchMaxDps",
-        "telemetryDigest",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["uid", "displayName", "createdAt"]
+    },
+    "FriendLink": {
+      "title": "FriendLink",
+      "description": "Mutual friendship edge under users/{uid}/friends/{friendUid}.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "displayName": { "type": "string", "minLength": 3, "maxLength": 12 },
+        "friendCode": { "type": "string", "maxLength": 12 },
+        "since": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "friendCode", "since"]
+    },
+    "FriendRequest": {
+      "title": "FriendRequest",
+      "description": "Pending incoming friend request under users/{targetUid}/friendRequests/{fromUid}.",
+      "type": "object",
+      "properties": {
+        "fromUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "fromName": { "type": "string", "minLength": 3, "maxLength": 12 },
+        "fromCode": { "type": "string", "maxLength": 12 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fromUid", "fromName", "fromCode", "createdAt"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/UserProfile" },
-      "description": "Private authenticated player profile and cloud save sync document."
+      "description": "Player cloud progression, career stats, HUD profiles, and public Top-50 leaderboard data (zero PII)."
     },
-    "/leaderboard/{userId}": {
-      "schema": { "$ref": "#/entities/LeaderboardEntry" },
-      "description": "Public Global Top-50 competitive leaderboard records containing zero PII."
+    "/users/{userId}/friends/{friendUid}": {
+      "schema": { "$ref": "#/entities/FriendLink" },
+      "description": "Mutual friends subcollection updated atomically via writeBatch."
+    },
+    "/users/{userId}/friendRequests/{fromUid}": {
+      "schema": { "$ref": "#/entities/FriendRequest" },
+      "description": "Incoming friend requests created only by fromUid."
+    },
+    "/friendCodes/{code}": {
+      "schema": { "$ref": "#/entities/FriendCode" },
+      "description": "Immutable unique ARC-XXXX friend code directory."
     }
   }
 }

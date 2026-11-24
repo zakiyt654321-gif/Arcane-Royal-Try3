@@ -1,22 +1,23 @@
-# Arcane Royale Firestore Security Specification
+# Arcane Royale Firestore & RTDB Security Specification
 
 ## 1. Data Invariants
-1. **Strict Ownership (`/users/{userId}`)**: Only the authenticated user whose `request.auth.uid == userId` may read, create, update, or delete their private profile document. Zero blanket `list` access is permitted on `/users`.
-2. **Zero-PII Public Leaderboard (`/leaderboard/{userId}`)**: Leaderboard records contain only competitive public attributes (`uid`, `playerName`, `champion`, `level`, `wins`, `eliminations`, `matches`, `isPublic`, telemetry validation fields, and server timestamps). No email, phone, or device tokens are stored here.
-3. **Anti-Tamper Bounded Progression**: Currency balances (`gold`, `astralCrystals`, `gems`), levels (`1..100`), and match increments (`wins`, `eliminations`, `matches`) are strictly bounded in type, range, and per-update delta (`wins <= existing + 1`, `eliminations <= existing + 49`, `matches <= existing + 1`, `gold <= existing + 50000`, `gems <= existing + 10000`).
-4. **Immutable Identity & Server Timestamps**: `uid` and `createdAt` are immutable after document creation. `createdAt` (on create) and `updatedAt` (on create/update) must strictly equal `request.time`.
-5. **Telemetry Sanity Gate**: Every leaderboard submission must include valid match telemetry bounds (`5 <= lastMatchDurationSec <= 1800`, `0 <= lastMatchKills <= 49`, `0 <= lastMatchMaxDps <= 2500`, and a non-empty `telemetryDigest`).
+1. **Strict Ownership & Non-PII Profiles (`/users/{userId}`)**: Only `request.auth.uid == userId` may create, update, or delete their profile document. `users/{userId}` contains zero PII (no email, phone, or device tokens). Public reads/list queries require `isSignedIn() && resource.data.isPublic == true` to power the Global Top-50 Leaderboard and Champion Name friend search safely.
+2. **Immutable Unique Friend Codes (`/friendCodes/{code}`)**: Friend codes match `^ARC-[A-HJ-NP-Z2-9]{4}$`, can only be created once (`!exists(...)`) with `uid == request.auth.uid`, and can never be modified or deleted.
+3. **Sender-Bound Friend Requests (`/users/{userId}/friendRequests/{fromUid}`)**: Only `request.auth.uid == fromUid` (where `userId != fromUid`) may create a friend request; only `userId` or `fromUid` may read or delete it.
+4. **Mutual Atomic Friendships (`/users/{userId}/friends/{friendUid}`)**: Only `userId` may list/read their friends; only `userId` or `friendUid` (for mutual accept/unfriend `writeBatch`) may write or delete the mutual edge.
+5. **Anti-Tamper Validation**: `displayName` is restricted to `3..12` alphanumeric/underscore characters, `level` to `1..100`, `coins`/`crystals`/`gems`/`xp` non-negative integers within bounds, `selectedChampion` within `['BERSERKER', 'TIDECALLER', 'SHADOW']`, and `createdAt`/`updatedAt` strictly equal `request.time`.
+6. **Realtime Database Guardrails (`database.rules.json`)**: `presence/{uid}` writable only by `auth.uid == uid`; `invites/{targetUid}/{squadId}` readable/deletable by `targetUid` and creatable only when `fromUid == auth.uid`; `squads/{squadId}` member writes restricted to `auth.uid == memberUid` or `leaderUid`; `matches/{matchId}` `bots` & `world` writable only by `hostUid`, `players/{uid}` only by `auth.uid == uid`, and `hostUid` transition permitted only when current host is disconnected.
 
 ## 2. The "Dirty Dozen" Adversarial Payloads (Must Return PERMISSION_DENIED)
-1. **Cross-User Profile Read**: Authenticated user `uid_B` calls `get(/users/uid_A)`.
-2. **Cross-User Profile Write / Identity Spoof**: User `uid_B` creates `/users/uid_B` with `{ uid: "uid_A", ... }`.
-3. **Blanket User Enumeration**: User `uid_A` calls `list(/users)`.
-4. **Shadow / Ghost Field Injection**: User `uid_A` updates `/users/uid_A` adding `{ isAdmin: true }` or `{ role: "superadmin" }`.
-5. **Currency Inflation Exploit**: User `uid_A` updates `/users/uid_A` jumping `gold` from `100` to `9999999` in a single write.
-6. **Level Cap Bypass**: User `uid_A` sets `level: 999` (exceeding max `100`).
-7. **Unbounded String Poisoning (DoW)**: User `uid_A` writes a 10KB `playerName` or oversized document ID (`userId` > 128 chars or invalid characters).
-8. **Client Timestamp Forgery**: User `uid_A` writes a backdated/future client timestamp instead of `serverTimestamp()` (`request.time`).
-9. **Immutable `createdAt` Tampering**: User `uid_A` alters `createdAt` on an update.
-10. **Leaderboard Kill-Rate / Stat Jump Spoof**: User `uid_A` increments `wins` by `+50` or `eliminations` by `+200` in one leaderboard update.
-11. **Impossible Telemetry Submission**: User `uid_A` submits `lastMatchMaxDps: 99999` or `lastMatchDurationSec: 0` on `/leaderboard/uid_A`.
-12. **Unauthenticated Write**: Anonymous unauthenticated client (`request.auth == null`) attempts to write `/users/guest` or `/leaderboard/guest`.
+1. **Cross-User Profile Write**: User `uid_B` attempts to update `/users/uid_A`.
+2. **Identity Spoofing**: User `uid_B` creates `/users/uid_B` with `{ uid: "uid_A" }`.
+3. **Friend Code Hijack**: User `uid_B` overwrites or claims an already-existing `/friendCodes/ARC-K9M2`.
+4. **Friend Code Impersonation**: User `uid_B` creates `/friendCodes/ARC-7X4P` pointing to `{ uid: "uid_A" }`.
+5. **Shadow Field Injection**: User `uid_A` injects `{ isAdmin: true }` into `/users/uid_A`.
+6. **Negative Currency / Overflow**: User `uid_A` writes `coins: -500` or `level: 999`.
+7. **Invalid Champion Name Length**: User `uid_A` writes `displayName: "A"` (< 3 chars) or `"WayTooLongChampionName"` (> 12 chars).
+8. **Spoofed Friend Request**: User `uid_B` creates `/users/uid_C/friendRequests/uid_A` pretending to be `uid_A`.
+9. **Self Friend Request**: User `uid_A` creates `/users/uid_A/friendRequests/uid_A`.
+10. **Third-Party Friend Injection**: User `uid_C` writes `/users/uid_A/friends/uid_B`.
+11. **Backdated Timestamp Forgery**: User `uid_A` submits a client timestamp instead of `serverTimestamp()`.
+12. **Unauthenticated Access**: Unauthenticated client (`request.auth == null`) reads or writes any collection.

@@ -547,3 +547,97 @@ export function damageDestructibleProp(
   };
 }
 
+// ==========================================
+// 5. LIVE CHARACTER PNG ASSETS & EXACT SPRITE SHEET SLICING
+// ==========================================
+export type CharacterAssetKey = 'BERSERKER' | 'TIDECALLER' | 'SHADOW';
+
+export interface CharacterRemoteAssetEntry {
+  key: CharacterAssetKey;
+  displayName: string;
+  portraitUrl: string;
+  portraitFallback: string;
+  spriteUrl: string;
+  spriteFallback: string;
+  cols: number;
+  rows: number;
+  frameCount: number;
+}
+
+const REMOTE_CHARACTER_BASE = 'https://zakiyt654321-gif.github.io/Arcane-Royal-Try3/assets/Image/';
+const LOCAL_CHARACTER_BASE = './assets/Image/';
+
+export const CHARACTER_REMOTE_ASSETS: Record<CharacterAssetKey, CharacterRemoteAssetEntry> = Object.freeze({
+  BERSERKER: Object.freeze({
+    key: 'BERSERKER',
+    displayName: 'The Berserker',
+    portraitUrl: `${REMOTE_CHARACTER_BASE}Beserker_Portrait.png`,
+    portraitFallback: `${LOCAL_CHARACTER_BASE}Beserker_Portrait.png`,
+    spriteUrl: `${REMOTE_CHARACTER_BASE}Beserker_Sprite.png`,
+    spriteFallback: `${LOCAL_CHARACTER_BASE}Beserker_Sprite.png`,
+    cols: 5,
+    rows: 4,
+    frameCount: 20,
+  }),
+  TIDECALLER: Object.freeze({
+    key: 'TIDECALLER',
+    displayName: 'The Tidecaller',
+    portraitUrl: `${REMOTE_CHARACTER_BASE}Tidecaller_Portrait.png`,
+    portraitFallback: `${LOCAL_CHARACTER_BASE}Tidecaller_Portrait.png`,
+    spriteUrl: `${REMOTE_CHARACTER_BASE}Tidecaller_Sprite.png`,
+    spriteFallback: `${LOCAL_CHARACTER_BASE}Tidecaller_Sprite.png`,
+    cols: 5,
+    rows: 6,
+    frameCount: 30,
+  }),
+  SHADOW: Object.freeze({
+    key: 'SHADOW',
+    displayName: 'The Shadow',
+    portraitUrl: `${REMOTE_CHARACTER_BASE}Shadow_Portrait.png`,
+    portraitFallback: `${LOCAL_CHARACTER_BASE}Shadow_Portrait.png`,
+    spriteUrl: `${REMOTE_CHARACTER_BASE}Shadow_Sprite.png`,
+    spriteFallback: `${LOCAL_CHARACTER_BASE}Shadow_Sprite.png`,
+    cols: 5,
+    rows: 4,
+    frameCount: 20,
+  }),
+});
+
+export interface SpriteSliceRect {
+  frameW: number;
+  frameH: number;
+  sx: number;
+  sy: number;
+  sw: number;
+  sh: number;
+  drawW: number;
+  drawH: number;
+}
+
+export function computeSpriteSliceRect(
+  naturalWidth: number,
+  naturalHeight: number,
+  cols: number,
+  rows: number,
+  col: number,
+  row: number,
+  drawMaxSize = 74
+): SpriteSliceRect {
+  const safeCols = Math.max(1, Math.floor(cols));
+  const safeRows = Math.max(1, Math.floor(rows));
+  const clampedCol = Math.max(0, Math.min(safeCols - 1, Math.floor(col)));
+  const clampedRow = Math.max(0, Math.min(safeRows - 1, Math.floor(row)));
+  const frameW = naturalWidth / safeCols;
+  const frameH = naturalHeight / safeRows;
+  const bleedInset = frameW > 4 && frameH > 4 ? 0.5 : 0;
+  const sx = clampedCol * frameW + bleedInset;
+  const sy = clampedRow * frameH + bleedInset;
+  const sw = frameW - bleedInset * 2;
+  const sh = frameH - bleedInset * 2;
+  const cellAspect = frameW / frameH;
+  const drawW = cellAspect < 1 ? drawMaxSize * cellAspect : drawMaxSize;
+  const drawH = cellAspect > 1 ? drawMaxSize / cellAspect : drawMaxSize;
+  return { frameW, frameH, sx, sy, sw, sh, drawW, drawH };
+}
+
+

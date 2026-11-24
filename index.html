@@ -2,13 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="x5-fullscreen" content="true" />
     <meta name="browsermode" content="application" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ArcaneRoyale" />
-    <meta name="theme-color" content="#0b1020" />
+    <meta name="theme-color" content="#050510" />
     <meta name="color-scheme" content="dark" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="format-detection" content="telephone=no" />
@@ -19,6 +19,7 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
     <meta property="og:site_name" content="Arcane Royale" />
+    <link rel="manifest" href="./manifest.json" />
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/arcane/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/assets/arcane/icon-192.png" />
     <script type="module" src="/src/firebase/cloudSync.ts"></script>
@@ -558,8 +559,11 @@
       .hero-portrait-img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        padding: 4px;
+        box-sizing: border-box;
+        object-fit: contain;
         border-radius: 50%;
+        background: transparent;
         display: block;
       }
       .hero-portrait-img.hidden { display: none !important; }
@@ -569,12 +573,14 @@
         gap: 8px;
       }
       .killcam-attacker-portrait {
-        width: 30px;
-        height: 30px;
+        width: 32px;
+        height: 32px;
+        padding: 2px;
+        box-sizing: border-box;
         border-radius: 50%;
-        object-fit: cover;
+        object-fit: contain;
         border: 1.5px solid rgba(248, 113, 113, 0.75);
-        background: #0f172a;
+        background: rgba(15, 23, 42, 0.55);
         flex-shrink: 0;
       }
       .cloud-status-pill {
@@ -623,10 +629,12 @@
       .lb-avatar {
         width: 32px;
         height: 32px;
+        padding: 2px;
+        box-sizing: border-box;
         border-radius: 50%;
-        object-fit: cover;
+        object-fit: contain;
         border: 1.5px solid rgba(168, 85, 247, 0.65);
-        background: #0b1020;
+        background: rgba(11, 16, 32, 0.55);
       }
       .lb-name-col {
         display: flex;
@@ -3387,9 +3395,10 @@
         box-shadow: none !important;
         display: flex;
         flex-direction: column;
-        gap: 7px;
+        gap: 6px;
         min-height: 0;
         flex: 1 1 auto;
+        overflow: hidden;
       }
       .lobby-left-panel .daily-missions-head {
         display: flex;
@@ -3399,14 +3408,19 @@
         font-weight: 800;
         color: #f8fafc;
         letter-spacing: 0.02em;
+        flex-shrink: 0;
       }
       .lobby-left-panel .daily-missions-list {
         display: flex !important;
         flex-direction: column !important;
-        gap: 6px !important;
+        gap: 5px !important;
         flex: 1 1 auto;
-        justify-content: center;
+        min-height: 0;
+        justify-content: flex-start;
+        overflow-y: auto;
+        scrollbar-width: none;
       }
+      .lobby-left-panel .daily-missions-list::-webkit-scrollbar { display: none; }
       .dm-compact-row {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -3895,10 +3909,13 @@
         justify-content: center;
       }
       .split-modal-pane .shop-portrait-img {
-        width: 56px;
-        height: 56px;
-        object-fit: cover;
+        width: 60px;
+        height: 60px;
+        padding: 3px;
+        box-sizing: border-box;
+        object-fit: contain;
         border-radius: 12px;
+        background: transparent;
         border: 2px solid rgba(148, 163, 184, 0.25);
         align-self: center;
       }
@@ -4423,6 +4440,531 @@
         cursor: not-allowed;
         opacity: 0.85;
       }
+
+      /* ==========================================================
+         AUTH GATE, ACCOUNT MODAL, FRIENDS & 4-SLOT SQUAD UI
+         ========================================================== */
+      html, body { overscroll-behavior: none; }
+      #login-screen {
+        padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) !important;
+        overflow-y: auto !important;
+      }
+      .auth-gate-shell {
+        width: min(440px, 100%);
+        max-height: calc(100dvh - 16px);
+        overflow-y: auto;
+        background: linear-gradient(160deg, rgba(12, 16, 34, 0.96), rgba(6, 9, 22, 0.98));
+        border: 1.5px solid rgba(168, 85, 247, 0.45);
+        border-radius: 18px;
+        padding: 14px 16px;
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.72), 0 0 28px rgba(168, 85, 247, 0.16);
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .auth-gate-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 6px 8px;
+      }
+      .auth-gate-title {
+        font-size: 19px;
+        font-weight: 900;
+        letter-spacing: 1.4px;
+        background: linear-gradient(135deg, #fde68a, #f59e0b 55%, #c084fc);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .sandbox-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 9.5px;
+        font-weight: 800;
+        color: #fde68a;
+        background: rgba(245, 158, 11, 0.14);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        white-space: nowrap;
+      }
+      .auth-tab-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        background: rgba(15, 23, 42, 0.85);
+        padding: 3px;
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+      }
+      .auth-tab-btn {
+        border: 0;
+        background: transparent;
+        color: #94a3b8;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 7px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .auth-tab-btn.active {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(56, 189, 248, 0.25));
+        color: #f8fafc;
+        box-shadow: inset 0 0 0 1px rgba(192, 132, 252, 0.5);
+      }
+      .auth-form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .auth-input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .auth-input {
+        width: 100%;
+        padding: 9px 11px;
+        border-radius: 9px;
+        border: 1px solid rgba(168, 85, 247, 0.38);
+        background: rgba(15, 23, 42, 0.88);
+        color: #f8fafc;
+        font-size: 13px;
+        font-weight: 600;
+        outline: none;
+        user-select: text;
+        -webkit-user-select: text;
+      }
+      .auth-input:focus {
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.22);
+      }
+      .auth-pw-toggle {
+        position: absolute;
+        right: 6px;
+        background: transparent;
+        border: 0;
+        color: #94a3b8;
+        font-size: 13px;
+        padding: 4px 6px;
+        cursor: pointer;
+      }
+      .auth-inline-error {
+        font-size: 11px;
+        font-weight: 700;
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.14);
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        border-radius: 8px;
+        padding: 6px 9px;
+        text-align: left;
+      }
+      .auth-inline-info {
+        font-size: 11px;
+        font-weight: 700;
+        color: #6ee7b7;
+        background: rgba(16, 185, 129, 0.14);
+        border: 1px solid rgba(52, 211, 153, 0.35);
+        border-radius: 8px;
+        padding: 6px 9px;
+      }
+      .auth-alt-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+      }
+      .auth-link-btn {
+        background: none;
+        border: 0;
+        color: #7dd3fc;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        align-self: flex-end;
+        padding: 2px 0;
+      }
+      @media (max-height: 450px) and (orientation: landscape) {
+        .auth-gate-shell {
+          width: min(640px, 96vw);
+          padding: 10px 14px;
+          gap: 6px;
+        }
+        .auth-form-grid.two-col {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6px;
+        }
+        .auth-form-grid.two-col .auth-span-2 { grid-column: 1 / -1; }
+        .auth-input { padding: 7px 10px; font-size: 12px; }
+      }
+
+      /* Lobby Profile Cluster + Friends Unread Badge + 4-Slot Squad Strip */
+      .lobby-profile-cluster {
+        cursor: pointer;
+        border-radius: 10px;
+        padding: 2px 6px;
+        transition: background 0.15s ease;
+      }
+      .lobby-profile-cluster:hover { background: rgba(168, 85, 247, 0.16); }
+      .lobby-code-chip {
+        font-size: 9px;
+        font-weight: 800;
+        color: #7dd3fc;
+        letter-spacing: 0.4px;
+        background: rgba(14, 165, 233, 0.15);
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        border-radius: 6px;
+        padding: 1px 5px;
+      }
+      .lobby-icon-btn { position: relative; }
+      .unread-dot-badge {
+        position: absolute;
+        top: -3px;
+        right: -3px;
+        min-width: 15px;
+        height: 15px;
+        padding: 0 3px;
+        border-radius: 999px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
+      }
+
+      /* Compact 4-Slot Squad Roster Strip inside Left Panel */
+      .squad-roster-card {
+        background: rgba(10, 15, 32, 0.84);
+        border: 1px solid rgba(168, 85, 247, 0.34);
+        border-radius: 11px;
+        padding: 5px 7px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      #lobby-play-label {
+        white-space: nowrap;
+        font-size: clamp(13.5px, 2vw, 17px);
+      }
+      .squad-roster-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: 900;
+        color: #e2e8f0;
+      }
+      .squad-code-pill {
+        background: rgba(56, 189, 248, 0.14);
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        color: #7dd3fc;
+        border-radius: 6px;
+        padding: 2px 6px;
+        font-size: 9.5px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .squad-slots-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+      }
+      .squad-slot {
+        background: rgba(15, 23, 42, 0.88);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 8px;
+        padding: 4px 3px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        min-width: 0;
+        position: relative;
+      }
+      .squad-slot.is-ready { border-color: rgba(52, 211, 153, 0.6); }
+      .squad-slot.empty-slot {
+        border-style: dashed;
+        border-color: rgba(168, 85, 247, 0.45);
+        justify-content: center;
+        cursor: pointer;
+        min-height: 54px;
+        color: #c084fc;
+        font-size: 10px;
+        font-weight: 800;
+      }
+      .squad-slot-avatar {
+        width: 26px;
+        height: 26px;
+        object-fit: contain;
+        border-radius: 6px;
+        background: rgba(2, 6, 23, 0.55);
+      }
+      .squad-slot-name {
+        font-size: 8.5px;
+        font-weight: 800;
+        color: #f8fafc;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .squad-slot-meta {
+        font-size: 8px;
+        font-weight: 800;
+        color: #34d399;
+      }
+      .squad-slot-meta.waiting { color: #fbbf24; }
+      .squad-slot-crown {
+        position: absolute;
+        top: 1px;
+        left: 2px;
+        font-size: 9px;
+      }
+      .squad-slot-kick {
+        position: absolute;
+        top: 1px;
+        right: 1px;
+        background: rgba(239, 68, 68, 0.25);
+        border: 0;
+        color: #fca5a5;
+        font-size: 8px;
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 0;
+      }
+      .squad-actions-row {
+        display: flex;
+        gap: 4px;
+      }
+      .squad-mini-btn {
+        flex: 1;
+        border-radius: 7px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: rgba(30, 41, 59, 0.85);
+        color: #e2e8f0;
+        font-size: 9.5px;
+        font-weight: 800;
+        padding: 4px 5px;
+        cursor: pointer;
+      }
+      .squad-mini-btn.ready-on {
+        background: rgba(16, 185, 129, 0.22);
+        border-color: rgba(52, 211, 153, 0.55);
+        color: #6ee7b7;
+      }
+
+      /* Friends Modal & Account Modal Rows */
+      .social-row {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 8px 10px;
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 10px;
+      }
+      .social-avatar {
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: rgba(2, 6, 23, 0.6);
+        flex-shrink: 0;
+      }
+      .social-info { flex: 1; min-width: 0; }
+      .social-name { font-size: 12.5px; font-weight: 800; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .social-sub { font-size: 10.5px; color: #94a3b8; font-weight: 700; }
+      .social-actions { display: flex; gap: 5px; flex-shrink: 0; }
+      .social-btn {
+        border-radius: 8px;
+        border: 1px solid rgba(56, 189, 248, 0.45);
+        background: rgba(14, 165, 233, 0.16);
+        color: #bae6fd;
+        font-size: 10.5px;
+        font-weight: 800;
+        padding: 5px 8px;
+        cursor: pointer;
+      }
+      .social-btn.danger {
+        border-color: rgba(248, 113, 113, 0.45);
+        background: rgba(239, 68, 68, 0.14);
+        color: #fca5a5;
+      }
+      .social-btn.success {
+        border-color: rgba(52, 211, 153, 0.5);
+        background: rgba(16, 185, 129, 0.18);
+        color: #6ee7b7;
+      }
+
+      /* Incoming Squad Invite Toast */
+      #squad-invite-toast {
+        position: fixed;
+        top: max(10px, env(safe-area-inset-top));
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 920;
+        width: min(360px, calc(100vw - 24px));
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.97), rgba(30, 27, 75, 0.97));
+        border: 1.5px solid rgba(192, 132, 252, 0.65);
+        border-radius: 14px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+      }
+
+      /* In-Match Squad HUD, Quick-Comms Wheel, Revive & Spectator */
+      #squad-hud-panel {
+        position: absolute;
+        top: max(8px, env(safe-area-inset-top));
+        left: calc(max(8px, env(safe-area-inset-left)) + 154px);
+        z-index: 65;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 124px;
+        pointer-events: none;
+      }
+      .sq-hud-row {
+        background: rgba(6, 10, 24, 0.8);
+        border-left: 3px solid #fbbf24;
+        border-radius: 6px;
+        padding: 3px 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .sq-hud-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: 9.5px;
+        font-weight: 800;
+        color: #f8fafc;
+      }
+      .sq-hud-bar {
+        height: 4px;
+        background: rgba(148, 163, 184, 0.25);
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .sq-hud-bar-fill { height: 100%; background: #34d399; transition: width 0.12s linear; }
+      .sq-hud-bar-fill.downed { background: #ef4444; }
+      #quick-comms-wheel {
+        position: absolute;
+        top: calc(max(8px, env(safe-area-inset-top)) + 68px);
+        right: max(10px, env(safe-area-inset-right));
+        z-index: 85;
+        background: rgba(7, 11, 26, 0.94);
+        border: 1.5px solid rgba(168, 85, 247, 0.55);
+        border-radius: 14px;
+        padding: 8px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        width: 240px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
+        pointer-events: auto;
+      }
+      .comm-wheel-btn {
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        background: rgba(30, 41, 59, 0.9);
+        color: #f8fafc;
+        border-radius: 9px;
+        padding: 7px 6px;
+        font-size: 10.5px;
+        font-weight: 800;
+        cursor: pointer;
+        text-align: left;
+      }
+      .comm-wheel-btn:active { transform: scale(0.96); background: rgba(168, 85, 247, 0.35); }
+      #btn-revive-ally {
+        position: absolute;
+        bottom: 132px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 90;
+        pointer-events: auto;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        border: 2px solid #a7f3d0;
+        border-radius: 999px;
+        padding: 10px 18px;
+        font-size: 13px;
+        font-weight: 900;
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.45);
+        cursor: pointer;
+      }
+      #downed-banner {
+        position: absolute;
+        top: 22%;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 88;
+        background: rgba(127, 29, 29, 0.9);
+        border: 1.5px solid #fca5a5;
+        border-radius: 12px;
+        padding: 8px 16px;
+        text-align: center;
+        color: #fef2f2;
+        font-size: 12px;
+        font-weight: 900;
+        pointer-events: none;
+      }
+      #spectator-bar {
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 95;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(8, 12, 28, 0.92);
+        border: 1.5px solid rgba(56, 189, 248, 0.55);
+        border-radius: 14px;
+        padding: 8px 14px;
+        pointer-events: auto;
+      }
+      .squad-drop-pin {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+      }
+      .squad-drop-pin-lbl {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 8.5px;
+        font-weight: 900;
+        color: #fff;
+        background: rgba(2, 6, 23, 0.82);
+        padding: 1px 4px;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
+      html[data-device-profile="mobile-portrait"] .squad-roster-card { padding: 5px 6px; }
+      html[data-device-profile="mobile-portrait"] #squad-hud-panel {
+        top: calc(max(8px, env(safe-area-inset-top)) + 196px);
+        left: max(8px, env(safe-area-inset-left));
+        width: 112px;
+      }
     </style>
   </head>
   <body>
@@ -4484,8 +5026,26 @@
               <button type="button" id="btn-zoom-toggle" class="interactive hud-tool" data-ar-click="toggleZoom" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🔍 Auto</button>
               <button type="button" id="btn-expand-map" class="interactive hud-tool" data-ar-click="toggleMapExpand" aria-expanded="false" aria-label="Expand island map" style="background: rgba(30,41,59,0.9); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 3px 8px; font-size: 10px; color: #cbd5e1; font-weight: 700; cursor: pointer; white-space: nowrap;">🗺️ Map</button>
               <button type="button" id="btn-ping" class="interactive hud-tool" data-ar-click="pingAtAim" aria-label="Place waypoint ahead" title="Ping ahead">📍 Ping</button>
+              <button type="button" id="btn-quick-comms" class="interactive hud-tool" data-ar-click="toggleQuickCommsWheel" aria-label="Quick tactical comms" title="Squad Quick Comms">💬</button>
             </div>
           </div>
+        </div>
+
+        <div id="squad-hud-panel" class="hidden" aria-label="Squad status"></div>
+        <div id="quick-comms-wheel" class="hidden" role="menu" aria-label="Tactical Quick Comms">
+          <button type="button" class="comm-wheel-btn" data-ar-click="sendQuickComm" data-ar-arg="enemy">⚠️ Enemy Here!</button>
+          <button type="button" class="comm-wheel-btn" data-ar-click="sendQuickComm" data-ar-arg="heal">✚ Need Healing!</button>
+          <button type="button" class="comm-wheel-btn" data-ar-click="sendQuickComm" data-ar-arg="group">🛡️ Group Up!</button>
+          <button type="button" class="comm-wheel-btn" data-ar-click="sendQuickComm" data-ar-arg="zone">🌀 Safe Zone!</button>
+          <button type="button" class="comm-wheel-btn" data-ar-click="sendQuickComm" data-ar-arg="revive">💛 Revive Me!</button>
+          <button type="button" class="comm-wheel-btn" data-ar-click="sendQuickComm" data-ar-arg="nice">🔥 Nice Play!</button>
+        </div>
+        <div id="downed-banner" class="hidden" role="status" aria-live="polite">💛 DOWNED — Crawl to cover! Bleeding out in <span id="downed-timer-text">15.0</span>s</div>
+        <button type="button" id="btn-revive-ally" class="hidden" data-ar-click="startOrHoldRevive" aria-label="Revive downed squadmate">✚ REVIVE (3.0s)</button>
+        <div id="spectator-bar" class="hidden" role="group" aria-label="Spectating squadmate">
+          <button type="button" class="squad-mini-btn" data-ar-click="cycleSpectator" data-ar-arg="-1">◀ Prev</button>
+          <span id="spectator-label" style="font-size: 11.5px; font-weight: 800; color: #7dd3fc;">Spectating Squadmate</span>
+          <button type="button" class="squad-mini-btn" data-ar-click="cycleSpectator" data-ar-arg="1">Next ▶</button>
         </div>
 
         <div id="waypoint-hud" class="waypoint-hud hidden" role="group" aria-label="Current waypoint">
@@ -4592,6 +5152,7 @@
           <div class="drop-map-pane">
             <div id="drop-map-container" style="position: relative; border: 2px solid #a855f7; border-radius: 14px; background: #040208; overflow: hidden; box-shadow: 0 0 28px rgba(168, 85, 247, 0.28); touch-action: none;">
               <canvas id="dropMapCanvas" width="560" height="560"></canvas>
+              <div id="squad-drop-pins" style="position: absolute; inset: 0; pointer-events: none;"></div>
               <div id="drop-pin" style="position: absolute; width: 16px; height: 16px; background: #fbbf24; border: 2px solid white; border-radius: 50%; transform: translate(-50%, -50%); display: none; box-shadow: 0 0 10px #fbbf24; pointer-events: none;"></div>
             </div>
           </div>
@@ -4603,6 +5164,10 @@
               </div>
               <p class="drop-hint-text">Tap the island to pick your landing zone. Steer with your left joystick while descending.</p>
               <div id="drop-coords" aria-live="polite">No deployment point selected</div>
+              <div id="squad-drop-bar" class="hidden" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px; padding: 6px 8px; background: rgba(15,23,42,0.85); border: 1px solid rgba(56,189,248,0.35); border-radius: 8px;">
+                <span id="squad-drop-status" style="font-size: 10.5px; font-weight: 800; color: #7dd3fc;">Squad Drop Ready</span>
+                <button type="button" id="btn-follow-leader" class="squad-mini-btn ready-on" data-ar-click="toggleFollowLeader" style="flex: 0 0 auto; padding: 4px 8px;">🪂 Follow Leader: ON</button>
+              </div>
             </div>
             <div class="drop-actions-col">
               <button type="button" id="btn-random-drop" class="btn-lobby-sec" data-ar-click="selectRandomDrop">⚄ Random Drop</button>
@@ -4612,21 +5177,61 @@
         </div>
       </div>
 
-      <!-- LOGIN / ENTER NAME SCREEN -->
+      <!-- ACCOUNT LOGIN GATE -->
       <div id="login-screen" class="overlay-screen" role="dialog" aria-modal="true" aria-labelledby="login-title">
-        <div class="lobby-title-card" style="margin-bottom: 25px;">
-          <h1 class="lobby-game-title">ARCANE ROYALE</h1>
-          <p class="lobby-tagline">SURVIVE &bull; CONQUER &bull; ASCEND</p>
-        </div>
-        <div class="gameover-box" style="max-width: 320px; padding: 25px; text-align: center;">
-          <div class="brand-sigil" aria-hidden="true">
-            <svg viewBox="0 0 64 64" fill="none"><path d="M32 4 55 14v19c0 14-10 23-23 27C19 56 9 47 9 33V14L32 4Z" stroke="#ffc857" stroke-width="3"/><path d="m19 43 25-25M39 17h7v7M45 43 20 18M25 17h-7v7" stroke="#fff0ae" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="32" r="6" fill="#ff6475" stroke="#fff0ae" stroke-width="2"/></svg>
+        <div class="auth-gate-shell">
+          <div class="auth-gate-head">
+            <div>
+              <div id="login-title" class="auth-gate-title">ARCANE ROYALE</div>
+              <div style="font-size: 10px; color: #94a3b8; font-weight: 700; letter-spacing: 0.7px;">SURVIVE &bull; SQUAD UP &bull; ASCEND</div>
+            </div>
+            <span id="sandbox-mode-badge" class="sandbox-badge hidden">⚡ Cloud Setup Pending · Local Sandbox Mode</span>
           </div>
-          <h2 id="login-title" style="color: #fbbf24; margin-bottom: 12px; font-weight: 900; letter-spacing: 1px;">ENTER YOUR NAME</h2>
-          <p style="font-size: 12px; color: #94a3b8; margin-bottom: 15px;"><span id="name-help">Choose your arcane identity for the arena. Up to 12 characters.</span></p>
-          <label class="field-label" for="name-input">Champion name</label>
-          <input type="text" id="name-input" class="text-field" autocomplete="nickname" enterkeyhint="play" aria-describedby="name-help" maxlength="12" data-ar-enter="submitName" style="width: 100%; padding: 12px; margin-bottom: 18px; border-radius: 8px; border: 1px solid #a855f7; background: rgba(15,23,42,0.85); color: white; text-align: center; font-weight: bold; font-size: 16px; outline: none;" placeholder="PLAYER NAME">
-          <button type="button" id="btn-submit-name" class="btn-lobby-main" data-ar-click="submitName" style="width: 100%; justify-content: center; padding: 12px; font-size: 15px;">PLAY</button>
+
+          <div class="auth-tab-bar" role="tablist" aria-label="Authentication mode">
+            <button type="button" id="auth-tab-signin" class="auth-tab-btn active" data-ar-click="switchAuthTab" data-ar-arg="signin" role="tab" aria-selected="true">Sign In</button>
+            <button type="button" id="auth-tab-signup" class="auth-tab-btn" data-ar-click="switchAuthTab" data-ar-arg="signup" role="tab" aria-selected="false">Create Account</button>
+          </div>
+
+          <div id="auth-error-msg" class="auth-inline-error hidden" role="alert"></div>
+          <div id="auth-info-msg" class="auth-inline-info hidden" role="status"></div>
+
+          <!-- Sign In Tab -->
+          <div id="auth-pane-signin" class="auth-form-grid">
+            <input type="email" id="auth-signin-email" class="auth-input" autocomplete="email" placeholder="Email address" aria-label="Email address" />
+            <div class="auth-input-wrap">
+              <input type="password" id="auth-signin-password" class="auth-input" autocomplete="current-password" placeholder="Password (6+ characters)" aria-label="Password" data-ar-enter="authSubmitSignIn" />
+              <button type="button" class="auth-pw-toggle" data-ar-click="togglePasswordVis" data-ar-arg="auth-signin-password" aria-label="Show or hide password">👁</button>
+            </div>
+            <button type="button" class="auth-link-btn" data-ar-click="authForgotPassword">Forgot Password?</button>
+            <button type="button" id="btn-auth-signin" class="btn-lobby-main" data-ar-click="authSubmitSignIn" style="width: 100%; justify-content: center; padding: 10px; font-size: 13.5px;">SIGN IN &amp; ENTER ARENA</button>
+          </div>
+
+          <!-- Create Account Tab -->
+          <div id="auth-pane-signup" class="auth-form-grid two-col hidden">
+            <input type="text" id="name-input" class="auth-input" autocomplete="nickname" maxlength="12" placeholder="Champion Name (3-12)" aria-label="Champion Name" />
+            <input type="email" id="auth-signup-email" class="auth-input" autocomplete="email" placeholder="Email address" aria-label="Email address" />
+            <div class="auth-input-wrap">
+              <input type="password" id="auth-signup-password" class="auth-input" autocomplete="new-password" placeholder="Password (6+ chars)" aria-label="Password" />
+              <button type="button" class="auth-pw-toggle" data-ar-click="togglePasswordVis" data-ar-arg="auth-signup-password" aria-label="Show or hide password">👁</button>
+            </div>
+            <div class="auth-input-wrap">
+              <input type="password" id="auth-signup-confirm" class="auth-input" autocomplete="new-password" placeholder="Confirm Password" aria-label="Confirm Password" data-ar-enter="authSubmitSignUp" />
+              <button type="button" class="auth-pw-toggle" data-ar-click="togglePasswordVis" data-ar-arg="auth-signup-confirm" aria-label="Show or hide confirm password">👁</button>
+            </div>
+            <button type="button" id="btn-auth-signup" class="btn-lobby-main auth-span-2" data-ar-click="authSubmitSignUp" style="width: 100%; justify-content: center; padding: 10px; font-size: 13.5px;">CREATE ACCOUNT &amp; PLAY</button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 10px; font-weight: 800;">
+            <span style="flex: 1; height: 1px; background: rgba(148,163,184,0.2);"></span>
+            <span>QUICK ACCESS</span>
+            <span style="flex: 1; height: 1px; background: rgba(148,163,184,0.2);"></span>
+          </div>
+
+          <div class="auth-alt-row">
+            <button type="button" id="btn-auth-guest" class="btn-lobby-sec" data-ar-click="authPlayAsGuest" style="justify-content: center; padding: 9px 8px; font-size: 12px; border-color: rgba(168,85,247,0.5); color: #e9d5ff;">👤 Play as Guest</button>
+            <button type="button" id="btn-auth-google" class="btn-lobby-sec" data-ar-click="authSignInGoogle" style="justify-content: center; padding: 9px 8px; font-size: 12px; border-color: rgba(56,189,248,0.5); color: #bae6fd;">🔐 Google Sign-In</button>
+          </div>
         </div>
       </div>
 
@@ -4648,8 +5253,9 @@
       <div id="lobby-screen" class="overlay-screen">
         <!-- Compact Top Bar (44px max height) -->
         <header class="lobby-topbar">
-          <div class="lobby-profile-cluster">
+          <div class="lobby-profile-cluster" role="button" tabindex="0" data-ar-click="openAccountModal" title="Account &amp; Friend Code" aria-label="Open Account Profile">
             <strong id="lobby-player-name" class="lobby-brand-name">Champion</strong>
+            <span id="lobby-friend-code-tag" class="lobby-code-chip">ARC-XXXX</span>
             <div class="lvl-pill" title="Player Level & Arcane Progression">
               <div class="lvl-pill-top">
                 <span>⭐ <span id="lobby-level">LVL 1</span></span>
@@ -4670,6 +5276,7 @@
           </div>
 
           <div class="lobby-topbar-actions">
+            <button type="button" id="btn-friends" class="lobby-icon-btn" data-ar-click="openFriendsModal" title="Friends &amp; Squads" aria-label="Open Friends and Squads">👥<span id="friends-unread-badge" class="unread-dot-badge hidden">0</span></button>
             <button type="button" id="btn-leaderboard" class="lobby-icon-btn" data-ar-click="openLeaderboard" data-ar-arg="wins" title="Global Top-50 Leaderboard" aria-label="Open Global Leaderboard">🏆</button>
             <button type="button" id="btn-combat-guide" class="lobby-icon-btn" data-ar-click="openCombatGuide" title="Combat Guide" aria-label="Open Combat Guide">📜</button>
             <button type="button" id="btn-settings" class="lobby-icon-btn" data-ar-click="openSettings" title="Settings" aria-label="Open Settings">⚙️</button>
@@ -4677,14 +5284,25 @@
           </div>
         </header>
 
-        <!-- Clean 3-Zone Landscape Grid: 30% Missions/Stats | 40% Showcase | 30% Action Dock -->
+        <!-- Clean 3-Zone Landscape Grid: 30% Missions/Squad/Stats | 40% Showcase | 30% Action Dock -->
         <main class="lobby-shell-grid">
-          <!-- Left Panel (30%): Daily Missions + 1-Row Career Stat Strip -->
-          <section class="lobby-left-panel" aria-label="Daily Missions and Career Stats">
+          <!-- Left Panel (30%): 4-Slot Squad Roster + Daily Missions + Career Stats -->
+          <section class="lobby-left-panel" aria-label="Squad, Daily Missions and Career Stats">
+            <div id="squad-roster-strip" class="squad-roster-card" aria-label="Friend Squad Roster">
+              <div class="squad-roster-head">
+                <span id="squad-header-label">SQUAD (1/4)</span>
+                <button type="button" id="btn-copy-squad-code" class="squad-code-pill" data-ar-click="copySquadRoomCode" title="Copy Room Code">SQ-XXXX 📋</button>
+              </div>
+              <div id="squad-slots-grid" class="squad-slots-grid"></div>
+              <div id="squad-actions-row" class="squad-actions-row hidden">
+                <button type="button" id="btn-squad-ready" class="squad-mini-btn ready-on" data-ar-click="toggleSquadReady">✓ READY</button>
+                <button type="button" id="btn-squad-leave" class="squad-mini-btn" data-ar-click="leaveCurrentSquad" style="color: #fca5a5;">Leave</button>
+              </div>
+            </div>
             <div id="daily-missions-panel" class="daily-missions-panel">
               <div class="daily-missions-head">
                 <span>Daily Missions</span>
-                <button type="button" id="btn-reroll-mission" class="dm-reroll-btn" data-ar-click="rerollDailyMissionAd" aria-label="Watch ad to reroll a daily mission">📺 Reroll Mission</button>
+                <button type="button" id="btn-reroll-mission" class="dm-reroll-btn" data-ar-click="rerollDailyMissionAd" aria-label="Watch ad to reroll a daily mission">📺 Reroll</button>
               </div>
               <div id="daily-missions-list" class="daily-missions-list"></div>
             </div>
@@ -4702,7 +5320,7 @@
             <div class="showcase-carousel-row">
               <button type="button" id="btn-prev-hero" class="showcase-arrow-btn" data-ar-click="cycleLobbyHero" data-ar-arg="-1" aria-label="Previous champion">&lsaquo;</button>
               <div class="showcase-avatar-ring" id="hero-showcase-bg">
-                <img id="heroPreviewPortrait" class="hero-portrait-img hidden" alt="Selected champion portrait" referrerpolicy="no-referrer" />
+                <img id="heroPreviewPortrait" class="hero-portrait-img hidden" alt="Selected champion portrait" crossorigin="anonymous" referrerpolicy="no-referrer" />
                 <canvas id="heroPreviewCanvas" width="240" height="240"></canvas>
               </div>
               <button type="button" id="btn-next-hero" class="showcase-arrow-btn" data-ar-click="cycleLobbyHero" data-ar-arg="1" aria-label="Next champion">&rsaquo;</button>
@@ -4739,7 +5357,7 @@
             </div>
             <button type="button" id="btn-lobby-play" class="lobby-play-cta" data-ar-click="startBattle">
               <span>⚔️</span>
-              <span>PLAY</span>
+              <span id="lobby-play-label">PLAY</span>
             </button>
           </aside>
         </main>
@@ -4923,7 +5541,7 @@
               <canvas id="killCamCanvas" width="520" height="280"></canvas>
               <div class="killcam-progress-track"><div id="killcam-progress-fill" class="killcam-progress-fill"></div></div>
               <div class="killcam-portrait-wrap">
-                <img id="killcam-attacker-portrait" class="killcam-attacker-portrait hidden" alt="Eliminator champion portrait" referrerpolicy="no-referrer" />
+                <img id="killcam-attacker-portrait" class="killcam-attacker-portrait hidden" alt="Eliminator champion portrait" crossorigin="anonymous" referrerpolicy="no-referrer" />
                 <span id="killcam-text" style="font-size: 11px; color: #cbd5e1; line-height: 1.3;"></span>
               </div>
             </div>
@@ -5118,19 +5736,18 @@
               </div>
             </div>
 
-            <!-- Save Data Tab (Cloud Sync + Backup Transfer) -->
+            <!-- Save Data Tab (Unified Cloud Sync & Account + Backup Transfer) -->
             <div id="settings-pane-data" class="settings-pane-section hidden" role="tabpanel">
               <div class="settings-tile span-2" style="border-color: rgba(56, 189, 248, 0.35);">
                 <div class="settings-tile-head">
                   <span class="settings-tile-label">☁️ Arcane Cloud Sync &amp; Account</span>
-                  <span id="cloud-sync-status-pill" class="cloud-status-pill">Local Save Mode · Cloud Ready</span>
+                  <span id="cloud-sync-status-pill" class="cloud-status-pill">Local Sandbox Mode</span>
                 </div>
-                <span id="cloud-sync-account-desc" class="settings-tile-desc">Sign in to sync progression, dual HUD profiles, and verified Global Top-50 Leaderboard rank across devices.</span>
+                <span id="cloud-sync-account-desc" class="settings-tile-desc">Sign in to sync progression, dual HUD profiles, Friends, and Global Top-50 Leaderboard rank across devices.</span>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                  <button type="button" id="btn-cloud-google" class="btn-lobby-sec" data-ar-click="cloudSignInGoogle" style="justify-content: center; border-color: rgba(56, 189, 248, 0.5); color: #bae6fd;">🔐 Google</button>
-                  <button type="button" id="btn-cloud-guest" class="btn-lobby-sec" data-ar-click="cloudSignInGuest" style="justify-content: center; border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff;">👤 Guest Sync</button>
-                  <button type="button" id="btn-cloud-signout" class="btn-lobby-sec hidden" data-ar-click="cloudSignOut" style="justify-content: center; border-color: rgba(248, 113, 113, 0.45); color: #fca5a5;">🚪 Sign Out</button>
+                  <button type="button" id="btn-cloud-manage" class="btn-lobby-sec" data-ar-click="openAccountModal" style="justify-content: center; border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff;">👤 Account</button>
                   <button type="button" id="btn-cloud-sync-now" class="btn-lobby-sec" data-ar-click="cloudSyncNow" style="justify-content: center; border-color: rgba(52, 211, 153, 0.45); color: #6ee7b7;">↻ Sync Now</button>
+                  <button type="button" id="btn-cloud-signout" class="btn-lobby-sec" data-ar-click="cloudSignOut" style="justify-content: center; border-color: rgba(248, 113, 113, 0.45); color: #fca5a5;">🚪 Sign Out</button>
                 </div>
               </div>
 
@@ -5186,6 +5803,98 @@
             <div id="leaderboard-list" class="lb-list" role="list" aria-label="Top 50 players"></div>
           </div>
         </div>
+      </div>
+
+      <!-- ACCOUNT MODAL (FRIEND CODE + GUEST-TO-EMAIL UPGRADE + SIGN OUT) -->
+      <div id="account-modal" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="account-modal-title" style="z-index: 225; background: rgba(2, 6, 23, 0.88);">
+        <div class="auth-gate-shell" style="max-width: 420px;">
+          <div class="auth-gate-head">
+            <h2 id="account-modal-title" style="font-size: 16px; font-weight: 900; color: #fde68a;">ARCANE ACCOUNT</h2>
+            <button type="button" class="modal-back-btn" style="width: auto; min-height: 34px; padding: 0 12px;" data-ar-click="closeAccountModal">✕</button>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; background: rgba(15,23,42,0.88); border: 1px solid rgba(56,189,248,0.35); border-radius: 10px; padding: 10px;">
+            <div>
+              <div id="acct-display-name" style="font-size: 14px; font-weight: 900; color: #f8fafc;">Champion</div>
+              <div id="acct-provider-badge" style="font-size: 10.5px; font-weight: 700; color: #94a3b8;">Guest Account</div>
+            </div>
+            <button type="button" id="btn-copy-friend-code" class="squad-code-pill" data-ar-click="copyMyFriendCode" style="font-size: 11px; padding: 6px 10px;">ARC-XXXX 📋</button>
+          </div>
+
+          <div id="acct-upgrade-box" class="hidden" style="background: rgba(168,85,247,0.12); border: 1px solid rgba(192,132,252,0.45); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-size: 11.5px; font-weight: 900; color: #e9d5ff;">🔒 Secure Your Account (Link Email &amp; Password)</div>
+            <div style="font-size: 10px; color: #cbd5e1;">Keep 100% of your coins, champions, upgrades, friends, and custom HUD layouts permanently.</div>
+            <div id="acct-upgrade-error" class="auth-inline-error hidden"></div>
+            <input type="text" id="acct-upgrade-name" class="auth-input" maxlength="12" placeholder="Champion Name (optional)" />
+            <input type="email" id="acct-upgrade-email" class="auth-input" placeholder="Email address" />
+            <input type="password" id="acct-upgrade-password" class="auth-input" placeholder="New Password (6+ chars)" />
+            <button type="button" id="btn-acct-upgrade" class="btn-lobby-main" data-ar-click="submitGuestUpgrade" style="width: 100%; padding: 8px; font-size: 12px;">LINK EMAIL &amp; SECURE ACCOUNT</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button type="button" class="btn-lobby-sec" data-ar-click="cloudSyncNow" style="justify-content: center; border-color: rgba(52,211,153,0.45); color: #6ee7b7;">↻ Sync Now</button>
+            <button type="button" class="btn-lobby-sec" data-ar-click="cloudSignOut" style="justify-content: center; border-color: rgba(248,113,113,0.45); color: #fca5a5;">🚪 Sign Out</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FRIENDS & SQUAD MODAL (SPLIT-PANE) -->
+      <div id="friends-modal" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="friends-modal-title" style="z-index: 222;">
+        <div class="split-modal-shell">
+          <aside class="split-modal-sidebar">
+            <button type="button" class="modal-back-btn" data-ar-click="closeFriendsModal" aria-label="Back to lobby">← BACK</button>
+            <h2 id="friends-modal-title" class="split-sidebar-title">FRIENDS</h2>
+            <div class="split-sidebar-wallet" style="flex-direction: column; gap: 4px; align-items: stretch;">
+              <div style="font-size: 9.5px; color: #94a3b8; font-weight: 800;">MY FRIEND CODE</div>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" id="btn-friends-mycode" class="squad-code-pill" data-ar-click="copyMyFriendCode" style="flex: 1;">ARC-XXXX 📋</button>
+                <button type="button" class="squad-code-pill" data-ar-click="shareMyFriendCode" title="Share Friend Code">📤</button>
+              </div>
+            </div>
+            <div class="split-tab-list" role="tablist" aria-label="Social sections">
+              <button type="button" id="tab-social-friends" class="split-tab-btn active" data-ar-click="switchFriendsTab" data-ar-arg="friends" role="tab" aria-selected="true">👥 Friends</button>
+              <button type="button" id="tab-social-requests" class="split-tab-btn" data-ar-click="switchFriendsTab" data-ar-arg="requests" role="tab" aria-selected="false">📩 Requests</button>
+              <button type="button" id="tab-social-join" class="split-tab-btn" data-ar-click="switchFriendsTab" data-ar-arg="join" role="tab" aria-selected="false">🛡️ Join Squad</button>
+            </div>
+          </aside>
+          <div class="split-modal-pane" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="friend-search-input" class="auth-input" placeholder="Add Friend by ARC-XXXX or Champion Name..." style="flex: 1;" />
+              <button type="button" id="btn-send-friend-req" class="btn-lobby-main" data-ar-click="sendFriendRequestFromUI" style="padding: 0 14px; font-size: 12px; white-space: nowrap;">+ Add</button>
+            </div>
+            <div id="friends-pane-friends" style="display: flex; flex-direction: column; gap: 7px;"></div>
+            <div id="friends-pane-requests" class="hidden" style="display: flex; flex-direction: column; gap: 7px;"></div>
+            <div id="friends-pane-join" class="hidden" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="settings-tile">
+                <div class="settings-tile-head">
+                  <span class="settings-tile-label">Join Friend's Squad Room</span>
+                </div>
+                <span class="settings-tile-desc">Enter a 4-slot Squad Room Code (e.g. SQ-7K4M) to team up inside the 50-player Battle Royale.</span>
+                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                  <input type="text" id="squad-join-code-input" class="auth-input" maxlength="7" placeholder="SQ-XXXX" style="flex: 1; text-transform: uppercase;" />
+                  <button type="button" id="btn-join-squad-code" class="btn-lobby-main" data-ar-click="joinSquadByCodeFromUI" style="padding: 0 16px; font-size: 12px;">Join Squad</button>
+                </div>
+              </div>
+              <div class="settings-tile" style="border-color: rgba(168,85,247,0.35);">
+                <div class="settings-tile-head">
+                  <span class="settings-tile-label">Sandbox Squad Preview</span>
+                </div>
+                <span class="settings-tile-desc">Testing solo on one device? Add a simulated squadmate to test Drop Pins, Follow Leader, Squad HUD, Quick-Comms, and Revives immediately.</span>
+                <button type="button" id="btn-add-sim-mate" class="btn-lobby-sec" data-ar-click="addDemoSquadmate" style="justify-content: center; margin-top: 4px; border-color: rgba(56,189,248,0.45); color: #bae6fd;">+ Add Demo Squadmate</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INCOMING SQUAD INVITE TOAST -->
+      <div id="squad-invite-toast" class="hidden" role="alertdialog" aria-label="Squad invite">
+        <span style="font-size: 20px;">🛡️</span>
+        <div style="flex: 1; min-width: 0;">
+          <div id="squad-invite-title" style="font-size: 12px; font-weight: 900; color: #fde68a;">Squad Invite</div>
+          <div id="squad-invite-desc" style="font-size: 10.5px; color: #cbd5e1;">Invited you to join their squad!</div>
+        </div>
+        <button type="button" id="btn-accept-squad-invite" class="social-btn success" data-ar-click="acceptTopSquadInvite">Join</button>
+        <button type="button" id="btn-decline-squad-invite" class="social-btn danger" data-ar-click="declineTopSquadInvite">✕</button>
       </div>
 
       <!-- STRICT ONLINE CONNECTION LOST MODAL (NON-DISMISSIBLE) -->
@@ -7387,8 +8096,44 @@
       };
 
       // ==========================================
-      // LOCAL COMPRESSED ASSET LOADER (ZERO EXTERNAL FLAKINESS)
       // ==========================================
+      // CORS-SAFE ASSET LOADER (LOCAL-FIRST VERBATIM PNGS + REMOTE FALLBACK)
+      // ==========================================
+      const CHARACTER_ASSET_LOCAL_BASE = './assets/Image/';
+      const CHARACTER_ASSET_REMOTE_BASE = 'https://zakiyt654321-gif.github.io/Arcane-Royal-Try3/assets/Image/';
+      const CHARACTER_ASSET_CONFIG = Object.freeze({
+        BERSERKER: Object.freeze({
+          portraitFile: 'Beserker_Portrait.png',
+          spriteFile: 'Beserker_Sprite.png',
+          portraitUrl: CHARACTER_ASSET_LOCAL_BASE + 'Beserker_Portrait.png',
+          portraitFallback: CHARACTER_ASSET_REMOTE_BASE + 'Beserker_Portrait.png',
+          spriteUrl: CHARACTER_ASSET_LOCAL_BASE + 'Beserker_Sprite.png',
+          spriteFallback: CHARACTER_ASSET_REMOTE_BASE + 'Beserker_Sprite.png',
+          cols: 5,
+          rows: 4
+        }),
+        TIDECALLER: Object.freeze({
+          portraitFile: 'Tidecaller_Portrait.png',
+          spriteFile: 'Tidecaller_Sprite.png',
+          portraitUrl: CHARACTER_ASSET_LOCAL_BASE + 'Tidecaller_Portrait.png',
+          portraitFallback: CHARACTER_ASSET_REMOTE_BASE + 'Tidecaller_Portrait.png',
+          spriteUrl: CHARACTER_ASSET_LOCAL_BASE + 'Tidecaller_Sprite.png',
+          spriteFallback: CHARACTER_ASSET_REMOTE_BASE + 'Tidecaller_Sprite.png',
+          cols: 5,
+          rows: 6
+        }),
+        SHADOW: Object.freeze({
+          portraitFile: 'Shadow_Portrait.png',
+          spriteFile: 'Shadow_Sprite.png',
+          portraitUrl: CHARACTER_ASSET_LOCAL_BASE + 'Shadow_Portrait.png',
+          portraitFallback: CHARACTER_ASSET_REMOTE_BASE + 'Shadow_Portrait.png',
+          spriteUrl: CHARACTER_ASSET_LOCAL_BASE + 'Shadow_Sprite.png',
+          spriteFallback: CHARACTER_ASSET_REMOTE_BASE + 'Shadow_Sprite.png',
+          cols: 5,
+          rows: 4
+        })
+      });
+
       const AssetLoader = {
         images: {},
         rawAudio: {},
@@ -7399,11 +8144,14 @@
         total: 0,
 
         manifest: [
-          { key: 'portrait_BERSERKER', type: 'img', path: '/assets/arcane/portrait-berserker.webp' },
-          { key: 'portrait_TIDECALLER', type: 'img', path: '/assets/arcane/portrait-tidecaller.webp' },
-          { key: 'portrait_SHADOW', type: 'img', path: '/assets/arcane/portrait-shadow.webp' },
-          { key: 'ground_runic', type: 'img', path: '/assets/arcane/ground-runic.webp' },
-          { key: 'app_icon', type: 'img', path: '/assets/arcane/icon-192.png' },
+          { key: 'portrait_BERSERKER', type: 'img', path: CHARACTER_ASSET_CONFIG.BERSERKER.portraitUrl, fallbackPath: CHARACTER_ASSET_CONFIG.BERSERKER.portraitFallback },
+          { key: 'sprite_BERSERKER', type: 'img', path: CHARACTER_ASSET_CONFIG.BERSERKER.spriteUrl, fallbackPath: CHARACTER_ASSET_CONFIG.BERSERKER.spriteFallback },
+          { key: 'portrait_TIDECALLER', type: 'img', path: CHARACTER_ASSET_CONFIG.TIDECALLER.portraitUrl, fallbackPath: CHARACTER_ASSET_CONFIG.TIDECALLER.portraitFallback },
+          { key: 'sprite_TIDECALLER', type: 'img', path: CHARACTER_ASSET_CONFIG.TIDECALLER.spriteUrl, fallbackPath: CHARACTER_ASSET_CONFIG.TIDECALLER.spriteFallback },
+          { key: 'portrait_SHADOW', type: 'img', path: CHARACTER_ASSET_CONFIG.SHADOW.portraitUrl, fallbackPath: CHARACTER_ASSET_CONFIG.SHADOW.portraitFallback },
+          { key: 'sprite_SHADOW', type: 'img', path: CHARACTER_ASSET_CONFIG.SHADOW.spriteUrl, fallbackPath: CHARACTER_ASSET_CONFIG.SHADOW.spriteFallback },
+          { key: 'ground_runic', type: 'img', path: './assets/arcane/ground-runic.webp', fallbackPath: '/assets/arcane/ground-runic.webp' },
+          { key: 'app_icon', type: 'img', path: './assets/arcane/icon-192.png', fallbackPath: '/assets/arcane/icon-192.png' },
           { key: 'bgm_lobby', type: 'audio', path: '/assets/arcane/audio/lobby-theme.mp3' },
           { key: 'bgm_combat', type: 'audio', path: '/assets/arcane/audio/arena-combat.mp3' },
           { key: 'bgm_climax', type: 'audio', path: '/assets/arcane/audio/storm-climax.mp3' }
@@ -7446,14 +8194,35 @@
                 resolve();
               };
 
-              const timeoutId = setTimeout(() => finish(false), 8000);
+              const timeoutId = setTimeout(() => finish(false), 12000);
 
               if (item.type === 'img') {
-                const img = new Image();
-                img.referrerPolicy = 'no-referrer';
-                img.onload = () => finish(true, img);
-                img.onerror = () => finish(false);
-                img.src = url;
+                let triedFallback = false;
+                const loadImageUrl = (targetUrl) => {
+                  const img = new Image();
+                  img.crossOrigin = 'anonymous';
+                  img.referrerPolicy = 'no-referrer';
+                  img.onload = () => {
+                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                      finish(true, img);
+                    } else if (!triedFallback && item.fallbackPath) {
+                      triedFallback = true;
+                      loadImageUrl(item.fallbackPath);
+                    } else {
+                      finish(false);
+                    }
+                  };
+                  img.onerror = () => {
+                    if (!triedFallback && item.fallbackPath) {
+                      triedFallback = true;
+                      loadImageUrl(item.fallbackPath);
+                    } else {
+                      finish(false);
+                    }
+                  };
+                  img.src = targetUrl;
+                };
+                loadImageUrl(url);
               } else {
                 fetch(url, { cache: 'force-cache' })
                   .then(r => {
@@ -7497,15 +8266,38 @@
           return this.groundPattern;
         },
 
+        getCharacterConfig(charKey) {
+          return CHARACTER_ASSET_CONFIG[charKey] || CHARACTER_ASSET_CONFIG.BERSERKER;
+        },
+        getSpriteGrid(charKey) {
+          const cfg = this.getCharacterConfig(charKey);
+          return { cols: cfg.cols, rows: cfg.rows };
+        },
         getSprite(charKey) { return this.images['sprite_' + charKey] || null; },
         getObstacle(obsKey) { return this.images['obs_' + obsKey] || null; },
         getLoot(lootType) { return this.images['loot_' + lootType] || null; },
         getDecal(index) { return this.images['decal_' + index] || null; },
         getPortrait(charKey) { return this.images['portrait_' + charKey] || null; },
         getPortraitSrc(charKey) {
-          if (charKey === 'TIDECALLER') return '/assets/arcane/portrait-tidecaller.webp';
-          if (charKey === 'SHADOW') return '/assets/arcane/portrait-shadow.webp';
-          return '/assets/arcane/portrait-berserker.webp';
+          const loadedImg = this.images['portrait_' + charKey];
+          if (loadedImg && loadedImg.src) return loadedImg.src;
+          return this.getCharacterConfig(charKey).portraitUrl;
+        },
+        getPortraitFallbackSrc(charKey) {
+          return this.getCharacterConfig(charKey).portraitFallback;
+        },
+        bindPortraitFallback(imgEl, charKey) {
+          if (!imgEl) return;
+          const fallbackSrc = this.getPortraitFallbackSrc(charKey);
+          imgEl.crossOrigin = 'anonymous';
+          imgEl.referrerPolicy = 'no-referrer';
+          imgEl.dataset.fallbackSrc = fallbackSrc;
+          imgEl.dataset.fallbackUsed = '0';
+          imgEl.onerror = () => {
+            if (imgEl.dataset.fallbackUsed === '1') return;
+            imgEl.dataset.fallbackUsed = '1';
+            imgEl.src = fallbackSrc;
+          };
         },
         getMap() { return this.images.map || null; },
         getFog() { return this.images['fog'] || null; },
@@ -10082,43 +10874,65 @@
         ctx.restore();
       }
 
-      const SHEET_CELL_SIZE = 256;
-      const SHEET_DRAW_SIZE = 72;
+      const SHEET_DRAW_SIZE = 74;
       // Direction order: right, down-right, down, down-left, left, up-left, up, up-right.
-      // Cells are [row, column, optional horizontal flip]. The supplied sheets contain
-      // varied poses rather than uniform animation rows, so each class has its own map.
+      // Cells are [row, col, optional horizontal flip] aligned to exact transparent sprite grids:
+      // BERSERKER (5x4), TIDECALLER (5x6), SHADOW (5x4).
+      // Frame slots per direction: [idle, walkA, walkB, attack].
       const DIRECTION_FRAME_MAP = {
         BERSERKER: [
-          [[3,4],[3,3],[3,4],[3,3]], [[1,0,1],[3,0,1],[1,0,1],[3,0,1]],
-          [[0,0],[0,1],[0,2],[0,3]], [[1,0],[3,0],[1,0],[3,0]],
-          [[1,1],[1,2],[1,3],[2,0]], [[3,1],[3,2],[3,1],[3,2]],
-          [[2,1],[2,2],[2,3],[1,4]], [[3,1,1],[3,2,1],[3,1,1],[2,4]]
+          [[1,4],[2,3],[2,4],[3,4]],
+          [[0,3],[0,4],[1,3],[0,4]],
+          [[0,0],[0,2],[0,3],[0,2]],
+          [[1,0],[1,2],[2,0],[3,0]],
+          [[1,1],[2,1],[1,1],[2,1]],
+          [[3,3,1],[3,3,1],[3,1],[3,3,1]],
+          [[0,1],[2,2],[3,1],[3,2]],
+          [[3,3],[3,4],[3,3],[3,4]]
         ],
         TIDECALLER: [
-          [[3,4],[2,4],[3,4],[2,4]], [[3,3],[1,0,1],[3,3],[1,0,1]],
-          [[0,0],[0,1],[0,2],[0,3]], [[1,0],[1,0],[1,1],[1,0]],
-          [[1,1],[1,1],[1,0],[1,1]], [[2,0],[2,1],[3,0],[2,1]],
-          [[2,2],[3,1],[3,2],[2,2]], [[2,3],[2,3],[3,3],[2,4]]
+          [[2,0,1],[2,1,1],[2,0,1],[2,1,1]],
+          [[1,0,1],[1,1,1],[1,0,1],[1,1,1]],
+          [[0,0],[0,1],[0,2],[0,4]],
+          [[1,0],[1,1],[1,0],[1,1]],
+          [[2,0],[2,1],[2,0],[2,1]],
+          [[3,0],[4,3,1],[5,3,1],[3,0]],
+          [[2,2],[3,1],[4,0],[5,1]],
+          [[2,4],[3,4],[4,4],[5,4]]
         ],
         SHADOW: [
-          [[3,4],[3,3],[3,4],[3,3]], [[3,3],[3,4],[3,3],[3,4]],
-          [[0,0],[0,1],[0,0],[0,1]], [[1,0],[1,0],[2,0],[1,0]],
-          [[1,1],[1,2],[2,0],[2,1]], [[3,0],[2,1],[3,0],[2,1]],
-          [[0,2],[0,3],[0,4],[2,2]], [[1,4],[2,3],[3,2],[2,4]]
+          [[1,4],[2,3],[2,4],[3,4]],
+          [[0,0],[0,1],[0,2],[0,4]],
+          [[0,0],[0,2],[0,3],[0,4]],
+          [[1,0],[0,1,1],[1,0],[0,3,1]],
+          [[1,1],[1,2],[2,0],[1,2]],
+          [[2,0],[2,1],[1,1],[2,0]],
+          [[1,3],[2,1],[2,2],[3,1]],
+          [[2,3],[3,0],[3,3],[3,4]]
         ]
       };
 
       function drawWizardFromSheet(ctx, charKey, isPlayer, facingAngle, invuln, hitFlash, animState = 'idle', animFrame = 0, squashAmount = 0) {
         const spriteSheet = typeof AssetLoader !== 'undefined' ? AssetLoader.getSprite(charKey) : null;
-        if (!spriteSheet) {
+        if (!spriteSheet || !spriteSheet.complete || !spriteSheet.naturalWidth || !spriteSheet.naturalHeight) {
           drawWizardSprite(ctx, charKey, isPlayer, facingAngle, invuln, hitFlash, animState === 'attack');
           return;
         }
 
+        const grid = (typeof AssetLoader !== 'undefined' && AssetLoader.getSpriteGrid)
+          ? AssetLoader.getSpriteGrid(charKey)
+          : { cols: 5, rows: 4 };
+        const cols = Math.max(1, grid.cols || 5);
+        const rows = Math.max(1, grid.rows || 4);
+        const frameW = spriteSheet.naturalWidth / cols;
+        const frameH = spriteSheet.naturalHeight / rows;
+
         ctx.save();
 
-        // Idle bob animation
-        const idleBob = Math.sin(performance.now() / 200) * 1.5;
+        // Idle / stride bob animation
+        const bobSpeed = animState === 'walk' ? 110 : 210;
+        const bobAmp = animState === 'walk' ? 2.2 : 1.3;
+        const idleBob = Math.sin(performance.now() / bobSpeed) * bobAmp;
         ctx.translate(0, idleBob);
 
         // Player aura (GlowAtlas, zero shadowBlur)
@@ -10142,10 +10956,10 @@
         const norm = (facingAngle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
         const sector = Math.floor(((norm + Math.PI / 8) % (Math.PI * 2)) / (Math.PI / 4));
         const directionFrames = (DIRECTION_FRAME_MAP[charKey] || DIRECTION_FRAME_MAP.BERSERKER)[sector % 8];
-        const frameIndex = Math.max(0, Math.min(3, Number.isFinite(animFrame) ? animFrame : 0));
+        const frameIndex = Math.max(0, Math.min(directionFrames.length - 1, Number.isFinite(animFrame) ? Math.floor(animFrame) : 0));
         const frame = directionFrames[frameIndex] || directionFrames[0];
-        const row = frame[0];
-        const col = frame[1];
+        const row = Math.max(0, Math.min(rows - 1, frame[0]));
+        const col = Math.max(0, Math.min(cols - 1, frame[1]));
 
         // Bright white arc when attacking (layered stroke, zero shadowBlur)
         if (animState === 'attack') {
@@ -10164,16 +10978,25 @@
           ctx.restore();
         }
 
-        // Crop only the selected 256px cell. Filtering the draw operation avoids
-        // painting a white rectangle over the arena during hit flashes.
+        // Exact dynamic cell math with 0.5px sub-pixel inset to guarantee zero frame bleeding
+        const bleedInset = (frameW > 4 && frameH > 4) ? 0.5 : 0;
+        const sx = col * frameW + bleedInset;
+        const sy = row * frameH + bleedInset;
+        const sw = frameW - bleedInset * 2;
+        const sh = frameH - bleedInset * 2;
+
+        // Preserve natural cell aspect ratio inside SHEET_DRAW_SIZE (prevents squashing 5x6 Tidecaller cells)
+        const cellAspect = frameW / frameH;
+        const drawW = cellAspect < 1 ? SHEET_DRAW_SIZE * cellAspect : SHEET_DRAW_SIZE;
+        const drawH = cellAspect > 1 ? SHEET_DRAW_SIZE / cellAspect : SHEET_DRAW_SIZE;
+
         ctx.save();
         if (frame[2]) ctx.scale(-1, 1);
         if (hitFlash > 0 && 'filter' in ctx) ctx.filter = 'brightness(0) invert(1)';
-        const half = SHEET_DRAW_SIZE / 2;
         ctx.drawImage(
           spriteSheet,
-          col * SHEET_CELL_SIZE, row * SHEET_CELL_SIZE, SHEET_CELL_SIZE, SHEET_CELL_SIZE,
-          -half, -half, SHEET_DRAW_SIZE, SHEET_DRAW_SIZE
+          sx, sy, sw, sh,
+          -drawW / 2, -drawH / 2, drawW, drawH
         );
         ctx.restore();
 
@@ -10951,9 +11774,17 @@
           if (this.isPlayer) {
             moveX = Input.moveX;
             moveY = Input.moveY;
+            if (this.isDowned) {
+              moveX *= 0.35;
+              moveY *= 0.35;
+            }
             if (!isAiming && (moveX !== 0 || moveY !== 0)) {
               this.facingAngle = Math.atan2(moveY, moveX);
             }
+          } else if (this.isSquadMate && !this.isSimMate) {
+            // Remote real human squadmate driven by SquadEngine 100ms zero-GC interpolation
+            moveX = 0;
+            moveY = 0;
           } else {
             if (Game.state === "DROPPING") {
               this.wanderTimer = (this.wanderTimer || 0) + deltaTime;
@@ -10963,6 +11794,38 @@
               }
               moveX = Math.cos(this.wanderAngle || 0) * 0.4;
               moveY = Math.sin(this.wanderAngle || 0) * 0.4;
+            } else if (this.isSquadMate && this.isSimMate) {
+              // Friendly Sandbox Test Squadmate follows player and fights nearby hostile bots
+              if (this.isDowned) {
+                moveX = 0;
+                moveY = 0;
+              } else {
+                const allyRef = Game.player;
+                let nearestFoe = null;
+                let bestD = 420;
+                for (let fi = 0; fi < Game.entities.length; fi++) {
+                  const cand = Game.entities[fi];
+                  if (!cand.isAlive || cand.isPlayer || cand.isSquadMate) continue;
+                  const cd = Math.hypot(cand.x - this.x, cand.y - this.y);
+                  if (cd < bestD) { bestD = cd; nearestFoe = cand; }
+                }
+                if (nearestFoe) {
+                  const ang = Math.atan2(nearestFoe.y - this.y, nearestFoe.x - this.x);
+                  this.facingAngle = ang;
+                  moveX = bestD > 160 ? Math.cos(ang) * 0.85 : 0;
+                  moveY = bestD > 160 ? Math.sin(ang) * 0.85 : 0;
+                  if (bestD < 340 && Math.random() < 0.04) this.useSpell(gameTime);
+                  else if (bestD < 82) this.useSword(gameTime);
+                } else if (allyRef && allyRef.isAlive) {
+                  const distToLeader = Math.hypot(allyRef.x - this.x, allyRef.y - this.y);
+                  if (distToLeader > 110) {
+                    const ang = Math.atan2(allyRef.y - this.y, allyRef.x - this.x);
+                    moveX = Math.cos(ang) * 0.9;
+                    moveY = Math.sin(ang) * 0.9;
+                    this.facingAngle = ang;
+                  }
+                }
+              }
             } else {
               // Tick on-screen bots at full 60Hz; throttle distant off-screen bots (>140px outside view) to 15Hz
               if (isPointWithinCameraCull(this.x, this.y, VIEWPORT_CULL_MARGIN)) {
@@ -11088,6 +11951,10 @@
 
         takeDamage(amount, source = null, triggerShake = true, shakeMagnitude = 12, hitMeta = null) {
           if (!this.isAlive || this.invulnerableTimer > 0) return false;
+          // Friendly Fire strictly disabled between squadmates
+          if (source && (this.isPlayer || this.isSquadMate) && (source.isPlayer || source.isSquadMate)) {
+            return false;
+          }
           if (this.itemChannel) cancelItemChannel(this, 'Damage interrupted the item.', true);
 
           this.lastCombatTime = Game.time;
@@ -11211,7 +12078,12 @@
             }
           }
 
-          if (this.hp <= 0) this.die(source);
+          if (this.hp <= 0) {
+            if ((this.isPlayer || this.isSquadMate) && typeof SquadEngine !== 'undefined' && SquadEngine.tryEnterDowned(this, source)) {
+              return true;
+            }
+            this.die(source);
+          }
           return true;
         }
 
@@ -13299,6 +14171,11 @@
             this.entities.push(bot);
           }
 
+          // Spawn joined real or sandbox squadmates into the 50-player arena
+          if (typeof SquadEngine !== 'undefined') {
+            SquadEngine.onMatchStart(px, py);
+          }
+
           // Do NOT show HUD yet during dropping - enable joystick for steering, hide combat HUD
           const hud = document.getElementById('hud-container');
           if (hud) hud.style.display = 'block';
@@ -13438,6 +14315,9 @@
               }
             }
 
+            if (typeof SquadEngine !== 'undefined') {
+              SquadEngine.updateDropping(deltaTime);
+            }
             return;
           }
 
@@ -13447,8 +14327,13 @@
             Announcer.play('one_alive');
           }
 
-          // Mobile Hold-To-Attack for Sword & 120ms Input Buffer flush
-          if (this.player && this.player.isAlive && (this.player.stunTimer || 0) <= 0) {
+          // Real-Time Squad Multiplayer Tick (12 Hz player, 6 Hz AOI bots, 100ms interp, Downed/Revive, Spectator)
+          if (typeof SquadEngine !== 'undefined') {
+            SquadEngine.updatePlaying(deltaTime);
+          }
+
+          // Mobile Hold-To-Attack for Sword & 120ms Input Buffer flush (disabled while Downed)
+          if (this.player && this.player.isAlive && !this.player.isDowned && (this.player.stunTimer || 0) <= 0) {
             if (Input.isHoldingSword) this.playerAction('sword');
             const bufferedActions = ['dash', 'art', 'spell', 'sword', 'mana'];
             for (let bi = 0; bi < bufferedActions.length; bi++) {
@@ -13595,6 +14480,7 @@
             for (let j = 0; j < this.entities.length; j++) {
               const target = this.entities[j];
               if (!target.isAlive || target === p.owner || p.hitEntities.includes(target)) continue;
+              if ((target.isPlayer || target.isSquadMate) && p.owner && (p.owner.isPlayer || p.owner.isSquadMate)) continue;
 
               const hitDist = p.isWave ? p.radius + target.radius + 25 : p.radius + target.radius + 10;
               if (distToSegment(target.x, target.y, previousProjectileX, previousProjectileY, p.x, p.y) < hitDist) {
@@ -13814,7 +14700,7 @@
         },
 
         playerAction(action) {
-          if (this.state !== "PLAYING" || !this.player || !this.player.isAlive) return;
+          if (this.state !== "PLAYING" || !this.player || !this.player.isAlive || this.player.isDowned) return;
           const fired = this.tryExecutePlayerAction(action);
           if (!fired) {
             // 120ms responsive input buffer so slightly early taps execute cleanly on cooldown/stun recovery
@@ -14015,6 +14901,10 @@
               champion: this.player ? this.player.charKey : (PlayerData.selectedFighter || 'BERSERKER')
             });
             CloudBridge.syncProfile(true);
+            CloudBridge.request('setMatchStatus', { status: 'finished' });
+          }
+          if (typeof SquadEngine !== 'undefined') {
+            SquadEngine.onMatchExit();
           }
           clearMapPing(true);
           Input.reset();
@@ -14538,17 +15428,20 @@
 
         Game.storm.draw(CTX);
 
-        const fogActive = Game.state === 'PLAYING' && Game.player && Game.player.isAlive;
-        const fogPx = fogActive ? Game.player.x : Camera.x;
-        const fogPy = fogActive ? Game.player.y : Camera.y;
+        const fogActive = Game.state === 'PLAYING' && Game.player && (Game.player.isAlive || (typeof SquadEngine !== 'undefined' && SquadEngine.isSpectating()));
+        const fogFocus = (typeof SquadEngine !== 'undefined' && SquadEngine.getVisionAnchor()) || Game.player;
+        const fogPx = fogActive && fogFocus ? fogFocus.x : Camera.x;
+        const fogPy = fogActive && fogFocus ? fogFocus.y : Camera.y;
 
-        // LAYER 2: Glowing Projectiles with Bloom & 520u Fog-of-War Culling
+        // LAYER 2: Glowing Projectiles with Bloom & 520u Shared Squad Fog-of-War Culling
         for (let i = 0; i < projectilePool.length; i++) {
           const p = projectilePool[i];
           if (!p.active || p.x < viewLeft || p.x > viewRight || p.y < viewTop || p.y > viewBottom) continue;
           let projFogAlpha = 1;
-          if (fogActive && p.owner !== Game.player) {
-            projFogAlpha = computeVisionAlpha(Math.hypot(p.x - fogPx, p.y - fogPy));
+          if (fogActive && p.owner !== Game.player && !(p.owner && p.owner.isSquadMate)) {
+            projFogAlpha = typeof SquadEngine !== 'undefined'
+              ? SquadEngine.computeSharedVisionAlpha(p.x, p.y, fogPx, fogPy)
+              : computeVisionAlpha(Math.hypot(p.x - fogPx, p.y - fogPy));
             if (projFogAlpha <= 0.01) continue;
           }
 
@@ -14838,8 +15731,10 @@
           const ent = Game.entities[i];
           if (ent.despawned) continue;
           if (ent.x < viewLeft || ent.x > viewRight || ent.y < viewTop || ent.y > viewBottom) continue;
-          if (fogActive && !ent.isPlayer && ent.isAlive) {
-            const vAlpha = computeVisionAlpha(Math.hypot(ent.x - fogPx, ent.y - fogPy));
+          if (fogActive && !ent.isPlayer && !ent.isSquadMate && ent.isAlive) {
+            const vAlpha = typeof SquadEngine !== 'undefined'
+              ? SquadEngine.computeSharedVisionAlpha(ent.x, ent.y, fogPx, fogPy)
+              : computeVisionAlpha(Math.hypot(ent.x - fogPx, ent.y - fogPy));
             if (vAlpha <= 0.01) continue;
             ent._fogAlpha = vAlpha;
           } else {
@@ -15063,7 +15958,7 @@
           }
         }
 
-        // LAYER 4.8: Diegetic 520u Circular Fog-of-War Horizon Ring (Zero-Advantage Portrait/Landscape Fairness)
+        // LAYER 4.8: Diegetic 520u Circular Fog-of-War Horizon Ring + Squad Overlays
         if (fogActive) {
           CTX.save();
           CTX.strokeStyle = 'rgba(139, 92, 246, 0.28)';
@@ -15079,6 +15974,9 @@
           CTX.arc(fogPx, fogPy, VISION_RADIUS + 22, 0, Math.PI * 2);
           CTX.stroke();
           CTX.restore();
+        }
+        if (typeof SquadEngine !== 'undefined') {
+          SquadEngine.drawWorldOverlays(CTX);
         }
 
         if (activePing && activePing.x >= viewLeft && activePing.x <= viewRight && activePing.y >= viewTop && activePing.y <= viewBottom) {
@@ -15115,6 +16013,9 @@
         WeatherSystem.drawScreenOverlay(CTX);
         drawWaypointEdgeIndicator();
         drawEdgeThreatChevrons();
+        if (typeof SquadEngine !== 'undefined') {
+          SquadEngine.drawScreenEdgeArrows(CTX);
+        }
 
         // Directional Red Hit-Arcs around player for off-screen / ranged damage
         if (Game.state === 'PLAYING' && Game.player && Game.player.isAlive) {
@@ -15720,6 +16621,12 @@
         if (adBlockModal && !adBlockModal.classList.contains('hidden')) return true;
         const confirmModal = document.getElementById('confirm-modal');
         if (confirmModal && !confirmModal.classList.contains('hidden')) { confirmModalCancel(); return true; }
+        const quickComms = document.getElementById('quick-comms-wheel');
+        if (quickComms && !quickComms.classList.contains('hidden')) { quickComms.classList.add('hidden'); return true; }
+        const acctModal = document.getElementById('account-modal');
+        if (acctModal && !acctModal.classList.contains('hidden')) { closeAccountModal(); return true; }
+        const friendsModal = document.getElementById('friends-modal');
+        if (friendsModal && !friendsModal.classList.contains('hidden')) { closeFriendsModal(); return true; }
         if (typeof HudEditor !== 'undefined' && HudEditor.isOpen) { HudEditor.close(false); return true; }
         const settings = document.getElementById('settings-screen');
         if (!settings.classList.contains('hidden')) { closeSettings(); return true; }
@@ -16164,6 +17071,7 @@
                   ? AssetLoader.getPortraitSrc(kcData.killerCharKey)
                   : '';
                 if (pSrc) {
+                  AssetLoader.bindPortraitFallback(kcPortrait, kcData.killerCharKey);
                   kcPortrait.src = pSrc;
                   kcPortrait.classList.remove('hidden');
                 } else {
@@ -16508,6 +17416,9 @@
         if (PlayerData.unlockedFighters.includes(charKey)) {
           PlayerData.selectedFighter = charKey;
           PlayerData.save();
+          if (typeof CloudBridge !== 'undefined') {
+            CloudBridge.request('syncChampion', { championId: charKey });
+          }
           if (typeof AudioEngine !== 'undefined' && AudioEngine.ctx) {
             AudioEngine.sfxSpell(CHARACTER_DATA[charKey].spellType);
           }
@@ -16629,10 +17540,11 @@
         const previewCanvas = document.getElementById('heroPreviewCanvas');
         const portraitSrc = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(activeKey) : '';
         if (portraitImg && portraitSrc) {
+          AssetLoader.bindPortraitFallback(portraitImg, activeKey);
           if (portraitImg.getAttribute('src') !== portraitSrc) {
             portraitImg.src = portraitSrc;
           }
-          portraitImg.alt = `${hero.name} dark-arcane portrait`;
+          portraitImg.alt = `${hero.name} portrait`;
           portraitImg.classList.remove('hidden');
           if (previewCanvas) previewCanvas.classList.add('hidden');
         } else {
@@ -16663,6 +17575,12 @@
           if (!PlayerData.unlockedFighters.includes(PlayerData.selectedFighter)) {
             PlayerData.selectedFighter = 'BERSERKER';
           }
+          if (typeof SocialUI !== 'undefined' && !SocialUI.canStartMatch()) {
+            return;
+          }
+          if (typeof SquadEngine !== 'undefined' && SocialUI.getSquadMemberCount() > 1) {
+            await SquadEngine.prepareSquadDrop();
+          }
           lobbyPreviewHeroKey = PlayerData.selectedFighter;
           transitionTo(() => {
             document.getElementById('lobby-screen').classList.add('hidden');
@@ -16675,6 +17593,7 @@
             document.getElementById('drop-coords').textContent = 'No deployment point selected';
             document.getElementById('btn-confirm-drop').disabled = true;
             drawDropMap();
+            if (typeof SquadEngine !== 'undefined') SquadEngine.refreshDropZoneUI();
           });
         } finally {
           isStartingBattle = false;
@@ -16749,6 +17668,10 @@
         pin.style.display = 'block';
         document.getElementById('drop-coords').textContent = `DEPLOYMENT · X ${Math.round(selectedDropX)} · Y ${Math.round(selectedDropY)}`;
         document.getElementById('btn-confirm-drop').disabled = false;
+        if (typeof CloudBridge !== 'undefined' && typeof SquadEngine !== 'undefined' && SquadEngine.isActive()) {
+          CloudBridge.request('pushDropPin', { x: selectedDropX, y: selectedDropY });
+          SquadEngine.renderDropPins();
+        }
       }
 
       function selectRandomDrop() {
@@ -16788,6 +17711,9 @@
           if (!(await OnlineGuard.ensureOnline())) return;
           tryLockLandscape();
           acquireScreenWakeLock();
+          if (typeof CloudBridge !== 'undefined' && typeof SquadEngine !== 'undefined' && SquadEngine.isActive()) {
+            CloudBridge.request('setMatchStatus', { status: 'active' });
+          }
           transitionTo(() => {
             document.getElementById('drop-screen').classList.add('hidden');
             isPaused = false;
@@ -16869,6 +17795,8 @@
         toggleItemDetails(false);
         Input.reset();
         isPaused = false;
+        if (typeof SquadEngine !== 'undefined') SquadEngine.onMatchExit();
+        if (typeof CloudBridge !== 'undefined') CloudBridge.request('leaveSquadMatch', { clearToken: true });
         transitionTo(() => {
           if (fromMatch) Game.matchFinished = true;
           Game.state = 'LOBBY';
@@ -17182,11 +18110,13 @@
           if (!portraitEl) {
             portraitEl = document.createElement('img');
             portraitEl.className = 'shop-portrait-img';
+            portraitEl.crossOrigin = 'anonymous';
             portraitEl.referrerPolicy = 'no-referrer';
             portraitEl.alt = `${data.name} portrait`;
             portraitEl.style.cssText = `border-color: ${data.color}66;`;
             card.insertBefore(portraitEl, card.firstChild);
           }
+          AssetLoader.bindPortraitFallback(portraitEl, key);
           const targetSrc = portraitSrc || getCachedSprite(key, true, 0).toDataURL('image/png');
           if (portraitEl.getAttribute('src') !== targetSrc) {
             portraitEl.src = targetSrc;
@@ -18264,7 +19194,7 @@
         const pct = Math.round((loaded / total) * 100);
         if (progressFill) progressFill.style.width = pct + '%';
         const st = document.getElementById('loading-status-text');
-        if (st) st.textContent = `SUMMONING ASSETS (${pct}%)...`;
+        if (st) st.textContent = `INITIALIZING REALM... (${pct}%)`;
       }).then(() => {
         clearInterval(tipInterval);
         if (loadingScreen) {
@@ -18293,23 +19223,25 @@
             updateHUD();
             showFirstMatchMinimapTip();
           }
-        } else if (!PlayerData.playerName || PlayerData.playerName === "Player") {
-          document.body.dataset.state = 'login';
-          const loginEl = document.getElementById('login-screen');
-          if (loginEl) loginEl.classList.remove('hidden');
-          const lobbyEl = document.getElementById('lobby-screen');
-          if (lobbyEl) lobbyEl.classList.add('hidden');
-          const nameInput = document.getElementById('name-input');
-          if (nameInput) {
-            nameInput.value = PlayerData.playerName === "Player" ? "" : PlayerData.playerName;
-            nameInput.focus({ preventScroll: true });
-          }
         } else {
-          const loginEl = document.getElementById('login-screen');
-          if (loginEl) loginEl.classList.add('hidden');
-          UIController.showLobby();
-          Music.start('lobby');
-          checkTutorial();
+          // Wait briefly for Firebase Auth / Sandbox session restore before deciding Login Gate vs Lobby
+          CloudBridge.request('init').then((initRes) => {
+            const st = (initRes && initRes.state) || CloudBridge.state;
+            if (st && st.signedIn) {
+              CloudBridge.applyAuthProfileToLocal(st.profile, st);
+              const loginEl = document.getElementById('login-screen');
+              if (loginEl) loginEl.classList.add('hidden');
+              UIController.showLobby();
+              Music.start('lobby');
+              checkTutorial();
+            } else {
+              document.body.dataset.state = 'login';
+              const loginEl = document.getElementById('login-screen');
+              if (loginEl) loginEl.classList.remove('hidden');
+              const lobbyEl = document.getElementById('lobby-screen');
+              if (lobbyEl) lobbyEl.classList.add('hidden');
+            }
+          });
         }
         if (saveIntegrityResetNotice) {
           saveIntegrityResetNotice = false;
@@ -18318,19 +19250,25 @@
       });
 
       // ==========================================
-      // SEALED FIREBASE CLOUDSYNC BRIDGE, LEADERBOARD & ARCANE BILLING IAPs
+      // SEALED FIREBASE AUTH, CLOUDSYNC, FRIENDS & SQUAD MULTIPLAYER ENGINE
       // ==========================================
       const CloudBridge = (() => {
         let reqSeq = 0;
         const pending = new Map();
         const state = {
+          ready: false,
           configured: false,
+          rtdbConfigured: false,
+          sandboxMode: true,
           signedIn: false,
           isAnonymous: false,
           uid: null,
           displayName: null,
           email: null,
-          statusLabel: 'Local Save Mode · Cloud Ready'
+          friendCode: null,
+          authProvider: 'anonymous',
+          profile: null,
+          statusLabel: 'Cloud Setup Pending · Local Sandbox Mode'
         };
 
         document.addEventListener('ar:cloud:response', (ev) => {
@@ -18347,6 +19285,9 @@
           const detail = ev && ev.detail;
           if (!detail) return;
           Object.assign(state, detail);
+          if (detail.signedIn && detail.profile) {
+            applyAuthProfileToLocal(detail.profile, detail);
+          }
           refreshUI();
         });
 
@@ -18374,44 +19315,74 @@
             ? HudLayoutManager.getAllProfiles()
             : { landscape: null, portrait: null };
           return {
-            playerName: PlayerData.playerName || 'HERO',
+            displayName: PlayerData.playerName || 'ArcaneHero',
+            playerName: PlayerData.playerName || 'ArcaneHero',
             level: PlayerData.level || 1,
             xp: PlayerData.xp || 0,
+            coins: PlayerData.gold || 0,
             gold: PlayerData.gold || 0,
+            crystals: PlayerData.astralCrystals || 0,
             astralCrystals: PlayerData.astralCrystals || 0,
             gems: PlayerData.gems || 0,
+            selectedChampion: PlayerData.selectedFighter || 'BERSERKER',
             selectedFighter: PlayerData.selectedFighter || 'BERSERKER',
+            unlockedChampions: Array.isArray(PlayerData.unlockedFighters) ? PlayerData.unlockedFighters : ['BERSERKER'],
             unlockedFighters: Array.isArray(PlayerData.unlockedFighters) ? PlayerData.unlockedFighters : ['BERSERKER'],
+            unlockedRunes: Array.isArray(PlayerData.unlockedRunes) ? PlayerData.unlockedRunes : [],
+            equippedRune: PlayerData.equippedRune || null,
+            unlockedTrails: Array.isArray(PlayerData.unlockedDropSkins) ? PlayerData.unlockedDropSkins : ['RIFT'],
+            equippedTrail: PlayerData.selectedDropSkin || 'RIFT',
+            statTiers: PlayerData.statUpgrades || {},
+            careerStats: {
+              wins: PlayerData.totalWins || 0,
+              elims: PlayerData.totalKills || 0,
+              matches: PlayerData.totalMatches || 0,
+              damageDealt: PlayerData.totalDamageDealt || 0,
+              revives: PlayerData.totalRevives || 0,
+              top10: PlayerData.totalTop10 || 0
+            },
             wins: PlayerData.totalWins || 0,
             eliminations: PlayerData.totalKills || 0,
             matches: PlayerData.totalMatches || 0,
             saveDigest: computeSaveChecksum(PlayerData),
+            hudLayouts: {
+              landscape: dualHud.landscape,
+              portrait: dualHud.portrait
+            },
             hudLayoutLandscape: dualHud.landscape,
             hudLayoutPortrait: dualHud.portrait
           };
         }
 
-        function applyRemoteProfile(remote) {
+        function applyAuthProfileToLocal(remote, authState = null) {
           if (!remote || typeof remote !== 'object') return;
-          if (typeof remote.playerName === 'string' && remote.playerName.trim()) PlayerData.playerName = remote.playerName.trim().slice(0, 12);
+          const rName = remote.displayName || remote.playerName || (authState && authState.displayName);
+          if (typeof rName === 'string' && rName.trim()) PlayerData.playerName = rName.trim().slice(0, 12);
           if (typeof remote.level === 'number') PlayerData.level = Math.max(PlayerData.level || 1, Math.min(MAX_PLAYER_LEVEL, remote.level));
-          if (typeof remote.xp === 'number') PlayerData.xp = Math.max(0, remote.xp);
-          if (typeof remote.gold === 'number') PlayerData.gold = Math.max(PlayerData.gold || 0, remote.gold);
-          if (typeof remote.astralCrystals === 'number') PlayerData.astralCrystals = Math.max(PlayerData.astralCrystals || 0, remote.astralCrystals);
+          if (typeof remote.xp === 'number') PlayerData.xp = Math.max(PlayerData.xp || 0, remote.xp);
+          const rCoins = remote.coins !== undefined ? remote.coins : remote.gold;
+          const rCrystals = remote.crystals !== undefined ? remote.crystals : remote.astralCrystals;
+          if (typeof rCoins === 'number') PlayerData.gold = Math.max(PlayerData.gold || 0, rCoins);
+          if (typeof rCrystals === 'number') PlayerData.astralCrystals = Math.max(PlayerData.astralCrystals || 0, rCrystals);
           if (typeof remote.gems === 'number') PlayerData.gems = Math.max(PlayerData.gems || 0, remote.gems);
-          if (typeof remote.wins === 'number') PlayerData.totalWins = Math.max(PlayerData.totalWins || 0, remote.wins);
-          if (typeof remote.eliminations === 'number') PlayerData.totalKills = Math.max(PlayerData.totalKills || 0, remote.eliminations);
-          if (typeof remote.matches === 'number') PlayerData.totalMatches = Math.max(PlayerData.totalMatches || 0, remote.matches);
-          if (Array.isArray(remote.unlockedFighters)) {
-            PlayerData.unlockedFighters = Array.from(new Set([...PlayerData.unlockedFighters, ...remote.unlockedFighters]));
+          const cs = remote.careerStats || {};
+          if (typeof (cs.wins ?? remote.wins) === 'number') PlayerData.totalWins = Math.max(PlayerData.totalWins || 0, cs.wins ?? remote.wins);
+          if (typeof (cs.elims ?? remote.eliminations) === 'number') PlayerData.totalKills = Math.max(PlayerData.totalKills || 0, cs.elims ?? remote.eliminations);
+          if (typeof (cs.matches ?? remote.matches) === 'number') PlayerData.totalMatches = Math.max(PlayerData.totalMatches || 0, cs.matches ?? remote.matches);
+          if (typeof cs.revives === 'number') PlayerData.totalRevives = Math.max(PlayerData.totalRevives || 0, cs.revives);
+          const rChamps = remote.unlockedChampions || remote.unlockedFighters;
+          if (Array.isArray(rChamps)) {
+            PlayerData.unlockedFighters = Array.from(new Set([...PlayerData.unlockedFighters, ...rChamps]));
           }
-          if (remote.hudLayoutLandscape && typeof remote.hudLayoutLandscape === 'object') {
-            const s = JSON.stringify(remote.hudLayoutLandscape);
+          const hLand = (remote.hudLayouts && remote.hudLayouts.landscape) || remote.hudLayoutLandscape;
+          const hPort = (remote.hudLayouts && remote.hudLayouts.portrait) || remote.hudLayoutPortrait;
+          if (hLand && typeof hLand === 'object') {
+            const s = JSON.stringify(hLand);
             localStorage.setItem(HUD_LAYOUT_LANDSCAPE_KEY, s);
             localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, s);
           }
-          if (remote.hudLayoutPortrait && typeof remote.hudLayoutPortrait === 'object') {
-            localStorage.setItem(HUD_LAYOUT_PORTRAIT_KEY, JSON.stringify(remote.hudLayoutPortrait));
+          if (hPort && typeof hPort === 'object') {
+            localStorage.setItem(HUD_LAYOUT_PORTRAIT_KEY, JSON.stringify(hPort));
           }
           PlayerData.save();
           if (typeof HudLayoutManager !== 'undefined') {
@@ -18425,44 +19396,49 @@
         function refreshUI() {
           const pill = document.getElementById('cloud-sync-status-pill');
           const desc = document.getElementById('cloud-sync-account-desc');
-          const btnGoogle = document.getElementById('btn-cloud-google');
-          const btnGuest = document.getElementById('btn-cloud-guest');
-          const btnOut = document.getElementById('btn-cloud-signout');
+          const sandboxBadge = document.getElementById('sandbox-mode-badge');
+          const lobbyCode = document.getElementById('lobby-friend-code-tag');
+          const acctName = document.getElementById('acct-display-name');
+          const acctProv = document.getElementById('acct-provider-badge');
+          const acctCodeBtn = document.getElementById('btn-copy-friend-code');
+          const friendsCodeBtn = document.getElementById('btn-friends-mycode');
+          const upgradeBox = document.getElementById('acct-upgrade-box');
           const lbBadge = document.getElementById('lb-source-badge');
 
+          const codeText = state.friendCode || 'ARC-XXXX';
+          if (sandboxBadge) sandboxBadge.classList.toggle('hidden', !state.sandboxMode);
+          if (lobbyCode) lobbyCode.textContent = codeText;
+          if (acctCodeBtn) acctCodeBtn.textContent = `${codeText} 📋`;
+          if (friendsCodeBtn) friendsCodeBtn.textContent = `${codeText} 📋`;
+          if (acctName) acctName.textContent = state.displayName || PlayerData.playerName || 'Champion';
+          if (acctProv) {
+            acctProv.textContent = state.isAnonymous
+              ? 'Guest Account (Unlinked)'
+              : (state.authProvider === 'google' ? `Google Account · ${state.email || ''}` : `Email Account · ${state.email || ''}`);
+          }
+          if (upgradeBox) upgradeBox.classList.toggle('hidden', !state.isAnonymous);
+
           if (pill) {
-            pill.textContent = state.statusLabel || 'Local Save Mode · Cloud Ready';
+            pill.textContent = state.statusLabel || 'Cloud Setup Pending · Local Sandbox Mode';
             pill.classList.toggle('connected', Boolean(state.signedIn));
           }
           if (desc) {
             desc.textContent = state.signedIn
-              ? (state.isAnonymous
-                ? 'Signed in as Guest. Link Google to preserve your profile & Global Top-50 rank across devices.'
-                : `Connected as ${state.displayName || state.email || 'Arcane Champion'}. Progress & Dual HUD layouts synced.`)
-              : 'Local Save Mode active. Sign in to sync progression, dual HUD profiles, and Global Top-50 Leaderboard rank.';
+              ? `${state.displayName || PlayerData.playerName} (${codeText}) · ${state.isAnonymous ? 'Guest account — tap Account to link Email & Password.' : 'Cloud Profile, Friends & Dual HUD synced.'}`
+              : 'Sign in via Account Login Gate to sync progression, Friends, Squads, and Top-50 Leaderboard.';
           }
-          if (btnGoogle) {
-            btnGoogle.textContent = state.signedIn && state.isAnonymous ? '🔗 Link Google' : '🔐 Google';
-            btnGoogle.classList.toggle('hidden', Boolean(state.signedIn && !state.isAnonymous));
-          }
-          if (btnGuest) btnGuest.classList.toggle('hidden', Boolean(state.signedIn));
-          if (btnOut) btnOut.classList.toggle('hidden', !state.signedIn);
           if (lbBadge) {
-            lbBadge.textContent = state.signedIn ? '☁️ Live Global Cloud Top-50' : 'Local Preview · Cloud Ready';
+            lbBadge.textContent = state.signedIn && !state.sandboxMode ? '☁️ Live Global Cloud Top-50' : 'Local Sandbox · Cloud Ready';
           }
         }
 
         async function syncProfile(silent = false) {
           const res = await request('syncProfile', buildProfilePayload());
           if (res && res.ok) {
-            if (res.action === 'pulled' && res.remoteProfile) {
-              applyRemoteProfile(res.remoteProfile);
-              if (!silent) showToast('☁️ Cloud save synced & restored!', '#34d399');
-            } else if (!silent) {
-              showToast('☁️ Profile & Dual HUD synced to Arcane Cloud!', '#34d399');
-            }
+            if (res.profile) applyAuthProfileToLocal(res.profile, state);
+            if (!silent) showToast('☁️ Profile, Friends & Dual HUD synced!', '#34d399');
           } else if (!silent) {
-            showToast('💾 Local Save Mode active — sign in for Cloud Sync.', '#7dd3fc');
+            showToast('💾 Local save updated.', '#7dd3fc');
           }
           return res;
         }
@@ -18478,51 +19454,1079 @@
           return request('fetchLeaderboard', { sortBy });
         }
 
-        // Request initial auth state once module finishes loading
-        setTimeout(() => { request('getState'); }, 150);
-
         return {
           state,
           refreshUI,
           request,
+          buildProfilePayload,
+          applyAuthProfileToLocal,
           syncProfile,
           submitMatch,
           fetchLeaderboard
         };
       })();
 
-      async function cloudSignInGoogle() {
-        AudioEngine.init();
-        const res = await CloudBridge.request('signInGoogle');
-        if (res && res.ok) {
-          showToast('☁️ Signed in with Google! Syncing profile...', '#34d399');
-          await CloudBridge.syncProfile(false);
-        } else {
-          showToast(res && res.error ? `⚠️ ${res.error}` : '💾 Local Save Mode · Cloud Ready', '#fbbf24');
+      // ==========================================
+      // ACCOUNT LOGIN GATE & ACCOUNT MODAL ACTIONS
+      // ==========================================
+      function showAuthFeedback(msg, isError = true) {
+        const errEl = document.getElementById('auth-error-msg');
+        const infoEl = document.getElementById('auth-info-msg');
+        if (errEl) {
+          errEl.textContent = isError && msg ? msg : '';
+          errEl.classList.toggle('hidden', !(isError && msg));
+        }
+        if (infoEl) {
+          infoEl.textContent = !isError && msg ? msg : '';
+          infoEl.classList.toggle('hidden', !(!isError && msg));
         }
       }
 
-      async function cloudSignInGuest() {
-        AudioEngine.init();
-        const res = await CloudBridge.request('signInGuest');
-        if (res && res.ok) {
-          showToast('👤 Guest Cloud Sync activated!', '#c084fc');
-          await CloudBridge.syncProfile(false);
-        } else {
-          showToast(res && res.error ? `⚠️ ${res.error}` : '💾 Local Save Mode · Cloud Ready', '#fbbf24');
+      function switchAuthTab(tab) {
+        const isSignUp = tab === 'signup';
+        const tIn = document.getElementById('auth-tab-signin');
+        const tUp = document.getElementById('auth-tab-signup');
+        const pIn = document.getElementById('auth-pane-signin');
+        const pUp = document.getElementById('auth-pane-signup');
+        if (tIn) { tIn.classList.toggle('active', !isSignUp); tIn.setAttribute('aria-selected', String(!isSignUp)); }
+        if (tUp) { tUp.classList.toggle('active', isSignUp); tUp.setAttribute('aria-selected', String(isSignUp)); }
+        if (pIn) pIn.classList.toggle('hidden', isSignUp);
+        if (pUp) pUp.classList.toggle('hidden', !isSignUp);
+        showAuthFeedback('');
+      }
+
+      function togglePasswordVis(inputId) {
+        const el = document.getElementById(inputId);
+        if (!el) return;
+        el.type = el.type === 'password' ? 'text' : 'password';
+      }
+
+      function completeAuthEntry(res) {
+        applyNativeOrientationPref(PlayerData.orientationPref || 'auto');
+        if (res && res.state && res.state.profile) {
+          CloudBridge.applyAuthProfileToLocal(res.state.profile, res.state);
         }
+        AudioEngine.init();
+        Music.start('lobby');
+        const loginEl = document.getElementById('login-screen');
+        if (loginEl) loginEl.classList.add('hidden');
+        UIController.showLobby();
+        CloudBridge.syncProfile(true);
+        checkTutorial();
+      }
+
+      async function authSubmitSignIn() {
+        AudioEngine.init();
+        showAuthFeedback('');
+        const email = (document.getElementById('auth-signin-email')?.value || '').trim();
+        const password = document.getElementById('auth-signin-password')?.value || '';
+        const res = await CloudBridge.request('signInEmail', { email, password });
+        if (res && res.ok) {
+          completeAuthEntry(res);
+          showToast('☁️ Welcome back to Arcane Royale!', '#34d399');
+        } else {
+          showAuthFeedback((res && res.error) || 'Sign-in failed.');
+        }
+      }
+
+      async function authSubmitSignUp() {
+        AudioEngine.init();
+        showAuthFeedback('');
+        const championName = (document.getElementById('name-input')?.value || '').trim();
+        const email = (document.getElementById('auth-signup-email')?.value || '').trim();
+        const password = document.getElementById('auth-signup-password')?.value || '';
+        const confirmPassword = document.getElementById('auth-signup-confirm')?.value || '';
+        const res = await CloudBridge.request('createAccount', {
+          championName,
+          email,
+          password,
+          confirmPassword,
+          seedLocal: CloudBridge.buildProfilePayload()
+        });
+        if (res && res.ok) {
+          completeAuthEntry(res);
+          showToast(`✨ Account created! Friend Code: ${res.state?.friendCode || ''}`, '#34d399');
+        } else {
+          showAuthFeedback((res && res.error) || 'Account creation failed.');
+        }
+      }
+
+      async function authPlayAsGuest() {
+        AudioEngine.init();
+        showAuthFeedback('');
+        const nameVal = (document.getElementById('name-input')?.value || '').trim();
+        const res = await CloudBridge.request('playAsGuest', {
+          preferredName: nameVal,
+          seedLocal: CloudBridge.buildProfilePayload()
+        });
+        if (res && res.ok) {
+          completeAuthEntry(res);
+          showToast(`👤 Playing as Guest (${res.state?.displayName || 'Arcane'}) · Link email anytime!`, '#c084fc');
+        } else {
+          showAuthFeedback((res && res.error) || 'Guest login unavailable.');
+        }
+      }
+
+      async function authSignInGoogle() {
+        AudioEngine.init();
+        showAuthFeedback('');
+        const res = await CloudBridge.request('signInGoogle', { seedLocal: CloudBridge.buildProfilePayload() });
+        if (res && res.ok) {
+          if (res.redirecting) {
+            showAuthFeedback('Redirecting to Google Sign-In...', false);
+            return;
+          }
+          completeAuthEntry(res);
+          showToast(res.message || '☁️ Signed in with Google!', '#34d399');
+        } else {
+          showAuthFeedback((res && res.error) || 'Google Sign-In failed.');
+        }
+      }
+
+      async function authForgotPassword() {
+        const email = (document.getElementById('auth-signin-email')?.value || '').trim();
+        const res = await CloudBridge.request('sendPasswordReset', { email });
+        if (res && res.ok) {
+          showAuthFeedback(res.message || 'Password reset email sent.', false);
+        } else {
+          showAuthFeedback((res && res.error) || 'Enter your email address first.');
+        }
+      }
+
+      function openAccountModal() {
+        AudioEngine.init();
+        CloudBridge.refreshUI();
+        const err = document.getElementById('acct-upgrade-error');
+        if (err) { err.textContent = ''; err.classList.add('hidden'); }
+        const modal = document.getElementById('account-modal');
+        if (modal) modal.classList.remove('hidden');
+        if (window.ArcaneNativeBridge && window.ArcaneNativeBridge.pushNavState) {
+          window.ArcaneNativeBridge.pushNavState('account');
+        }
+      }
+
+      function closeAccountModal() {
+        const modal = document.getElementById('account-modal');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      async function submitGuestUpgrade() {
+        const newName = (document.getElementById('acct-upgrade-name')?.value || '').trim();
+        const email = (document.getElementById('acct-upgrade-email')?.value || '').trim();
+        const password = document.getElementById('acct-upgrade-password')?.value || '';
+        const errEl = document.getElementById('acct-upgrade-error');
+        const res = await CloudBridge.request('upgradeGuest', { email, password, newName });
+        if (res && res.ok) {
+          if (errEl) errEl.classList.add('hidden');
+          CloudBridge.refreshUI();
+          showToast('🔒 Account permanently secured! All progress preserved.', '#34d399', 3200);
+        } else if (errEl) {
+          errEl.textContent = (res && res.error) || 'Could not link email.';
+          errEl.classList.remove('hidden');
+        }
+      }
+
+      function copyMyFriendCode() {
+        const code = CloudBridge.state.friendCode || 'ARC-XXXX';
+        if (window.ArcaneNativeBridge && window.ArcaneNativeBridge.shareText) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).catch(() => {});
+          }
+        }
+        showToast(`📋 Copied Friend Code: ${code}`, '#7dd3fc');
+      }
+
+      async function shareMyFriendCode() {
+        const code = CloudBridge.state.friendCode || 'ARC-XXXX';
+        if (window.ArcaneNativeBridge && window.ArcaneNativeBridge.shareText) {
+          await window.ArcaneNativeBridge.shareText('Arcane Royale Squad', `Add me on Arcane Royale! Friend Code: ${code}`);
+        }
+        showToast(`📤 Friend Code ready to share: ${code}`, '#7dd3fc');
+      }
+
+      async function cloudSignInGoogle() {
+        await authSignInGoogle();
+      }
+
+      async function cloudSignInGuest() {
+        await authPlayAsGuest();
       }
 
       async function cloudSignOut() {
         AudioEngine.init();
+        closeAccountModal();
+        closeSettings();
+        closeFriendsModal();
         await CloudBridge.request('signOut');
-        showToast('🚪 Signed out — Local Save Mode active.', '#94a3b8');
+        document.getElementById('lobby-screen')?.classList.add('hidden');
+        document.getElementById('login-screen')?.classList.remove('hidden');
+        document.body.dataset.state = 'login';
+        showAuthFeedback('Signed out cleanly.', false);
       }
 
       async function cloudSyncNow() {
         AudioEngine.init();
         await CloudBridge.syncProfile(false);
       }
+
+      // ==========================================
+      // SOCIAL UI: FRIENDS, PRESENCE & 4-SLOT SQUAD ROSTER
+      // ==========================================
+      const SocialUI = (() => {
+        let snapshot = { uid: null, friends: [], friendRequests: [], unreadCount: 0, incomingInvites: [], squad: null, squadId: null };
+        let activeTab = 'friends';
+
+        document.addEventListener('ar:social:state', (ev) => {
+          if (!ev || !ev.detail) return;
+          snapshot = ev.detail;
+          renderAll();
+          // Auto-join match if Leader launched a squad match
+          if (snapshot.squad && snapshot.squad.activeMatchId && Game.state === 'LOBBY') {
+            if (typeof SquadEngine !== 'undefined' && SquadEngine.matchId !== snapshot.squad.activeMatchId) {
+              SquadEngine.joinLeaderMatch(snapshot.squad.activeMatchId);
+            }
+          }
+        });
+
+        function getSquadMemberCount() {
+          return snapshot.squad && snapshot.squad.members ? Object.keys(snapshot.squad.members).length : 1;
+        }
+
+        function isSquadLeader() {
+          return !snapshot.squad || snapshot.squad.leaderUid === (CloudBridge.state.uid || snapshot.uid);
+        }
+
+        function canStartMatch() {
+          const sq = snapshot.squad;
+          if (!sq || !sq.members) return true;
+          const members = Object.values(sq.members);
+          if (members.length <= 1) return true;
+          if (!isSquadLeader()) {
+            showToast('👑 Only the Squad Leader can launch the match.', '#fbbf24');
+            return false;
+          }
+          const readyCount = members.filter(m => m.ready || m.uid === sq.leaderUid).length;
+          if (readyCount < members.length) {
+            showToast(`⏳ Waiting for squadmates to Ready (${readyCount}/${members.length})`, '#fbbf24');
+            return false;
+          }
+          return true;
+        }
+
+        function renderAll() {
+          renderUnreadBadge();
+          renderInviteToast();
+          renderSquadRoster();
+          renderFriendsLists();
+        }
+
+        function renderUnreadBadge() {
+          const badge = document.getElementById('friends-unread-badge');
+          if (!badge) return;
+          const n = Number(snapshot.unreadCount || 0);
+          badge.textContent = String(n);
+          badge.classList.toggle('hidden', n <= 0);
+        }
+
+        function renderInviteToast() {
+          const toast = document.getElementById('squad-invite-toast');
+          if (!toast) return;
+          const inv = snapshot.incomingInvites && snapshot.incomingInvites[0];
+          if (!inv || Game.state !== 'LOBBY') {
+            toast.classList.add('hidden');
+            return;
+          }
+          const tEl = document.getElementById('squad-invite-title');
+          const dEl = document.getElementById('squad-invite-desc');
+          if (tEl) tEl.textContent = `${inv.fromName} invited you!`;
+          if (dEl) dEl.textContent = `Squad Room ${inv.roomCode || inv.squadId}`;
+          toast.classList.remove('hidden');
+        }
+
+        function renderSquadRoster() {
+          const grid = document.getElementById('squad-slots-grid');
+          const header = document.getElementById('squad-header-label');
+          const codeBtn = document.getElementById('btn-copy-squad-code');
+          const actRow = document.getElementById('squad-actions-row');
+          const readyBtn = document.getElementById('btn-squad-ready');
+          const playLabel = document.getElementById('lobby-play-label');
+          if (!grid) return;
+
+          const sq = snapshot.squad;
+          const myUid = CloudBridge.state.uid || snapshot.uid;
+          const membersObj = (sq && sq.members) || {
+            [myUid || 'local']: {
+              uid: myUid || 'local',
+              displayName: PlayerData.playerName || 'Champion',
+              championId: PlayerData.selectedFighter || 'BERSERKER',
+              level: PlayerData.level || 1,
+              ready: true
+            }
+          };
+          const memberList = Object.values(membersObj).slice(0, 4);
+          const count = memberList.length;
+          const leaderUid = (sq && sq.leaderUid) || (memberList[0] && memberList[0].uid);
+          const amLeader = leaderUid === myUid;
+
+          if (header) header.textContent = `SQUAD (${count}/4)`;
+          if (codeBtn) codeBtn.textContent = `${(sq && (sq.roomCode || sq.squadId)) || 'SQ-LOCAL'} 📋`;
+          if (actRow) actRow.classList.toggle('hidden', count <= 1);
+          if (readyBtn && myUid && membersObj[myUid]) {
+            const isRdy = Boolean(membersObj[myUid].ready);
+            readyBtn.textContent = isRdy ? '✓ READY' : 'NOT READY';
+            readyBtn.classList.toggle('ready-on', isRdy);
+          }
+
+          if (playLabel) {
+            if (count <= 1) {
+              playLabel.textContent = 'PLAY';
+            } else {
+              const readyCount = memberList.filter(m => m.ready || m.uid === leaderUid).length;
+              playLabel.textContent = readyCount === count
+                ? (amLeader ? `PLAY SQUAD (${count})` : 'READY · WAITING')
+                : `READY (${readyCount}/${count})`;
+            }
+          }
+
+          let html = '';
+          for (let i = 0; i < 4; i++) {
+            const m = memberList[i];
+            if (m) {
+              const isLdr = m.uid === leaderUid;
+              const isRdy = Boolean(m.ready || isLdr);
+              const src = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(m.championId) : '';
+              const fb = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitFallbackSrc(m.championId) : '';
+              html += `
+                <div class="squad-slot ${isRdy ? 'is-ready' : ''}">
+                  ${isLdr ? '<span class="squad-slot-crown" title="Squad Leader">👑</span>' : ''}
+                  ${amLeader && !isLdr ? `<button type="button" class="squad-slot-kick" data-ar-click="kickSquadMember" data-ar-arg="${escapeHtmlSafe(m.uid)}" title="Remove">×</button>` : ''}
+                  <img class="squad-slot-avatar" src="${src}" data-fallback-src="${fb}" data-champ="${escapeHtmlSafe(m.championId || 'BERSERKER')}" alt="${escapeHtmlSafe(m.displayName)}" crossorigin="anonymous" />
+                  <div class="squad-slot-name">${escapeHtmlSafe(m.displayName)}</div>
+                  <div class="squad-slot-meta ${isRdy ? '' : 'waiting'}">${isRdy ? '✓ READY' : 'WAIT'}</div>
+                </div>`;
+            } else {
+              html += `<button type="button" class="squad-slot empty-slot" data-ar-click="openFriendsModal" title="Invite Friend">+ Invite</button>`;
+            }
+          }
+          grid.innerHTML = html;
+          grid.querySelectorAll('img.squad-slot-avatar').forEach(img => {
+            if (typeof AssetLoader !== 'undefined' && AssetLoader.bindPortraitFallback) {
+              AssetLoader.bindPortraitFallback(img, img.dataset.champ || 'BERSERKER');
+            }
+          });
+        }
+
+        function renderFriendsLists() {
+          const fPane = document.getElementById('friends-pane-friends');
+          const rPane = document.getElementById('friends-pane-requests');
+          if (fPane) {
+            const list = snapshot.friends || [];
+            if (list.length === 0) {
+              fPane.innerHTML = '<div style="padding: 16px; text-align: center; color: #94a3b8; font-size: 12px; font-weight: 700;">No friends added yet. Share your ARC-XXXX code or switch to "Join Squad" to test with a Demo Squadmate!</div>';
+            } else {
+              fPane.innerHTML = list.map(f => {
+                const dot = f.status === 'online' ? '🟢 Online' : (f.status === 'in_squad' ? '🟡 In Squad' : (f.status === 'in_match' ? '⚔️ In Match' : '⚫ Offline'));
+                const src = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(f.championId) : '';
+                return `
+                  <div class="social-row">
+                    <img class="social-avatar" src="${src}" data-champ="${escapeHtmlSafe(f.championId || 'BERSERKER')}" alt="${escapeHtmlSafe(f.displayName)}" crossorigin="anonymous" />
+                    <div class="social-info">
+                      <div class="social-name">${escapeHtmlSafe(f.displayName)} <span style="font-size:10px;color:#7dd3fc;">LVL ${f.level || 1}</span></div>
+                      <div class="social-sub">${dot} · ${escapeHtmlSafe(f.friendCode || '')}</div>
+                    </div>
+                    <div class="social-actions">
+                      <button type="button" class="social-btn success" data-ar-click="inviteFriendToSquad" data-ar-arg="${escapeHtmlSafe(f.uid)}">Invite</button>
+                      <button type="button" class="social-btn danger" data-ar-click="removeFriendConfirm" data-ar-arg="${escapeHtmlSafe(f.uid)}" data-ar-arg2="${escapeHtmlSafe(f.displayName)}">✕</button>
+                    </div>
+                  </div>`;
+              }).join('');
+            }
+          }
+          if (rPane) {
+            const reqs = snapshot.friendRequests || [];
+            if (reqs.length === 0) {
+              rPane.innerHTML = '<div style="padding: 16px; text-align: center; color: #94a3b8; font-size: 12px; font-weight: 700;">No pending friend requests.</div>';
+            } else {
+              rPane.innerHTML = reqs.map(r => `
+                <div class="social-row">
+                  <div class="social-info">
+                    <div class="social-name">${escapeHtmlSafe(r.fromName)}</div>
+                    <div class="social-sub">Code: ${escapeHtmlSafe(r.fromCode || '')}</div>
+                  </div>
+                  <div class="social-actions">
+                    <button type="button" class="social-btn success" data-ar-click="acceptFriendReq" data-ar-arg="${escapeHtmlSafe(r.fromUid)}">Accept</button>
+                    <button type="button" class="social-btn danger" data-ar-click="declineFriendReq" data-ar-arg="${escapeHtmlSafe(r.fromUid)}">Decline</button>
+                  </div>
+                </div>`).join('');
+            }
+          }
+        }
+
+        function switchTab(tab) {
+          activeTab = tab || 'friends';
+          ['friends', 'requests', 'join'].forEach(k => {
+            const btn = document.getElementById('tab-social-' + k);
+            const pane = document.getElementById('friends-pane-' + k);
+            if (btn) { btn.classList.toggle('active', activeTab === k); btn.setAttribute('aria-selected', String(activeTab === k)); }
+            if (pane) pane.classList.toggle('hidden', activeTab !== k);
+          });
+        }
+
+        return {
+          getSnapshot: () => snapshot,
+          getSquadMemberCount,
+          isSquadLeader,
+          canStartMatch,
+          renderAll,
+          switchTab
+        };
+      })();
+
+      function openFriendsModal() {
+        AudioEngine.init();
+        CloudBridge.request('refreshFriends');
+        SocialUI.renderAll();
+        document.getElementById('friends-modal')?.classList.remove('hidden');
+        if (window.ArcaneNativeBridge && window.ArcaneNativeBridge.pushNavState) {
+          window.ArcaneNativeBridge.pushNavState('friends');
+        }
+      }
+      function closeFriendsModal() {
+        document.getElementById('friends-modal')?.classList.add('hidden');
+      }
+      function switchFriendsTab(tab) { SocialUI.switchTab(tab); }
+
+      async function sendFriendRequestFromUI() {
+        const input = document.getElementById('friend-search-input');
+        const q = (input?.value || '').trim();
+        const res = await CloudBridge.request('sendFriendRequest', { query: q });
+        if (res && res.ok) {
+          if (input) input.value = '';
+          showToast(`📩 ${res.message || 'Friend request sent!'}`, '#34d399');
+        } else {
+          showToast(`⚠️ ${(res && res.error) || 'Player not found.'}`, '#fbbf24');
+        }
+      }
+      async function acceptFriendReq(fromUid) {
+        const res = await CloudBridge.request('acceptFriendRequest', { fromUid });
+        if (res && res.ok) showToast(`👥 ${res.message || 'Friend added!'}`, '#34d399');
+      }
+      async function declineFriendReq(fromUid) {
+        await CloudBridge.request('declineFriendRequest', { fromUid });
+      }
+      function removeFriendConfirm(friendUid, name) {
+        openConfirmModal({
+          icon: '👥',
+          title: 'REMOVE FRIEND?',
+          message: `Remove ${name || 'this player'} from your Friends list?`,
+          confirmLabel: 'Remove',
+          cancelLabel: 'Cancel',
+          onConfirm: () => { CloudBridge.request('removeFriend', { friendUid }); }
+        });
+      }
+      async function inviteFriendToSquad(targetUid) {
+        const res = await CloudBridge.request('inviteFriend', { targetUid });
+        showToast(res && res.ok ? '🛡️ Squad invite sent!' : `⚠️ ${(res && res.error) || 'Invite failed.'}`, res && res.ok ? '#34d399' : '#fbbf24');
+      }
+      async function acceptTopSquadInvite() {
+        const inv = SocialUI.getSnapshot().incomingInvites?.[0];
+        if (!inv) return;
+        const res = await CloudBridge.request('respondInvite', { squadId: inv.squadId, accept: true });
+        if (res && res.ok) showToast(`🛡️ Joined squad ${inv.roomCode || inv.squadId}!`, '#34d399');
+      }
+      async function declineTopSquadInvite() {
+        const inv = SocialUI.getSnapshot().incomingInvites?.[0];
+        if (!inv) return;
+        await CloudBridge.request('respondInvite', { squadId: inv.squadId, accept: false });
+      }
+      async function joinSquadByCodeFromUI() {
+        const input = document.getElementById('squad-join-code-input');
+        const code = (input?.value || '').trim().toUpperCase();
+        const res = await CloudBridge.request('joinSquadByCode', { code });
+        if (res && res.ok) {
+          if (input) input.value = '';
+          closeFriendsModal();
+          showToast(`🛡️ Joined Squad ${code}!`, '#34d399');
+        } else {
+          showToast(`⚠️ ${(res && res.error) || 'Squad not found.'}`, '#fbbf24');
+        }
+      }
+      function copySquadRoomCode() {
+        const sq = SocialUI.getSnapshot().squad;
+        const code = (sq && (sq.roomCode || sq.squadId)) || 'SQ-LOCAL';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).catch(() => {});
+        }
+        showToast(`📋 Copied Squad Room Code: ${code}`, '#7dd3fc');
+      }
+      async function toggleSquadReady() { await CloudBridge.request('toggleReady'); }
+      async function leaveCurrentSquad() {
+        await CloudBridge.request('leaveSquad', { createFreshOwn: true });
+        showToast('🛡️ Returned to your own Squad Room.', '#94a3b8');
+      }
+      async function kickSquadMember(targetUid) { await CloudBridge.request('kickMember', { targetUid }); }
+      async function addDemoSquadmate() {
+        const presets = [
+          { name: 'NovaTide', championId: 'TIDECALLER' },
+          { name: 'UmbraVex', championId: 'SHADOW' },
+          { name: 'PyroRex', championId: 'BERSERKER' }
+        ];
+        const count = SocialUI.getSquadMemberCount();
+        const pick = presets[(count - 1) % presets.length];
+        const res = await CloudBridge.request('addSandboxTestMate', pick);
+        if (res && res.ok) {
+          showToast(`🛡️ ${pick.name} joined your squad (Ready)!`, '#34d399');
+          closeFriendsModal();
+        } else {
+          showToast(`⚠️ ${(res && res.error) || 'Squad is full (4/4).'}`, '#fbbf24');
+        }
+      }
+
+      // ==========================================
+      // REAL-TIME FRIEND-SQUAD MULTIPLAYER ENGINE (DROP + COMBAT)
+      // ==========================================
+      const SquadEngine = (() => {
+        const COLORS = ['#fbbf24', '#38bdf8', '#34d399', '#e879f9'];
+        const COMMS_LABELS = {
+          enemy: '⚠️ Enemy Here!',
+          heal: '✚ Need Healing!',
+          group: '🛡️ Group Up!',
+          zone: '🌀 Move to Safe Zone!',
+          revive: '💛 Revive Me!',
+          nice: '🔥 Nice Play!'
+        };
+        let matchId = null;
+        let matchSnapshot = null;
+        let squadEntities = [];
+        let interpMap = new Map();
+        let activeComms = new Map(); // uid -> { text, color, expiresAt }
+        let followLeader = true;
+        let reviveTarget = null;
+        let reviveProgress = 0;
+        let isReviving = false;
+        let spectateIdx = 0;
+        let lastHudRefresh = 0;
+        let lastNetSync = 0;
+
+        document.addEventListener('ar:match:event', (ev) => {
+          const d = ev && ev.detail;
+          if (!d) return;
+          if (d.eventType === 'snapshot' && d.payload) {
+            matchSnapshot = d.payload;
+            const players = d.payload.players || {};
+            const now = performance.now();
+            for (const uid of Object.keys(players)) {
+              const p = players[uid];
+              if (p.comm && p.comm.label && Date.now() - (p.comm.ts || 0) < 3000) {
+                const m = d.payload.members && d.payload.members[uid];
+                activeComms.set(uid, {
+                  text: `${p.comm.icon || ''} ${p.comm.label}`.trim(),
+                  color: COLORS[(m && m.colorIndex) || 0],
+                  expiresAt: now + 3000
+                });
+              }
+              if (uid !== CloudBridge.state.uid) {
+                let b = interpMap.get(uid);
+                if (!b) {
+                  b = { prevX: p.x || 0, prevY: p.y || 0, nextX: p.x || 0, nextY: p.y || 0, prevT: now, nextT: now };
+                  interpMap.set(uid, b);
+                } else {
+                  b.prevX = b.nextX; b.prevY = b.nextY; b.prevT = b.nextT;
+                  b.nextX = p.x || 0; b.nextY = p.y || 0; b.nextT = now;
+                }
+              }
+            }
+            renderDropPins();
+          }
+        });
+
+        function isActive() {
+          return Boolean(matchId) || squadEntities.length > 0;
+        }
+        function isLeader() {
+          return SocialUI.isSquadLeader();
+        }
+        function hasLivingSquadmates() {
+          return squadEntities.some(e => e && e.isAlive && !e.isDowned);
+        }
+        function isSpectating() {
+          return Boolean(Game.player && !Game.player.isAlive && squadEntities.some(e => e && e.isAlive));
+        }
+        function getVisionAnchor() {
+          if (Game.player && Game.player.isAlive) return Game.player;
+          const living = squadEntities.filter(e => e && e.isAlive);
+          if (living.length === 0) return Game.player;
+          return living[spectateIdx % living.length];
+        }
+
+        async function prepareSquadDrop() {
+          const res = await CloudBridge.request('createSquadMatch');
+          if (res && res.ok) {
+            matchId = res.matchId;
+            followLeader = !isLeader();
+          }
+        }
+
+        async function joinLeaderMatch(leaderMatchId) {
+          matchId = leaderMatchId;
+          followLeader = !isLeader();
+          await CloudBridge.request('joinSquadMatch', { matchId: leaderMatchId });
+          await startBattle();
+        }
+
+        function refreshDropZoneUI() {
+          const bar = document.getElementById('squad-drop-bar');
+          const status = document.getElementById('squad-drop-status');
+          const flBtn = document.getElementById('btn-follow-leader');
+          const count = SocialUI.getSquadMemberCount();
+          if (bar) bar.classList.toggle('hidden', count <= 1);
+          if (status) status.textContent = `Squad Drop (${count}/4) · Tap map to pin`;
+          if (flBtn) {
+            flBtn.textContent = `🪂 Follow Leader: ${followLeader ? 'ON' : 'OFF'}`;
+            flBtn.classList.toggle('ready-on', followLeader);
+            flBtn.classList.toggle('hidden', isLeader());
+          }
+          renderDropPins();
+        }
+
+        function renderDropPins() {
+          const wrap = document.getElementById('squad-drop-pins');
+          const container = document.getElementById('drop-map-container');
+          if (!wrap || !container) return;
+          if (!matchSnapshot || !matchSnapshot.players) {
+            wrap.innerHTML = '';
+            return;
+          }
+          const rect = container.getBoundingClientRect();
+          const w = rect.width || 280;
+          const h = rect.height || 280;
+          const myUid = CloudBridge.state.uid;
+          let html = '';
+          for (const uid of Object.keys(matchSnapshot.players)) {
+            if (uid === myUid) continue;
+            const p = matchSnapshot.players[uid];
+            const m = matchSnapshot.members && matchSnapshot.members[uid];
+            if (!p || !p.dropPin) continue;
+            const col = COLORS[(m && m.colorIndex) || 1];
+            const left = (p.dropPin.x / ARENA_WIDTH) * w;
+            const top = (p.dropPin.y / ARENA_HEIGHT) * h;
+            html += `<div class="squad-drop-pin" style="left:${left}px;top:${top}px;background:${col};"><span class="squad-drop-pin-lbl">${escapeHtmlSafe((m && m.displayName) || 'Ally')}</span></div>`;
+          }
+          wrap.innerHTML = html;
+        }
+
+        function onMatchStart(px, py) {
+          squadEntities = [];
+          reviveTarget = null;
+          reviveProgress = 0;
+          isReviving = false;
+          const sq = SocialUI.getSnapshot().squad;
+          const myUid = CloudBridge.state.uid;
+          if (!sq || !sq.members) return;
+          const members = Object.values(sq.members);
+          if (members.length <= 1) return;
+
+          members.forEach((m, idx) => {
+            if (m.uid === myUid) return;
+            const ox = px + (idx % 2 === 0 ? 58 : -58);
+            const oy = py + (idx > 1 ? 52 : -46);
+            const mate = new Entity(ox, oy, false, m.championId || 'TIDECALLER', {
+              name: m.displayName || 'Squadmate',
+              level: m.level || 1
+            });
+            mate.isSquadMate = true;
+            mate.isSimMate = Boolean(m.isSimMate);
+            mate.netUid = m.uid;
+            mate.squadColor = COLORS[idx % 4];
+            mate.z = 3000;
+            mate.vz = 0;
+            mate.isGrounded = false;
+            Game.entities.push(mate);
+            squadEntities.push(mate);
+          });
+          document.getElementById('squad-hud-panel')?.classList.toggle('hidden', squadEntities.length === 0);
+        }
+
+        function tryEnterDowned(ent, source) {
+          if (ent.isDowned) return false;
+          // Only enter Downed if at least one OTHER squad member is still standing
+          const othersUp = (ent.isPlayer ? squadEntities : [Game.player, ...squadEntities.filter(e => e !== ent)])
+            .some(e => e && e.isAlive && !e.isDowned);
+          if (!othersUp) return false;
+          ent.isDowned = true;
+          ent.hp = Math.max(1, Math.round(ent.maxHp * 0.15));
+          ent.downedTimer = 15.0;
+          ent.downedBy = source || null;
+          if (ent.isPlayer) {
+            document.getElementById('downed-banner')?.classList.remove('hidden');
+            showToast('💛 You are DOWNED! Crawl to a squadmate for a 3s Revive!', '#fbbf24', 3200);
+          } else {
+            showToast(`💛 ${ent.name} is DOWNED! Get close to Revive!`, '#fbbf24', 3200);
+          }
+          return true;
+        }
+
+        function updateDropping(deltaTime) {
+          if (!followLeader || isLeader() || !Game.player) return;
+          if (Math.hypot(Input.moveX, Input.moveY) > 0.25) {
+            followLeader = false;
+            showToast('🪂 Detached from Leader — manual steering active!', '#7dd3fc');
+            return;
+          }
+          const leaderMate = squadEntities[0];
+          if (leaderMate) {
+            Game.player.x += (leaderMate.x - Game.player.x) * Math.min(1, deltaTime * 3.5);
+            Game.player.y += (leaderMate.y - Game.player.y) * Math.min(1, deltaTime * 3.5);
+          }
+        }
+
+        function updatePlaying(deltaTime) {
+          if (squadEntities.length === 0 && !matchId) return;
+          const now = performance.now();
+
+          // 1. Interpolate remote real human squadmates (100ms smooth buffer)
+          for (let i = 0; i < squadEntities.length; i++) {
+            const mate = squadEntities[i];
+            if (!mate.isSimMate && matchSnapshot && matchSnapshot.players && matchSnapshot.players[mate.netUid]) {
+              const rp = matchSnapshot.players[mate.netUid];
+              const buf = interpMap.get(mate.netUid);
+              if (buf) {
+                const renderT = now - 100;
+                const span = Math.max(16, buf.nextT - buf.prevT);
+                const t = Math.max(0, Math.min(1, (renderT - buf.prevT) / span));
+                mate.x = buf.prevX + (buf.nextX - buf.prevX) * t;
+                mate.y = buf.prevY + (buf.nextY - buf.prevY) * t;
+              }
+              mate.hp = Number(rp.hp ?? mate.hp);
+              mate.maxHp = Number(rp.mhp ?? mate.maxHp);
+              mate.isAlive = rp.alive !== 0;
+              mate.isDowned = Number(rp.downT || 0) > 0;
+              mate.downedTimer = Number(rp.downT || 0);
+            }
+          }
+
+          // 2. Downed 15s countdown for player & squadmates
+          const allSquad = [Game.player, ...squadEntities].filter(Boolean);
+          for (let i = 0; i < allSquad.length; i++) {
+            const ent = allSquad[i];
+            if (ent.isAlive && ent.isDowned) {
+              ent.downedTimer = Math.max(0, (ent.downedTimer || 0) - deltaTime);
+              if (ent.isPlayer) {
+                const tEl = document.getElementById('downed-timer-text');
+                if (tEl) tEl.textContent = ent.downedTimer.toFixed(1);
+              }
+              if (ent.downedTimer <= 0) {
+                ent.isDowned = false;
+                if (ent.isPlayer) document.getElementById('downed-banner')?.classList.add('hidden');
+                ent.die(ent.downedBy || null);
+              }
+            }
+          }
+
+          // 3. Contextual 3.0s Revive button within 70u of a downed teammate
+          const revBtn = document.getElementById('btn-revive-ally');
+          let nearDowned = null;
+          if (Game.player && Game.player.isAlive && !Game.player.isDowned) {
+            for (let i = 0; i < squadEntities.length; i++) {
+              const m = squadEntities[i];
+              if (m.isAlive && m.isDowned && Math.hypot(m.x - Game.player.x, m.y - Game.player.y) <= 70) {
+                nearDowned = m;
+                break;
+              }
+            }
+          }
+          if (nearDowned) {
+            reviveTarget = nearDowned;
+            if (isReviving) {
+              reviveProgress += deltaTime;
+              const rem = Math.max(0, 3.0 - reviveProgress);
+              if (revBtn) {
+                revBtn.classList.remove('hidden');
+                revBtn.textContent = `✚ REVIVING ${nearDowned.name}... (${rem.toFixed(1)}s)`;
+              }
+              if (reviveProgress >= 3.0) {
+                nearDowned.isDowned = false;
+                nearDowned.downedTimer = 0;
+                nearDowned.hp = Math.round(nearDowned.maxHp * 0.4);
+                isReviving = false;
+                reviveProgress = 0;
+                PlayerData.totalRevives = (PlayerData.totalRevives || 0) + 1;
+                Game.bonusLootXp = (Game.bonusLootXp || 0) + 50;
+                spawnParticles(nearDowned.x, nearDowned.y, 24, '#34d399', 5, 0.03);
+                spawnDamageText(nearDowned.x, nearDowned.y - 26, '✚ REVIVED! +50 XP', '#34d399', true);
+                showToast(`✚ Revived ${nearDowned.name}! (+50 XP)`, '#34d399');
+              }
+            } else if (revBtn) {
+              revBtn.classList.remove('hidden');
+              revBtn.textContent = `✚ REVIVE ${nearDowned.name} (3.0s)`;
+            }
+          } else {
+            reviveTarget = null;
+            isReviving = false;
+            reviveProgress = 0;
+            if (revBtn) revBtn.classList.add('hidden');
+          }
+
+          // 4. Spectator Cam when local player bled out while squadmates live
+          const specBar = document.getElementById('spectator-bar');
+          if (isSpectating()) {
+            Game.playerDeathPending = false; // Delay match-over until full Squad Wipe
+            const target = getVisionAnchor();
+            if (target) {
+              Camera.update(target.x, target.y, deltaTime);
+              const lbl = document.getElementById('spectator-label');
+              if (lbl) lbl.textContent = `Spectating ${target.name} · ${Math.round(target.hp)} HP`;
+            }
+            if (specBar) specBar.classList.remove('hidden');
+          } else if (specBar) {
+            specBar.classList.add('hidden');
+          }
+
+          // 5. Push 12 Hz local player state + 6 Hz Host AOI bots
+          if (matchId && now - lastNetSync >= 85 && Game.player) {
+            lastNetSync = now;
+            CloudBridge.request('pushPlayerState', {
+              state: {
+                x: Game.player.x,
+                y: Game.player.y,
+                vx: Game.player.vx || 0,
+                vy: Game.player.vy || 0,
+                a: Game.player.facingAngle || 0,
+                animState: Game.player.animState || 'idle',
+                hp: Game.player.hp,
+                maxHp: Game.player.maxHp,
+                mp: Game.player.mana,
+                maxMp: Game.player.maxMana,
+                shield: Game.player.shield,
+                charKey: Game.player.charKey,
+                isAlive: Game.player.isAlive,
+                downedTimer: Game.player.isDowned ? Game.player.downedTimer : 0
+              }
+            });
+            if (isLeader()) {
+              const livingHumans = allSquad.filter(e => e.isAlive).map(e => ({ x: e.x, y: e.y, alive: true }));
+              const hostileBots = Game.entities.filter(e => !e.isPlayer && !e.isSquadMate);
+              CloudBridge.request('pushAoiBots', { bots: hostileBots, livingHumans });
+            }
+          }
+
+          // 6. Refresh compact Squad HUD Widget (~6 Hz)
+          if (now - lastHudRefresh >= 160) {
+            lastHudRefresh = now;
+            renderSquadHud();
+          }
+        }
+
+        function renderSquadHud() {
+          const panel = document.getElementById('squad-hud-panel');
+          if (!panel || squadEntities.length === 0) return;
+          panel.classList.remove('hidden');
+          panel.innerHTML = squadEntities.map(m => {
+            const pct = Math.max(0, Math.min(100, Math.round((m.hp / Math.max(1, m.maxHp)) * 100)));
+            const statusIcon = !m.isAlive ? '💀' : (m.isDowned ? '💛' : '●');
+            return `
+              <div class="sq-hud-row" style="border-left-color:${m.squadColor || '#38bdf8'};">
+                <div class="sq-hud-top">
+                  <span>${escapeHtmlSafe(m.name)}</span>
+                  <span>${statusIcon} ${pct}%</span>
+                </div>
+                <div class="sq-hud-bar"><div class="sq-hud-bar-fill ${m.isDowned ? 'downed' : ''}" style="width:${pct}%;"></div></div>
+              </div>`;
+          }).join('');
+        }
+
+        function computeSharedVisionAlpha(wx, wy, fallbackPx, fallbackPy) {
+          let best = computeVisionAlpha(Math.hypot(wx - fallbackPx, wy - fallbackPy));
+          for (let i = 0; i < squadEntities.length; i++) {
+            const m = squadEntities[i];
+            if (!m || !m.isAlive) continue;
+            const a = computeVisionAlpha(Math.hypot(wx - m.x, wy - m.y));
+            if (a > best) best = a;
+          }
+          return best;
+        }
+
+        function drawWorldOverlays(ctx) {
+          const now = performance.now();
+          for (let i = 0; i < squadEntities.length; i++) {
+            const m = squadEntities[i];
+            if (!m || !m.isAlive) continue;
+            ctx.save();
+            ctx.strokeStyle = m.squadColor || '#38bdf8';
+            ctx.lineWidth = 2.6;
+            ctx.beginPath();
+            ctx.arc(m.x, m.y, m.radius + 7, 0, Math.PI * 2);
+            ctx.stroke();
+            if (m.isDowned) {
+              ctx.font = '900 11px system-ui, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillStyle = '#fde047';
+              ctx.fillText(`💛 DOWNED ${(m.downedTimer || 0).toFixed(0)}s`, m.x, m.y - 44);
+            }
+            const comm = activeComms.get(m.netUid);
+            if (comm && now < comm.expiresAt) {
+              ctx.font = '900 11px system-ui, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillStyle = 'rgba(2,6,23,0.86)';
+              ctx.fillRect(m.x - 56, m.y - 68, 112, 20);
+              ctx.fillStyle = comm.color || '#fde68a';
+              ctx.fillText(comm.text, m.x, m.y - 54);
+            }
+            ctx.restore();
+          }
+          // Self Quick-Comm pill above player
+          const selfComm = activeComms.get(CloudBridge.state.uid || 'local');
+          if (selfComm && now < selfComm.expiresAt && Game.player && Game.player.isAlive) {
+            ctx.save();
+            ctx.font = '900 11px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(2,6,23,0.86)';
+            ctx.fillRect(Game.player.x - 58, Game.player.y - 68, 116, 20);
+            ctx.fillStyle = '#fde68a';
+            ctx.fillText(selfComm.text, Game.player.x, Game.player.y - 54);
+            ctx.restore();
+          }
+        }
+
+        function drawScreenEdgeArrows(ctx) {
+          if (Game.state !== 'PLAYING' || !Game.player || squadEntities.length === 0) return;
+          const vp = Camera.getPlayableViewport();
+          const focal = Camera.getFocalPoint();
+          for (let i = 0; i < squadEntities.length; i++) {
+            const m = squadEntities[i];
+            if (!m || !m.isAlive) continue;
+            const dx = m.x - Camera.x;
+            const dy = m.y - Camera.y;
+            const sx = focal.x + dx * Camera.zoom;
+            const sy = focal.y + dy * Camera.zoom;
+            if (sx >= 24 && sx <= vp.w - 24 && sy >= 24 && sy <= vp.h - 24) continue;
+            const ang = Math.atan2(dy, dx);
+            const distM = Math.round(Math.hypot(dx, dy) / 10);
+            const ex = Math.max(28, Math.min(vp.w - 28, focal.x + Math.cos(ang) * (vp.w * 0.44)));
+            const ey = Math.max(36, Math.min(vp.h - 36, focal.y + Math.sin(ang) * (vp.h * 0.42)));
+            ctx.save();
+            ctx.translate(ex, ey);
+            ctx.fillStyle = m.squadColor || '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(0, 0, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#020617';
+            ctx.font = '900 8px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${distM}m`, 0, 0);
+            ctx.restore();
+          }
+        }
+
+        function triggerQuickComm(commId) {
+          const text = COMMS_LABELS[commId] || '⚠️ Enemy Here!';
+          activeComms.set(CloudBridge.state.uid || 'local', {
+            text,
+            color: '#fbbf24',
+            expiresAt: performance.now() + 3000
+          });
+          if (matchId) CloudBridge.request('pushQuickComm', { commId });
+          document.getElementById('quick-comms-wheel')?.classList.add('hidden');
+          showToast(`💬 Squad Callout: ${text}`, '#fde68a', 2000);
+        }
+
+        function onMatchExit() {
+          matchId = null;
+          matchSnapshot = null;
+          squadEntities = [];
+          reviveTarget = null;
+          isReviving = false;
+          reviveProgress = 0;
+          ['squad-hud-panel', 'quick-comms-wheel', 'downed-banner', 'btn-revive-ally', 'spectator-bar'].forEach(id => {
+            document.getElementById(id)?.classList.add('hidden');
+          });
+        }
+
+        return {
+          get matchId() { return matchId; },
+          get followLeader() { return followLeader; },
+          toggleFollowLeader() {
+            followLeader = !followLeader;
+            refreshDropZoneUI();
+          },
+          startRevive() {
+            if (reviveTarget) {
+              isReviving = true;
+              showToast(`✚ Reviving ${reviveTarget.name}... Stay close!`, '#34d399', 1800);
+            }
+          },
+          cycleSpectator(delta) {
+            const living = squadEntities.filter(e => e && e.isAlive);
+            if (living.length === 0) return;
+            spectateIdx = (spectateIdx + delta + living.length) % living.length;
+          },
+          isActive,
+          isLeader,
+          hasLivingSquadmates,
+          isSpectating,
+          getVisionAnchor,
+          prepareSquadDrop,
+          joinLeaderMatch,
+          refreshDropZoneUI,
+          renderDropPins,
+          onMatchStart,
+          tryEnterDowned,
+          updateDropping,
+          updatePlaying,
+          computeSharedVisionAlpha,
+          drawWorldOverlays,
+          drawScreenEdgeArrows,
+          triggerQuickComm,
+          onMatchExit
+        };
+      })();
+
+      function toggleQuickCommsWheel() {
+        const w = document.getElementById('quick-comms-wheel');
+        if (w) w.classList.toggle('hidden');
+      }
+      function sendQuickComm(commId) { SquadEngine.triggerQuickComm(commId); }
+      function toggleFollowLeader() { SquadEngine.toggleFollowLeader(); }
+      function startOrHoldRevive() { SquadEngine.startRevive(); }
+      function cycleSpectator(delta) { SquadEngine.cycleSpectator(Number(delta) || 1); }
+
+      // ==========================================
+      // ANDROID APK HARDWARE BACK BUTTON & LIFECYCLE HANDLERS
+      // ==========================================
+      document.addEventListener('ar:apk:back', () => {
+        if (closeTopOverlay()) return;
+        if (Game.state === 'PLAYING' || Game.state === 'DROPPING' || Game.state === 'PAUSED') {
+          togglePause();
+          return;
+        }
+        if (Game.state === 'LOBBY') {
+          openConfirmModal({
+            icon: '🚪',
+            title: 'LEAVE ARCANE ROYALE?',
+            message: 'Your progress is saved. Exit Arcane Royale?',
+            confirmLabel: 'Exit',
+            cancelLabel: 'Stay',
+            onConfirm: () => {
+              if (window.ArcaneNativeBridge && window.ArcaneNativeBridge.exitApp) {
+                window.ArcaneNativeBridge.exitApp();
+              }
+            }
+          });
+        }
+      });
+
+      document.addEventListener('ar:apk:lifecycle', (ev) => {
+        const d = ev && ev.detail;
+        if (!d) return;
+        if (d.hidden || d.blurred || d.pagehide) {
+          Input.reset();
+          Music.setVolume(0);
+        } else {
+          Music.setVolume(PlayerData.musicVolume);
+          lastTime = performance.now();
+        }
+      });
 
       // Global Top-50 Leaderboard (Live Firestore + Competitive Local Preview Fallback)
       const SEEDED_LEADERBOARD_RIVALS = Object.freeze([
@@ -18618,6 +20622,7 @@
           const rank = idx + 1;
           const rankCls = rank === 1 ? 'top-1' : (rank === 2 ? 'top-2' : (rank === 3 ? 'top-3' : ''));
           const portraitSrc = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(entry.champion) : '';
+          const fallbackSrc = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitFallbackSrc(entry.champion) : '';
           const heroData = CHARACTER_DATA[entry.champion] || CHARACTER_DATA.BERSERKER;
           const metricVal = sortKey === 'eliminations'
             ? `${Number(entry.eliminations || 0).toLocaleString('en-US')} ⚔️`
@@ -18626,7 +20631,7 @@
           return `
             <div class="lb-row ${entry.isSelf ? 'is-self' : ''}" role="listitem">
               <span class="lb-rank ${rankCls}">#${rank}</span>
-              <img class="lb-avatar" src="${portraitSrc}" alt="${escapeHtmlSafe(heroData.name)}" referrerpolicy="no-referrer" />
+              <img class="lb-avatar" src="${portraitSrc}" data-fallback-src="${fallbackSrc}" data-champ="${escapeHtmlSafe(entry.champion || 'BERSERKER')}" alt="${escapeHtmlSafe(heroData.name)}" crossorigin="anonymous" referrerpolicy="no-referrer" />
               <div class="lb-info">
                 <div class="lb-name">${escapeHtmlSafe(entry.playerName)}${entry.isSelf ? ' (YOU)' : ''}</div>
                 <div class="lb-sub">${escapeHtmlSafe(subText)}</div>
@@ -18635,6 +20640,11 @@
             </div>
           `;
         }).join('');
+        listEl.querySelectorAll('img.lb-avatar').forEach(imgEl => {
+          if (typeof AssetLoader !== 'undefined' && AssetLoader.bindPortraitFallback) {
+            AssetLoader.bindPortraitFallback(imgEl, imgEl.dataset.champ || 'BERSERKER');
+          }
+        });
       }
 
       // ==========================================
@@ -18699,6 +20709,15 @@
             showToast('✓ Arcane Pass is already active on your account!', '#c084fc');
             return false;
           }
+          if (typeof window !== 'undefined' && window.ArcaneNativeBridge && window.ArcaneNativeBridge.isNativeApk) {
+            try {
+              const nativeRes = await window.ArcaneNativeBridge.purchaseSku(pack.sku);
+              if (nativeRes && nativeRes.ok) { this.grantProduct(pack); return true; }
+            } catch (_) {
+              showToast('⚠️ Play Billing cancelled or unavailable.', '#f87171');
+              return false;
+            }
+          }
           const channel = this.detectChannel();
           if (channel === 'android_apk') {
             try {
@@ -18735,7 +20754,15 @@
       // PRIVATE DELEGATED UI EVENT DISPATCHER (ZERO WINDOW GLOBALS)
       // ==========================================
       const UI_CLICK_ACTIONS = Object.freeze({
+        acceptFriendReq: (arg) => acceptFriendReq(arg),
+        acceptTopSquadInvite: () => acceptTopSquadInvite(),
+        addDemoSquadmate: () => addDemoSquadmate(),
         applyImportSaveCode: () => applyImportSaveCode(),
+        authForgotPassword: () => authForgotPassword(),
+        authPlayAsGuest: () => authPlayAsGuest(),
+        authSignInGoogle: () => authSignInGoogle(),
+        authSubmitSignIn: () => authSubmitSignIn(),
+        authSubmitSignUp: () => authSubmitSignUp(),
         buyArcaneRune: (arg) => buyArcaneRune(arg),
         buyDropSkin: (arg, arg2) => buyDropSkin(arg, Number(arg2)),
         buyFighter: (arg, arg2, arg3) => buyFighter(arg, Number(arg2), Number(arg3)),
@@ -18746,6 +20773,8 @@
         claimDemoSupplies: () => claimDemoSupplies(),
         claimVaultRewardedAd: (arg) => claimVaultRewardedAd(arg),
         clearMapPing: () => clearMapPing(),
+        closeAccountModal: () => closeAccountModal(),
+        closeFriendsModal: () => closeFriendsModal(),
         closeImportSavePanel: () => toggleImportSavePanel(false),
         closeItemDetails: () => toggleItemDetails(false),
         closeLeaderboard: () => closeLeaderboard(),
@@ -18760,14 +20789,25 @@
         confirmDrop: () => confirmDrop(),
         confirmModalAccept: () => confirmModalAccept(),
         confirmModalCancel: () => confirmModalCancel(),
+        copyMyFriendCode: () => copyMyFriendCode(),
+        copySquadRoomCode: () => copySquadRoomCode(),
         cycleLobbyHero: (arg) => cycleLobbyHero(Number(arg)),
+        cycleSpectator: (arg) => cycleSpectator(arg),
+        declineFriendReq: (arg) => declineFriendReq(arg),
+        declineTopSquadInvite: () => declineTopSquadInvite(),
         dismissTutorial: () => dismissTutorial(),
         doubleMatchRewardsAd: () => doubleMatchRewardsAd(),
         equipArcaneRune: (arg) => equipArcaneRune(arg === 'null' ? null : arg),
         equipDropSkin: (arg) => equipDropSkin(arg),
         exportSaveCode: () => exportSaveCode(),
+        inviteFriendToSquad: (arg) => inviteFriendToSquad(arg),
+        joinSquadByCodeFromUI: () => joinSquadByCodeFromUI(),
+        kickSquadMember: (arg) => kickSquadMember(arg),
+        leaveCurrentSquad: () => leaveCurrentSquad(),
         leaveMatchToLobby: () => returnToLobby(true),
+        openAccountModal: () => openAccountModal(),
         openCombatGuide: () => openCombatGuide(),
+        openFriendsModal: () => openFriendsModal(),
         openHudEditor: () => openHudEditor(),
         openLeaderboard: (arg) => openLeaderboard(arg || 'wins'),
         openSettings: (arg) => openSettings(arg || 'audio'),
@@ -18780,6 +20820,7 @@
         previewLobbyHero: (arg) => previewLobbyHero(arg),
         purchaseGemPack: (arg) => purchaseGemPack(arg),
         recheckAdBlocker: () => recheckAdBlocker(),
+        removeFriendConfirm: (arg, arg2) => removeFriendConfirm(arg, arg2),
         rerollDailyMissionAd: () => rerollDailyMissionAd(),
         resetHudEditorLayout: () => resetHudEditorLayout(),
         resetPlayerProgress: () => resetPlayerProgress(),
@@ -18789,21 +20830,32 @@
         saveHudEditorLayout: () => saveHudEditorLayout(),
         selectFighter: (arg) => selectFighter(arg),
         selectRandomDrop: () => selectRandomDrop(),
+        sendFriendRequestFromUI: () => sendFriendRequestFromUI(),
+        sendQuickComm: (arg) => sendQuickComm(arg),
         setGraphicsQuality: (arg) => setGraphicsQuality(arg),
         setOrientationPref: (arg) => setOrientationPref(arg),
+        shareMyFriendCode: () => shareMyFriendCode(),
         startBattle: () => startBattle(),
+        startOrHoldRevive: () => startOrHoldRevive(),
+        submitGuestUpgrade: () => submitGuestUpgrade(),
         submitName: () => submitName(),
+        switchAuthTab: (arg) => switchAuthTab(arg),
+        switchFriendsTab: (arg) => switchFriendsTab(arg),
         switchLeaderboardTab: (arg) => switchLeaderboardTab(arg),
         switchSettingsTab: (arg) => switchSettingsTab(arg),
         switchShopTab: (arg) => switchShopTab(arg),
         switchUpgradesTab: (arg) => switchUpgradesTab(arg),
         toggleAutoAim: () => toggleAutoAim(),
+        toggleFollowLeader: () => toggleFollowLeader(),
         toggleHudEditorSnap: () => toggleHudEditorSnap(),
         toggleImportSavePanel: () => toggleImportSavePanel(),
         toggleItemDetails: () => toggleItemDetails(),
         toggleMapExpand: () => toggleMapExpand(),
+        togglePasswordVis: (arg) => togglePasswordVis(arg),
         togglePause: () => togglePause(),
+        toggleQuickCommsWheel: () => toggleQuickCommsWheel(),
         toggleQuickUseFanout: () => toggleQuickUseFanout(),
+        toggleSquadReady: () => toggleSquadReady(),
         toggleZoom: () => toggleZoom(),
         triggerOperatorAccess: () => triggerOperatorAccess(),
         upgradeFighterStat: (arg) => upgradeFighterStat(arg),
@@ -18859,9 +20911,10 @@
         if (event.key !== 'Enter') return;
         const target = event.target && event.target.closest ? event.target.closest('[data-ar-enter]') : null;
         if (!target) return;
-        if (target.getAttribute('data-ar-enter') === 'submitName') {
-          submitName();
-        }
+        const act = target.getAttribute('data-ar-enter');
+        if (act === 'submitName') submitName();
+        else if (act === 'authSubmitSignIn') authSubmitSignIn();
+        else if (act === 'authSubmitSignUp') authSubmitSignUp();
       });
 
       requestAnimationFrame(gameLoop);

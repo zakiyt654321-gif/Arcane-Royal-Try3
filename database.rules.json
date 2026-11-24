@@ -1,0 +1,76 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "presence": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['state']) && (newData.child('state').val() === 'online' || newData.child('state').val() === 'in_squad' || newData.child('state').val() === 'in_match' || newData.child('state').val() === 'offline')"
+      }
+    },
+    "invites": {
+      "$targetUid": {
+        ".read": "auth != null && auth.uid === $targetUid",
+        "$squadId": {
+          ".write": "auth != null && (auth.uid === $targetUid || (!data.exists() && newData.child('fromUid').val() === auth.uid))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['squadId', 'fromUid', 'fromName', 'createdAt']) && newData.child('fromName').isString() && newData.child('fromName').val().length <= 12)"
+        }
+      }
+    },
+    "squads": {
+      "$squadId": {
+        ".read": "auth != null",
+        ".write": "auth != null && ((!data.exists() && newData.child('leaderUid').val() === auth.uid) || data.child('leaderUid').val() === auth.uid || data.child('members').child(auth.uid).exists())",
+        "leaderUid": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 128"
+        },
+        "members": {
+          "$memberUid": {
+            ".write": "auth != null && (auth.uid === $memberUid || root.child('squads').child($squadId).child('leaderUid').val() === auth.uid)",
+            ".validate": "!newData.exists() || (newData.hasChildren(['uid', 'displayName', 'championId']) && newData.child('displayName').isString() && newData.child('displayName').val().length <= 12)"
+          }
+        }
+      }
+    },
+    "matches": {
+      "$matchId": {
+        ".read": "auth != null && data.child('members').child(auth.uid).exists()",
+        ".write": "auth != null && ((!data.exists() && newData.child('hostUid').val() === auth.uid) || (!newData.exists() && data.child('hostUid').val() === auth.uid))",
+        "hostUid": {
+          ".write": "auth != null && data.parent().child('members').child(auth.uid).exists() && (data.val() === auth.uid || data.parent().child('members').child(data.val()).child('connected').val() === false || data.parent().child('players').child(data.val()).child('connected').val() === false)"
+        },
+        "status": {
+          ".write": "auth != null && data.parent().child('hostUid').val() === auth.uid",
+          ".validate": "newData.val() === 'dropping' || newData.val() === 'active' || newData.val() === 'finished'"
+        },
+        "members": {
+          "$memberUid": {
+            ".write": "auth != null && (auth.uid === $memberUid || data.parent().parent().child('hostUid').val() === auth.uid)"
+          }
+        },
+        "players": {
+          "$memberUid": {
+            ".write": "auth != null && auth.uid === $memberUid && data.parent().parent().child('members').child(auth.uid).exists()"
+          }
+        },
+        "bots": {
+          ".write": "auth != null && data.parent().child('hostUid').val() === auth.uid"
+        },
+        "world": {
+          ".write": "auth != null && data.parent().child('hostUid').val() === auth.uid"
+        },
+        "intents": {
+          "$intentId": {
+            ".write": "auth != null && data.parent().parent().child('members').child(auth.uid).exists() && (!newData.exists() || newData.child('src').val() === auth.uid)"
+          }
+        },
+        "fx": {
+          "$fxId": {
+            ".write": "auth != null && data.parent().parent().child('members').child(auth.uid).exists() && (!newData.exists() || newData.child('src').val() === auth.uid)"
+          }
+        }
+      }
+    }
+  }
+}
