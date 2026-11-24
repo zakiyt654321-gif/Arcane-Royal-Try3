@@ -1,0 +1,184 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private player progression, currencies, unlocks, and dual-orientation HUD layouts owned strictly by the authenticated user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "playerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12,
+          "pattern": "^[a-zA-Z0-9 _\\-]+$"
+        },
+        "level": {
+          "type": "integer",
+          "description": "Player level clamped between 1 and 100."
+        },
+        "xp": {
+          "type": "integer",
+          "description": "Current level progress XP."
+        },
+        "gold": {
+          "type": "integer",
+          "description": "Coins currency balance."
+        },
+        "astralCrystals": {
+          "type": "integer",
+          "description": "Astral Crystals currency balance."
+        },
+        "gems": {
+          "type": "integer",
+          "description": "Gems currency balance."
+        },
+        "selectedFighter": {
+          "type": "string",
+          "enum": ["BERSERKER", "TIDECALLER", "SHADOW"]
+        },
+        "unlockedFighters": {
+          "type": "array",
+          "description": "Bounded list of unlocked champion keys."
+        },
+        "wins": {
+          "type": "integer"
+        },
+        "eliminations": {
+          "type": "integer"
+        },
+        "matches": {
+          "type": "integer"
+        },
+        "hudLayoutLandscape": {
+          "type": "object",
+          "description": "Custom mobile landscape HUD layout map."
+        },
+        "hudLayoutPortrait": {
+          "type": "object",
+          "description": "Custom mobile portrait HUD layout map."
+        },
+        "saveDigest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "playerName",
+        "level",
+        "xp",
+        "gold",
+        "astralCrystals",
+        "gems",
+        "selectedFighter",
+        "unlockedFighters",
+        "wins",
+        "eliminations",
+        "matches",
+        "saveDigest",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Public non-PII competitive leaderboard record validated by match telemetry bounds.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "playerName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12,
+          "pattern": "^[a-zA-Z0-9 _\\-]+$"
+        },
+        "champion": {
+          "type": "string",
+          "enum": ["BERSERKER", "TIDECALLER", "SHADOW"]
+        },
+        "level": {
+          "type": "integer"
+        },
+        "wins": {
+          "type": "integer"
+        },
+        "eliminations": {
+          "type": "integer"
+        },
+        "matches": {
+          "type": "integer"
+        },
+        "isPublic": {
+          "type": "boolean"
+        },
+        "lastMatchDurationSec": {
+          "type": "number"
+        },
+        "lastMatchKills": {
+          "type": "integer"
+        },
+        "lastMatchMaxDps": {
+          "type": "number"
+        },
+        "telemetryDigest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "playerName",
+        "champion",
+        "level",
+        "wins",
+        "eliminations",
+        "matches",
+        "isPublic",
+        "lastMatchDurationSec",
+        "lastMatchKills",
+        "lastMatchMaxDps",
+        "telemetryDigest",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private authenticated player profile and cloud save sync document."
+    },
+    "/leaderboard/{userId}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "Public Global Top-50 competitive leaderboard records containing zero PII."
+    }
+  }
+}

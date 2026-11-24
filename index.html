@@ -3,8 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="screen-orientation" content="landscape" />
-    <meta name="x5-orientation" content="landscape" />
     <meta name="x5-fullscreen" content="true" />
     <meta name="browsermode" content="application" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -21,7 +19,9 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
     <meta property="og:site_name" content="Arcane Royale" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/arcane/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/assets/arcane/icon-192.png" />
+    <script type="module" src="/src/firebase/cloudSync.ts"></script>
     <style>
       * {
         box-sizing: border-box;
@@ -541,76 +541,355 @@
         }
       }
 
-      /* ROTATE TO LANDSCAPE PROMPT (OPTIONAL VIA SETTINGS — PORTRAIT IS FULLY PLAYABLE) */
-      #landscape-prompt {
+      /* ZERO-ADVANTAGE PORTRAIT & LANDSCAPE FAIRNESS SHELL */
+      #portrait-thumb-deck {
         display: none;
-      }
-      .landscape-prompt-overlay {
         position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: rgba(7, 9, 14, 0.96);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        display: none;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        text-align: center;
-        color: #f3f4f6;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 36dvh;
+        background: linear-gradient(180deg, rgba(11, 14, 28, 0.94) 0%, rgba(5, 7, 15, 0.98) 100%);
+        border-top: 1px solid rgba(168, 85, 247, 0.38);
+        box-shadow: 0 -10px 28px rgba(2, 6, 23, 0.72), inset 0 1px 0 rgba(251, 191, 36, 0.22);
+        pointer-events: none;
+        z-index: 2;
       }
-      .landscape-prompt-overlay.dismissed {
-        display: none !important;
-      }
-      .rotate-phone-anim {
-        width: 86px;
-        height: 86px;
-        margin-bottom: 20px;
-        animation: phoneRotateSpin 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-      }
-      @keyframes phoneRotateSpin {
-        0%, 15% { transform: rotate(0deg); }
-        45%, 70% { transform: rotate(-90deg); }
-        90%, 100% { transform: rotate(0deg); }
-      }
-      .rotate-phone-svg {
+      .hero-portrait-img {
         width: 100%;
         height: 100%;
-        filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.6));
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
       }
-      .landscape-prompt-overlay h2 {
-        font-size: 20px;
-        font-weight: 900;
-        letter-spacing: 1.5px;
-        color: #fbbf24;
-        margin-bottom: 8px;
-        text-transform: uppercase;
-        text-shadow: 0 0 14px rgba(245, 158, 11, 0.5);
+      .hero-portrait-img.hidden { display: none !important; }
+      .killcam-portrait-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
-      .landscape-prompt-overlay p {
-        font-size: 13px;
-        color: #94a3b8;
-        max-width: 300px;
-        line-height: 1.5;
-        margin-bottom: 22px;
+      .killcam-attacker-portrait {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1.5px solid rgba(248, 113, 113, 0.75);
+        background: #0f172a;
+        flex-shrink: 0;
       }
-      .btn-rotate-dismiss {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.22);
+      .cloud-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.35);
         color: #cbd5e1;
-        padding: 9px 20px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background-color 0.2s;
       }
-      .rotate-prompt-actions { display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: min(280px, 100%); }
-      .btn-rotate-force {
-        min-height: 44px; padding: 10px 20px; border: 1px solid rgba(255,240,174,0.55);
-        border-radius: 22px; background: linear-gradient(120deg, #ffcb63, #ff8a61);
-        color: #21130c; font-size: 13px; font-weight: 900; cursor: pointer;
+      .cloud-status-pill.connected {
+        border-color: rgba(52, 211, 153, 0.55);
+        color: #6ee7b7;
+        background: rgba(6, 78, 59, 0.32);
+      }
+      .lb-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .lb-row {
+        display: grid;
+        grid-template-columns: 38px 34px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.78);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+      }
+      .lb-row.is-self {
+        background: rgba(88, 28, 135, 0.32);
+        border-color: rgba(251, 191, 36, 0.6);
+      }
+      .lb-rank {
+        font-size: 13px;
+        font-weight: 900;
+        color: #fbbf24;
+        text-align: center;
+      }
+      .lb-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1.5px solid rgba(168, 85, 247, 0.65);
+        background: #0b1020;
+      }
+      .lb-name-col {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .lb-name {
+        font-size: 13px;
+        font-weight: 800;
+        color: #f8fafc;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .lb-meta {
+        font-size: 10.5px;
+        color: #94a3b8;
+        font-weight: 700;
+      }
+      .lb-metric {
+        text-align: right;
+        font-size: 13px;
+        font-weight: 900;
+        color: #fde68a;
+        white-space: nowrap;
+      }
+      .iap-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        background: rgba(251, 191, 36, 0.16);
+        border: 1px solid rgba(251, 191, 36, 0.45);
+        color: #fde68a;
+        margin-bottom: 4px;
+      }
+      .vault-section-heading {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 2px 2px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #7dd3fc;
+      }
+
+      /* ADAPTIVE PORTRAIT FAIRNESS LAYOUT (64dvh LIVE ARENA + 36dvh THUMB DECK) */
+      html[data-device-profile="mobile-portrait"] #portrait-thumb-deck {
+        display: block;
+      }
+      html[data-device-profile="mobile-portrait"] #hud-top {
+        padding: max(6px, env(safe-area-inset-top, 0px)) 8px 0 8px;
+        gap: 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .hud-stats-card {
+        min-width: 126px;
+        max-width: 146px;
+        padding: 4px 8px;
+        gap: 2px;
+      }
+      html[data-device-profile="mobile-portrait"] .bar-label {
+        font-size: 10px;
+      }
+      html[data-device-profile="mobile-portrait"] .bar-track {
+        height: 7px;
+      }
+      html[data-device-profile="mobile-portrait"] #storm-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+      }
+      html[data-device-profile="mobile-portrait"] #kill-feed {
+        top: calc(env(safe-area-inset-top, 0px) + 152px);
+        right: 8px;
+        max-width: 190px;
+      }
+      html[data-device-profile="mobile-portrait"] #joystick-zone:not(.hud-custom-pos) {
+        bottom: max(22px, calc(env(safe-area-inset-bottom, 0px) + 18px));
+        left: 14px;
+        width: 112px;
+        height: 112px;
+        z-index: 12;
+      }
+      html[data-device-profile="mobile-portrait"] #action-buttons:not(.hud-custom-pos) {
+        bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 10px));
+        right: 8px;
+        transform: scale(calc(var(--control-scale, 1) * var(--el-scale-actions, 1) * 0.9));
+        transform-origin: bottom right;
+        z-index: 12;
+      }
+      html[data-device-profile="mobile-portrait"] #quick-use-wrap:not(.hud-custom-pos) {
+        left: 16px;
+        right: auto;
+        bottom: max(158px, calc(env(safe-area-inset-bottom, 0px) + 154px));
+        transform: scale(var(--el-scale-quickuse, 1));
+        transform-origin: bottom left;
+        z-index: 14;
+      }
+      html[data-device-profile="mobile-portrait"] #cancel-cast-zone {
+        position: fixed !important;
+        left: 50% !important;
+        right: auto !important;
+        top: auto !important;
+        bottom: calc(36dvh - 18px) !important;
+        transform: translateX(-50%) scale(0.92);
+        z-index: 30;
+      }
+      html[data-device-profile="mobile-portrait"] #cancel-cast-zone.visible {
+        transform: translateX(-50%) scale(1);
+      }
+      html[data-device-profile="mobile-portrait"] #item-channel {
+        bottom: calc(36dvh + 14px);
+      }
+
+      /* PORTRAIT LOBBY: SINGLE-SCREEN ZERO-SCROLL 100dvh STACK */
+      html[data-device-profile="mobile-portrait"] #lobby-screen {
+        padding: max(6px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px)) 10px;
+        gap: 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-topbar {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        height: auto !important;
+        max-height: none !important;
+        min-height: 0;
+        gap: 5px 6px;
+        padding: 6px 8px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-profile-cluster {
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-brand-name {
+        max-width: 82px;
+        font-size: 12.5px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-topbar .lvl-pill {
+        min-width: 86px;
+        padding: 2px 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-topbar-actions {
+        flex: 0 0 auto;
+        gap: 4px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-icon-btn {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
+        font-size: 14px;
+        border-radius: 8px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-currency-strip {
+        order: 3;
+        flex: 0 0 100%;
+        width: 100%;
+        justify-content: space-around;
+        gap: 4px;
+        font-size: 11px;
+        padding-top: 4px;
+        border-top: 1px solid rgba(148, 163, 184, 0.16);
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-shell-grid {
+        display: flex !important;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-center-stage {
+        order: 1;
+        flex: 1.15;
+        min-height: 0;
+        justify-content: center;
+        gap: 4px;
+        padding: 4px 0;
+      }
+      html[data-device-profile="mobile-portrait"] .showcase-avatar-ring {
+        width: 108px !important;
+        height: 108px !important;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-left-panel {
+        order: 2;
+        flex: 0 0 auto;
+        gap: 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .daily-missions-panel {
+        padding: 7px 9px;
+      }
+      html[data-device-profile="mobile-portrait"] .daily-missions-list {
+        gap: 4px;
+      }
+      html[data-device-profile="mobile-portrait"] .dm-compact-row {
+        padding: 4px 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-right-dock {
+        order: 3;
+        flex: 0 0 auto;
+        gap: 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-dock-secondary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-dock-btn {
+        min-height: 42px;
+        padding: 6px 8px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-play-cta {
+        min-height: 50px;
+        flex: 0 0 auto;
+      }
+
+      /* PORTRAIT MODALS: CLEAN VERTICAL STACK WITHOUT OVERFLOW */
+      html[data-device-profile="mobile-portrait"] .split-modal-shell {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto 1fr;
+        height: 94dvh !important;
+        max-height: 94dvh !important;
+      }
+      html[data-device-profile="mobile-portrait"] .split-modal-sidebar {
+        border-right: none !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        padding: 10px 12px !important;
+        gap: 8px !important;
+      }
+      html[data-device-profile="mobile-portrait"] .split-tab-list {
+        flex-direction: row !important;
+        overflow-x: auto;
+        gap: 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .split-tab-btn {
+        flex: 1 0 auto;
+        justify-content: center;
+        padding: 7px 10px !important;
+        font-size: 11.5px !important;
+      }
+      html[data-device-profile="mobile-portrait"] .split-pane-grid-3,
+      html[data-device-profile="mobile-portrait"] .split-pane-grid-2 {
+        grid-template-columns: 1fr !important;
+      }
+      html[data-device-profile="mobile-portrait"] .gameover-split-box {
+        grid-template-columns: 1fr !important;
+        max-height: 94dvh;
+        overflow-y: auto;
+      }
+      html[data-device-profile="mobile-portrait"] .drop-split-card {
+        grid-template-columns: 1fr !important;
+        max-height: 94dvh;
+        overflow-y: auto;
+      }
+      html[data-device-profile="mobile-portrait"] .tutorial-grid {
+        grid-template-columns: 1fr !important;
       }
       .force-landscape-shell, .force-landscape-shell body {
         position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; background: #050510;
@@ -2473,11 +2752,12 @@
       }
       html[data-device-profile="mobile-portrait"] #hud-center-top {
         position: absolute;
-        top: calc(max(8px, env(safe-area-inset-top, 0px)) + 84px);
-        left: max(108px, env(safe-area-inset-left, 0px));
-        right: max(10px, env(safe-area-inset-right, 0px));
+        top: calc(max(8px, env(safe-area-inset-top, 0px)) + 82px);
+        left: max(10px, env(safe-area-inset-left, 0px));
+        right: auto;
+        max-width: calc(100vw - 116px);
         transform: none;
-        align-items: flex-end;
+        align-items: flex-start;
         gap: 4px;
       }
       html[data-device-profile="mobile-portrait"] .storm-badge,
@@ -2489,11 +2769,11 @@
         text-overflow: ellipsis;
       }
       html[data-device-profile="mobile-portrait"] .waypoint-hud {
-        top: calc(var(--safe-top) + 122px);
-        left: auto;
-        right: max(10px, env(safe-area-inset-right, 0px));
+        top: calc(var(--safe-top) + 118px);
+        left: max(10px, env(safe-area-inset-left, 0px));
+        right: auto;
         transform: none;
-        max-width: calc(100vw - 122px);
+        max-width: calc(100vw - 118px);
         font-size: 10px;
         padding: 4px 6px 4px 9px;
       }
@@ -2515,13 +2795,9 @@
         font-size: 9px;
         padding: 3px 7px;
       }
-      html[data-device-profile="mobile-portrait"] #quick-use-wrap {
-        right: calc(max(12px, env(safe-area-inset-right, 0px)) + 236px * var(--control-scale, 1) * var(--el-scale-actions, 1));
-        bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 14px * var(--control-scale, 1));
-      }
       html[data-device-profile="mobile-portrait"] #btn-quick-use {
-        width: 52px;
-        height: 52px;
+        width: 50px;
+        height: 50px;
       }
       html[data-device-profile="mobile-portrait"] #cancel-cast-zone {
         left: -70px;
@@ -2531,12 +2807,12 @@
       }
       html[data-device-profile="mobile-portrait"] #inventory-hud {
         right: auto;
-        left: 50%;
-        transform: translateX(-50%) translateY(10px);
+        left: 0;
+        transform: translateY(10px);
         gap: 4px;
       }
       html[data-device-profile="mobile-portrait"] #inventory-hud.fanout-open {
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
       }
       html[data-device-profile="mobile-portrait"] .inventory-slot {
         width: 48px;
@@ -4151,24 +4427,6 @@
   </head>
   <body>
     <noscript><div style="position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 32px; background: #050510; color: #fff; text-align: center; font: 600 18px/1.6 system-ui;">Arcane Royale needs JavaScript enabled to run. Your local game file is intact—enable JavaScript and reopen it to enter the arena.</div></noscript>
-    <!-- ROTATE TO LANDSCAPE PROMPT (PORTRAIT SCREEN DETECTION) -->
-    <div id="landscape-prompt" class="landscape-prompt-overlay">
-      <div class="rotate-phone-anim">
-        <svg viewBox="0 0 100 100" class="rotate-phone-svg">
-          <rect x="28" y="16" width="44" height="68" rx="8" ry="8" fill="rgba(15, 23, 42, 0.85)" stroke="#a855f7" stroke-width="4"/>
-          <circle cx="50" cy="74" r="3.5" fill="#a855f7"/>
-          <path d="M 48 8 A 40 40 0 0 1 90 50" fill="none" stroke="#38bdf8" stroke-width="4" stroke-dasharray="6,4"/>
-          <polygon points="90,44 97,54 84,54" fill="#38bdf8"/>
-        </svg>
-      </div>
-      <h2>ROTATE TO LANDSCAPE</h2>
-      <p>Arcane Royale is optimized for two-thumb landscape battle royale combat. Force landscape works in your browser—no app required.</p>
-      <div class="rotate-prompt-actions">
-        <button type="button" class="btn-rotate-force" data-ar-click="forceLandscapeView">↻ Force landscape</button>
-        <button type="button" class="btn-rotate-dismiss" data-ar-click="dismissLandscapePrompt">Play in portrait anyway</button>
-      </div>
-    </div>
-
     <canvas id="gameCanvas" role="img" aria-label="Arcane Royale battle arena">Your browser needs Canvas support to run Arcane Royale.</canvas>
     <div id="vignette-overlay" aria-hidden="true"></div>
     <div id="storm-tint" aria-hidden="true"></div>
@@ -4237,6 +4495,9 @@
         <div id="kill-feed" role="log" aria-live="polite" aria-relevant="additions" aria-label="Elimination feed"></div>
         <div id="art-banner" aria-hidden="true">CRIMSON CLEAVE!</div>
         <div id="killstreak-banner" style="position:absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); font-size: 30px; font-weight: 900; color: #fbbf24; text-shadow: 0 0 20px #f59e0b; opacity: 0; transition: all 0.3s ease; pointer-events: none; z-index: 100;">KILL STREAK!</div>
+
+        <!-- Portrait 36dvh Thumb Deck Backdrop (zero arena obstruction) -->
+        <div id="portrait-thumb-deck" aria-hidden="true"></div>
 
         <!-- Touch Controls -->
         <div id="joystick-zone">
@@ -4409,6 +4670,7 @@
           </div>
 
           <div class="lobby-topbar-actions">
+            <button type="button" id="btn-leaderboard" class="lobby-icon-btn" data-ar-click="openLeaderboard" data-ar-arg="wins" title="Global Top-50 Leaderboard" aria-label="Open Global Leaderboard">🏆</button>
             <button type="button" id="btn-combat-guide" class="lobby-icon-btn" data-ar-click="openCombatGuide" title="Combat Guide" aria-label="Open Combat Guide">📜</button>
             <button type="button" id="btn-settings" class="lobby-icon-btn" data-ar-click="openSettings" title="Settings" aria-label="Open Settings">⚙️</button>
             <button type="button" id="btn-operator" class="lobby-icon-btn" data-ar-click="triggerOperatorAccess" title="Demo Supplies" aria-label="Open Demo Supplies">✨</button>
@@ -4440,6 +4702,7 @@
             <div class="showcase-carousel-row">
               <button type="button" id="btn-prev-hero" class="showcase-arrow-btn" data-ar-click="cycleLobbyHero" data-ar-arg="-1" aria-label="Previous champion">&lsaquo;</button>
               <div class="showcase-avatar-ring" id="hero-showcase-bg">
+                <img id="heroPreviewPortrait" class="hero-portrait-img hidden" alt="Selected champion portrait" referrerpolicy="no-referrer" />
                 <canvas id="heroPreviewCanvas" width="240" height="240"></canvas>
               </div>
               <button type="button" id="btn-next-hero" class="showcase-arrow-btn" data-ar-click="cycleLobbyHero" data-ar-arg="1" aria-label="Next champion">&rsaquo;</button>
@@ -4538,8 +4801,35 @@
             <!-- Drop Trails Tab -->
             <div id="shop-content-drops" class="split-pane-grid-2 hidden" role="tabpanel"></div>
 
-            <!-- Vault Tab (Rewarded Video Ad Claims with Cooldown Timers) -->
+            <!-- Vault Tab (APK Gem IAP Packs + Rewarded Video Ad Claims) -->
             <div id="shop-content-crystals" class="split-pane-grid-3 hidden" role="tabpanel">
+              <div class="vault-section-heading">
+                <span>💎 Gem Packs (Google Play Billing Ready)</span>
+                <span id="iap-channel-badge" style="color: #fde68a; font-size: 10px;">ArcaneBilling Bridge</span>
+              </div>
+              <div class="shop-item-card" style="text-align: center; border-color: rgba(56, 189, 248, 0.45) !important;">
+                <span class="iap-badge">+80 💎</span>
+                <strong style="color: #38bdf8;">Handful of Gems</strong>
+                <p>Instant gem pack for mythic champions &amp; shop cosmetics.</p>
+                <button type="button" id="btn-iap-gems_handful_80" class="btn-buy" data-ar-click="purchaseGemPack" data-ar-arg="gems_handful_80" style="background: linear-gradient(135deg, #0284c7, #38bdf8);">💎 $0.99 · Buy</button>
+              </div>
+              <div class="shop-item-card" style="text-align: center; border-color: rgba(251, 191, 36, 0.55) !important;">
+                <span class="iap-badge">+500 💎 · BEST VALUE</span>
+                <strong style="color: #fbbf24;">Royal Gem Chest</strong>
+                <p>500 Gems plus +250 bonus Astral Crystals.</p>
+                <button type="button" id="btn-iap-gems_royal_500" class="btn-buy" data-ar-click="purchaseGemPack" data-ar-arg="gems_royal_500" style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #090d16;">👑 $4.99 · Buy</button>
+              </div>
+              <div class="shop-item-card" style="text-align: center; border-color: rgba(192, 132, 252, 0.55) !important;">
+                <span class="iap-badge">SEASON PASS</span>
+                <strong style="color: #c084fc;">Arcane Pass</strong>
+                <p>+750 Gems, +600 Crystals &amp; +20% permanent XP boost.</p>
+                <button type="button" id="btn-iap-arcane_pass" class="btn-buy" data-ar-click="purchaseGemPack" data-ar-arg="arcane_pass" style="background: linear-gradient(135deg, #7e22ce, #c084fc);">⚡ $7.99 · Activate</button>
+              </div>
+
+              <div class="vault-section-heading">
+                <span>📺 Free Rewarded Vault Drops</span>
+                <span style="color: #94a3b8; font-size: 10px;">Cooldown Protected</span>
+              </div>
               <div class="shop-item-card" style="text-align: center;">
                 <div style="font-size: 26px;">🔮</div>
                 <strong style="color: #c084fc;">Pouch of Crystals</strong>
@@ -4557,12 +4847,6 @@
                 <strong style="color: #fbbf24;">Arcane Gem Crate</strong>
                 <p>+15 Arcane Gems to unlock elite champions faster (90s cooldown).</p>
                 <button type="button" id="btn-vault-ad-vault_gems_pack" class="btn-buy vault-ad-btn" data-ar-click="claimVaultRewardedAd" data-ar-arg="vault_gems_pack" style="background: linear-gradient(135deg, #d97706, #fbbf24); color: #090d16;">📺 Watch Ad · +15 💎</button>
-              </div>
-              <div class="shop-item-card" style="grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; gap: 14px;">
-                <div>
-                  <strong style="color: #7dd3fc;">🏆 Arena Placement Gem Rewards</strong>
-                  <p style="margin-top: 4px !important;">1st Place = +5 Gems · 2nd Place = +2 Gems · 3rd Place = +1 Gem · Watch rewarded videos above for bonus vault drops.</p>
-                </div>
               </div>
             </div>
 
@@ -4638,7 +4922,10 @@
               </div>
               <canvas id="killCamCanvas" width="520" height="280"></canvas>
               <div class="killcam-progress-track"><div id="killcam-progress-fill" class="killcam-progress-fill"></div></div>
-              <span id="killcam-text" style="font-size: 11px; color: #cbd5e1; line-height: 1.3;"></span>
+              <div class="killcam-portrait-wrap">
+                <img id="killcam-attacker-portrait" class="killcam-attacker-portrait hidden" alt="Eliminator champion portrait" referrerpolicy="no-referrer" />
+                <span id="killcam-text" style="font-size: 11px; color: #cbd5e1; line-height: 1.3;"></span>
+              </div>
             </div>
 
             <!-- Victory Crest (shown on Victory Royale when Kill Cam is hidden) -->
@@ -4820,20 +5107,38 @@
 
               <div class="settings-tile span-2">
                 <div class="settings-tile-head">
-                  <span class="settings-tile-label">Landscape Orientation Lock</span>
-                  <button type="button" class="btn-lobby-sec" data-ar-click="forceLandscapeView" style="padding: 0 14px;">↻ Force Landscape</button>
+                  <span class="settings-tile-label">Screen Orientation (Zero-Advantage Fairness)</span>
                 </div>
-                <span class="settings-tile-desc">Rotate browser view to landscape if orientation lock is disabled.</span>
+                <span class="settings-tile-desc">Equal visible arena area and 520u vision cap across Portrait and Landscape. Separate custom HUD layouts saved per mode.</span>
+                <div class="settings-quality-group" role="group" aria-label="Screen orientation preference">
+                  <button type="button" id="orient-btn-auto" class="quality-btn active" data-ar-click="setOrientationPref" data-ar-arg="auto" aria-pressed="true">Auto (Both)</button>
+                  <button type="button" id="orient-btn-landscape" class="quality-btn" data-ar-click="setOrientationPref" data-ar-arg="landscape" aria-pressed="false">Lock Landscape</button>
+                  <button type="button" id="orient-btn-portrait" class="quality-btn" data-ar-click="setOrientationPref" data-ar-arg="portrait" aria-pressed="false">Lock Portrait</button>
+                </div>
               </div>
             </div>
 
-            <!-- Save Data Tab (Strict Online Mode — Offline PWA Removed) -->
+            <!-- Save Data Tab (Cloud Sync + Backup Transfer) -->
             <div id="settings-pane-data" class="settings-pane-section hidden" role="tabpanel">
+              <div class="settings-tile span-2" style="border-color: rgba(56, 189, 248, 0.35);">
+                <div class="settings-tile-head">
+                  <span class="settings-tile-label">☁️ Arcane Cloud Sync &amp; Account</span>
+                  <span id="cloud-sync-status-pill" class="cloud-status-pill">Local Save Mode · Cloud Ready</span>
+                </div>
+                <span id="cloud-sync-account-desc" class="settings-tile-desc">Sign in to sync progression, dual HUD profiles, and verified Global Top-50 Leaderboard rank across devices.</span>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                  <button type="button" id="btn-cloud-google" class="btn-lobby-sec" data-ar-click="cloudSignInGoogle" style="justify-content: center; border-color: rgba(56, 189, 248, 0.5); color: #bae6fd;">🔐 Google</button>
+                  <button type="button" id="btn-cloud-guest" class="btn-lobby-sec" data-ar-click="cloudSignInGuest" style="justify-content: center; border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff;">👤 Guest Sync</button>
+                  <button type="button" id="btn-cloud-signout" class="btn-lobby-sec hidden" data-ar-click="cloudSignOut" style="justify-content: center; border-color: rgba(248, 113, 113, 0.45); color: #fca5a5;">🚪 Sign Out</button>
+                  <button type="button" id="btn-cloud-sync-now" class="btn-lobby-sec" data-ar-click="cloudSyncNow" style="justify-content: center; border-color: rgba(52, 211, 153, 0.45); color: #6ee7b7;">↻ Sync Now</button>
+                </div>
+              </div>
+
               <div class="settings-tile span-2">
                 <div class="settings-tile-head">
                   <span class="settings-tile-label">Save Backup Transfer</span>
                 </div>
-                <span class="settings-tile-desc">Copy or restore your Level 100 progress across browsers using a signed backup code.</span>
+                <span class="settings-tile-desc">Copy or restore your Level 100 progress and dual HUD layouts across browsers using a signed backup code.</span>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                   <button type="button" id="btn-export-save" class="btn-lobby-sec" data-ar-click="exportSaveCode" style="justify-content: center; border-color: rgba(251, 191, 36, 0.45); color: #fde68a;">📤 Export</button>
                   <button type="button" id="btn-import-save-toggle" class="btn-lobby-sec" data-ar-click="toggleImportSavePanel" style="justify-content: center; border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff;">📥 Import</button>
@@ -4859,6 +5164,26 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GLOBAL TOP-50 LEADERBOARD MODAL -->
+      <div id="leaderboard-screen" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title" style="z-index: 215;">
+        <div class="split-modal-shell">
+          <aside class="split-modal-sidebar">
+            <button type="button" class="modal-back-btn" data-ar-click="closeLeaderboard" aria-label="Back to lobby">← BACK</button>
+            <h2 id="leaderboard-title" class="split-sidebar-title">LEADERBOARD</h2>
+            <div class="split-sidebar-wallet" style="font-size: 11px;">
+              <span id="lb-source-badge" style="color: #7dd3fc;">Local Preview · Cloud Ready</span>
+            </div>
+            <div class="split-tab-list" role="tablist" aria-label="Leaderboard rankings">
+              <button type="button" id="tab-lb-wins" class="split-tab-btn active" data-ar-click="switchLeaderboardTab" data-ar-arg="wins" role="tab" aria-selected="true">🏆 Career Wins</button>
+              <button type="button" id="tab-lb-elims" class="split-tab-btn" data-ar-click="switchLeaderboardTab" data-ar-arg="eliminations" role="tab" aria-selected="false">⚔️ Eliminations</button>
+            </div>
+          </aside>
+          <div class="split-modal-pane">
+            <div id="leaderboard-list" class="lb-list" role="list" aria-label="Top 50 players"></div>
           </div>
         </div>
       </div>
@@ -4892,6 +5217,19 @@
           <div class="ad-preview-bar-track"><div id="ad-preview-bar-fill" class="ad-preview-bar-fill"></div></div>
           <div id="ad-preview-timer" style="font-size: 12px; font-weight: 800; color: #7dd3fc;">Completing in 3s...</div>
           <button type="button" id="btn-ad-cancel" class="btn-lobby-sec hidden" data-ar-click="cancelActiveAdPreview" style="width: 100%; min-height: 40px; justify-content: center; color: #fca5a5;">✕ Close Early (No Reward)</button>
+        </div>
+      </div>
+
+      <!-- IN-APP CONFIRMATION DIALOG (SAFE IN SANDBOXED IFRAMES) -->
+      <div id="confirm-modal" class="overlay-screen hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirm-modal-title" style="z-index: 930; background: rgba(2, 6, 23, 0.88);">
+        <div class="guard-modal-box" style="border-color: rgba(248, 113, 113, 0.45);">
+          <div id="confirm-modal-icon" class="guard-modal-icon" aria-hidden="true">⚠️</div>
+          <h2 id="confirm-modal-title" class="guard-modal-title" style="color: #fde68a;">CONFIRM ACTION</h2>
+          <p id="confirm-modal-message" class="guard-modal-desc">Are you sure you want to proceed?</p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 6px;">
+            <button type="button" id="btn-confirm-cancel" class="btn-lobby-sec" data-ar-click="confirmModalCancel" style="width: 100%; min-height: 44px; justify-content: center; white-space: nowrap;">Cancel</button>
+            <button type="button" id="btn-confirm-accept" class="btn-lobby-main" data-ar-click="confirmModalAccept" style="width: 100%; min-height: 44px; font-size: 13px; color: #ffffff; white-space: nowrap; background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);">Confirm</button>
+          </div>
         </div>
       </div>
 
@@ -5304,9 +5642,19 @@
         'statUpgrades', 'selectedFighter', 'unlockedFighters',
         'totalMatches', 'totalWins', 'totalKills',
         'musicVolume', 'sfxVolume', 'voiceVolume', 'haptics', 'reducedMotion', 'graphicsQuality',
-        'autoLoot', 'batterySaver30Fps',
+        'autoLoot', 'batterySaver30Fps', 'orientationPref', 'arcanePassOwned',
         'deviceMode', 'touchControlsMode', 'controlScale', 'tutorialSeen', 'firstMatchTipShown'
       ];
+      const VISION_RADIUS = 520;
+      const VISION_FADE_RIM = 40;
+      const VISION_INNER_RADIUS = VISION_RADIUS - VISION_FADE_RIM;
+      const BASE_PLAYABLE_AREA = 844 * 390;
+      function computeVisionAlpha(distance) {
+        if (!Number.isFinite(distance) || distance < 0) return 1;
+        if (distance >= VISION_RADIUS) return 0;
+        if (distance <= VISION_INNER_RADIUS) return 1;
+        return Math.max(0, Math.min(1, (VISION_RADIUS - distance) / VISION_FADE_RIM));
+      }
       const LOOT_RARITY_META = Object.freeze({
         COMMON: Object.freeze({ key: 'COMMON', rank: 1, mult: 1.0, color: '#94a3b8', label: 'Common' }),
         RARE: Object.freeze({ key: 'RARE', rank: 2, mult: 1.15, color: '#38bdf8', label: 'Rare' }),
@@ -5684,6 +6032,8 @@
         graphicsQuality: 'high',
         autoLoot: true,
         batterySaver30Fps: false,
+        orientationPref: 'auto',
+        arcanePassOwned: false,
         deviceMode: 'mobile',
         touchControlsMode: 'on',
         controlScale: 1.0,
@@ -5754,6 +6104,8 @@
           this.graphicsQuality = ['low', 'medium', 'high'].includes(source.graphicsQuality) ? source.graphicsQuality : 'high';
           this.autoLoot = typeof source.autoLoot === 'boolean' ? source.autoLoot : true;
           this.batterySaver30Fps = typeof source.batterySaver30Fps === 'boolean' ? source.batterySaver30Fps : false;
+          this.orientationPref = ['auto', 'landscape', 'portrait'].includes(source.orientationPref) ? source.orientationPref : 'auto';
+          this.arcanePassOwned = Boolean(source.arcanePassOwned);
           this.deviceMode = 'mobile';
           this.touchControlsMode = 'on';
           this.controlScale = Math.round(finite(source.controlScale, 1.0, 0.75, 1.25) * 100) / 100;
@@ -5834,46 +6186,49 @@
       };
 
       // ==========================================
-      // SCREEN ORIENTATION & LANDSCAPE MANAGEMENT
+      // SCREEN ORIENTATION (AUTO / LOCK LANDSCAPE / LOCK PORTRAIT)
       // ==========================================
-      function dismissLandscapePrompt() {
-        const el = document.getElementById('landscape-prompt');
-        if (el) el.classList.add('dismissed');
+      function applyNativeOrientationPref(pref) {
+        try {
+          if (!screen.orientation) return;
+          if (pref === 'landscape' && typeof screen.orientation.lock === 'function') {
+            screen.orientation.lock('landscape').catch(() => {});
+          } else if (pref === 'portrait' && typeof screen.orientation.lock === 'function') {
+            screen.orientation.lock('portrait').catch(() => {});
+          } else if (pref === 'auto' && typeof screen.orientation.unlock === 'function') {
+            screen.orientation.unlock();
+          }
+        } catch (_) {}
+      }
+
+      function setOrientationPref(pref) {
+        const next = ['auto', 'landscape', 'portrait'].includes(pref) ? pref : 'auto';
+        PlayerData.orientationPref = next;
+        PlayerData.save();
+        applyNativeOrientationPref(next);
+        if (typeof DeviceOptimizer !== 'undefined') DeviceOptimizer.apply(true);
+        updateOrientationButtonsUI();
+        const label = next === 'auto' ? 'Auto (Portrait & Landscape)' : (next === 'landscape' ? 'Lock Landscape' : 'Lock Portrait');
+        showToast(`📱 Orientation: ${label}`, '#38bdf8');
+      }
+
+      function updateOrientationButtonsUI() {
+        const pref = PlayerData.orientationPref || 'auto';
+        ['auto', 'landscape', 'portrait'].forEach(key => {
+          const btn = document.getElementById('orient-btn-' + key);
+          if (btn) {
+            btn.classList.toggle('active', pref === key);
+            btn.setAttribute('aria-pressed', String(pref === key));
+          }
+        });
       }
 
       function tryLockLandscape() {
-        try {
-          if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(() => {});
-          }
-        } catch(e) {}
+        applyNativeOrientationPref(PlayerData.orientationPref || 'auto');
       }
-      async function forceLandscapeView() {
-        AudioEngine.init();
-        let nativeLocked = false;
-        try {
-          if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-            try { await document.documentElement.requestFullscreen(); } catch (error) { /* CSS rotation remains available. */ }
-          }
-          if (screen.orientation && screen.orientation.lock) {
-            await screen.orientation.lock('landscape');
-            nativeLocked = true;
-          }
-        } catch (error) { /* Unsupported orientation locks use the in-browser rotated view. */ }
-        if (nativeLocked || window.innerWidth > window.innerHeight) {
-          dismissLandscapePrompt();
-          return;
-        }
-        const url = new URL(window.location.href);
-        url.searchParams.set('forceLandscape', 'cw');
-        window.location.assign(url.toString());
-      }
-      window.addEventListener('load', tryLockLandscape);
-      window.addEventListener('touchstart', tryLockLandscape, { passive: true });
-      window.addEventListener('click', tryLockLandscape, { passive: true });
 
       function submitName() {
-        tryLockLandscape();
+        applyNativeOrientationPref(PlayerData.orientationPref || 'auto');
         const input = document.getElementById('name-input');
         const rawVal = input ? input.value : '';
         const sanitized = sanitizePlayerName(rawVal, 'Player');
@@ -5910,6 +6265,11 @@
           hudScale: 0.88,
           dprCap: 1.5,
           targetCombatSpan: 560,
+          playableW: 844,
+          playableH: 390,
+          focalX: 422,
+          focalY: 195,
+          equalAreaZoom: 1.0,
           minimapSize: 82,
           minimapX: 10,
           minimapY: 86
@@ -5918,6 +6278,9 @@
         detectProfile(width, height) {
           const w = Math.max(240, Math.floor(Number(width) || 844));
           const h = Math.max(240, Math.floor(Number(height) || 390));
+          const pref = (typeof PlayerData !== 'undefined' && PlayerData.orientationPref) || 'auto';
+          if (pref === 'landscape') return 'mobile-landscape';
+          if (pref === 'portrait') return 'mobile-portrait';
           return h > w ? 'mobile-portrait' : 'mobile-landscape';
         },
 
@@ -5930,22 +6293,29 @@
 
         resolve() {
           const { width, height } = this.getViewportSize();
-          const orientation = height > width ? 'portrait' : 'landscape';
+          const pref = (typeof PlayerData !== 'undefined' && PlayerData.orientationPref) || 'auto';
+          const orientation = pref === 'landscape' ? 'landscape' : (pref === 'portrait' ? 'portrait' : (height > width ? 'portrait' : 'landscape'));
           const quality = ['low', 'medium', 'high'].includes(PlayerData.graphicsQuality) ? PlayerData.graphicsQuality : 'high';
           const profile = orientation === 'portrait' ? 'mobile-portrait' : 'mobile-landscape';
-          const detectedProfile = profile;
+          const detectedProfile = height > width ? 'mobile-portrait' : 'mobile-landscape';
           const modePref = 'mobile';
           const showTouchControls = true;
+
+          const playableW = width;
+          const playableH = orientation === 'portrait' ? Math.round(height * 0.64) : height;
+          const focalX = playableW * 0.5;
+          const focalY = playableH * 0.5; // Portrait: ~32dvh from top (center of unobstructed 64dvh arena)
+          const equalAreaZoom = Math.max(0.55, Math.min(1.85, Math.sqrt((playableW * playableH) / BASE_PLAYABLE_AREA)));
 
           const rawScale = Number(PlayerData.controlScale);
           const userScale = Number.isFinite(rawScale) ? Math.max(0.75, Math.min(1.25, rawScale)) : 1;
           const autoControlFit = profile === 'mobile-landscape'
             ? Math.min(0.84, Math.max(0.58, Math.min(width / 960, height / 490)))
-            : Math.min(0.86, Math.max(0.66, width / 470));
+            : Math.min(0.84, Math.max(0.68, width / 460));
           const controlScale = Math.round(Math.max(0.54, Math.min(1.25, autoControlFit * userScale)) * 100) / 100;
           const hudScale = profile === 'mobile-landscape'
             ? Math.round(Math.max(0.8, Math.min(1.05, 0.88 * userScale)) * 100) / 100
-            : Math.round(Math.max(0.82, Math.min(1.08, 0.92 * userScale)) * 100) / 100;
+            : Math.round(Math.max(0.82, Math.min(1.05, 0.9 * userScale)) * 100) / 100;
 
           const dprCap = quality === 'low' ? 1 : (quality === 'medium' ? 1.25 : 1.5);
           const targetCombatSpan = profile === 'mobile-portrait' ? 540 : 560;
@@ -5956,9 +6326,9 @@
             minimapX = 10;
             minimapY = Math.round(Math.max(82, Math.min(96, height - minimapSize - 118)));
           } else {
-            minimapSize = Math.round(Math.max(74, Math.min(96, width * 0.22)));
-            minimapX = 10;
-            minimapY = 104;
+            minimapSize = Math.round(Math.max(68, Math.min(86, width * 0.2)));
+            minimapX = Math.max(8, width - minimapSize - 10);
+            minimapY = 74;
           }
 
           this.current = {
@@ -5972,6 +6342,11 @@
             hudScale,
             dprCap,
             targetCombatSpan,
+            playableW,
+            playableH,
+            focalX,
+            focalY,
+            equalAreaZoom,
             minimapSize,
             minimapX,
             minimapY,
@@ -5982,10 +6357,11 @@
         },
 
         formatProfileLabel(profile) {
-          return profile === 'mobile-portrait' ? 'Mobile Portrait' : 'Mobile Landscape';
+          return profile === 'mobile-portrait' ? 'Mobile Portrait (64/36)' : 'Mobile Landscape';
         },
 
         apply(shouldResizeCanvas = true) {
+          const prevOrientation = this.current ? this.current.orientation : null;
           const cfg = this.resolve();
           const root = document.documentElement;
           root.dataset.deviceProfile = cfg.profile;
@@ -5999,6 +6375,9 @@
             resizeCanvas();
           }
           if (typeof HudLayoutManager !== 'undefined') {
+            if (prevOrientation && prevOrientation !== cfg.orientation) {
+              HudLayoutManager.load(cfg.orientation);
+            }
             HudLayoutManager.apply();
           }
           getMinimapLayout();
@@ -6008,14 +6387,19 @@
           if (typeof updateDeviceModeUI === 'function') {
             updateDeviceModeUI();
           }
+          if (typeof updateOrientationButtonsUI === 'function') {
+            updateOrientationButtonsUI();
+          }
           return cfg;
         }
       };
 
       // ==========================================
-      // CUSTOMISABLE MOBILE HUD LAYOUT MANAGER & EDITOR
+      // DUAL-ORIENTATION CUSTOMISABLE MOBILE HUD LAYOUT MANAGER
       // ==========================================
       const HUD_LAYOUT_STORAGE_KEY = 'arcane_royale_hud_layout_v1';
+      const HUD_LAYOUT_LANDSCAPE_KEY = 'arcane_royale_hud_landscape_v1';
+      const HUD_LAYOUT_PORTRAIT_KEY = 'arcane_royale_hud_portrait_v1';
       const HUD_ELEMENT_IDS = ['joystick', 'actions', 'quickuse', 'resources', 'minimap'];
       const HUD_ELEMENT_DOM = {
         joystick: 'joystick-zone',
@@ -6035,6 +6419,12 @@
       const HudLayoutManager = {
         saved: null,
         active: null,
+        activeProfile: 'landscape',
+
+        getProfileKey(orientationOverride) {
+          const orient = orientationOverride || (DeviceOptimizer.current && DeviceOptimizer.current.orientation) || (window.innerHeight > window.innerWidth ? 'portrait' : 'landscape');
+          return orient === 'portrait' ? HUD_LAYOUT_PORTRAIT_KEY : HUD_LAYOUT_LANDSCAPE_KEY;
+        },
 
         clampScale(val) {
           const n = Number(val);
@@ -6092,9 +6482,12 @@
           return out;
         },
 
-        load() {
+        load(orientationOverride) {
+          const orient = orientationOverride || (DeviceOptimizer.current && DeviceOptimizer.current.orientation) || (window.innerHeight > window.innerWidth ? 'portrait' : 'landscape');
+          this.activeProfile = orient;
+          const key = this.getProfileKey(orient);
           try {
-            const raw = localStorage.getItem(HUD_LAYOUT_STORAGE_KEY);
+            const raw = localStorage.getItem(key) || (orient === 'landscape' ? localStorage.getItem(HUD_LAYOUT_STORAGE_KEY) : null);
             this.saved = raw ? this.sanitize(JSON.parse(raw)) : this.createDefault(true);
           } catch (e) {
             this.saved = this.createDefault(true);
@@ -6103,14 +6496,32 @@
           return this.saved;
         },
 
-        save(layout) {
+        save(layout, orientationOverride) {
+          const orient = orientationOverride || this.activeProfile || (DeviceOptimizer.current && DeviceOptimizer.current.orientation) || 'landscape';
+          this.activeProfile = orient;
           this.saved = this.sanitize(layout);
           this.active = this.clone(this.saved);
           try {
-            localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, JSON.stringify(this.saved));
+            const serialized = JSON.stringify(this.saved);
+            localStorage.setItem(this.getProfileKey(orient), serialized);
+            if (orient === 'landscape') localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, serialized);
           } catch (e) {}
           this.apply(this.saved);
           return this.saved;
+        },
+
+        getAllProfiles() {
+          let landscape = null;
+          let portrait = null;
+          try {
+            const rawL = localStorage.getItem(HUD_LAYOUT_LANDSCAPE_KEY) || localStorage.getItem(HUD_LAYOUT_STORAGE_KEY);
+            if (rawL) landscape = this.sanitize(JSON.parse(rawL));
+          } catch (_) {}
+          try {
+            const rawP = localStorage.getItem(HUD_LAYOUT_PORTRAIT_KEY);
+            if (rawP) portrait = this.sanitize(JSON.parse(rawP));
+          } catch (_) {}
+          return { landscape, portrait };
         },
 
         getSafeBounds() {
@@ -6154,7 +6565,6 @@
             el.style.opacity = String(entry.opacity);
             if (entry.x !== null && entry.y !== null) {
               el.classList.add('hud-custom-pos');
-              // Measure rendered visual size including active scale transform
               const rect = el.getBoundingClientRect();
               const w = rect.width > 12 ? rect.width : (id === 'actions' ? 180 : id === 'joystick' ? 110 : id === 'resources' ? 148 : 58);
               const h = rect.height > 12 ? rect.height : (id === 'actions' ? 180 : id === 'joystick' ? 110 : id === 'resources' ? 76 : 58);
@@ -6961,29 +7371,42 @@
         sfxSupplyCrate() {
           this.playTone(587, 'triangle', 0.12, 0.26, 880);
           setTimeout(() => this.playTone(880, 'sine', 0.18, 0.26, 1175), 90);
+        },
+        sfxWallSlam() {
+          this.playTone(115, 'sawtooth', 0.22, 0.42, 38);
+          this.playTone(280, 'square', 0.08, 0.22, 95);
+        },
+        sfxBarrelExplode() {
+          this.playTone(92, 'sawtooth', 0.34, 0.45, 28);
+          setTimeout(() => this.playTone(240, 'triangle', 0.18, 0.24, 70), 40);
+        },
+        sfxGeothermErupt() {
+          this.playTone(165, 'sawtooth', 0.28, 0.32, 62);
+          this.playTone(420, 'sine', 0.22, 0.2, 880);
         }
       };
 
       // ==========================================
-      // ASSET LOADER (PART B)
+      // LOCAL COMPRESSED ASSET LOADER (ZERO EXTERNAL FLAKINESS)
       // ==========================================
-      const ASSET_BASE = 'https://zakiyt654321-gif.github.io/Arcane-Royal-2.5D/';
       const AssetLoader = {
         images: {},
+        rawAudio: {},
         buffers: {},
+        groundPattern: null,
         failed: new Set(),
         loaded: 0,
         total: 0,
 
-        // Optimized WebP derivatives of the supplied PNG masters reduce mobile data use.
-        // Original PNG artwork remains in assets/Image/UI for review; audio is procedural.
         manifest: [
-          { key: 'sprite_BERSERKER', type: 'img', path: 'assets/Image/Sheets/berserker_sheet.webp' },
-          { key: 'sprite_TIDECALLER', type: 'img', path: 'assets/Image/Sheets/tidecaller_sheet.webp' },
-          { key: 'sprite_SHADOW', type: 'img', path: 'assets/Image/Sheets/shadow_sheet.webp' },
-          { key: 'portrait_BERSERKER', type: 'img', path: 'assets/Image/UI/portrait_berserker.webp' },
-          { key: 'portrait_TIDECALLER', type: 'img', path: 'assets/Image/UI/portrait_tidecaller.webp' },
-          { key: 'portrait_SHADOW', type: 'img', path: 'assets/Image/UI/portrait_shadow.webp' }
+          { key: 'portrait_BERSERKER', type: 'img', path: '/assets/arcane/portrait-berserker.webp' },
+          { key: 'portrait_TIDECALLER', type: 'img', path: '/assets/arcane/portrait-tidecaller.webp' },
+          { key: 'portrait_SHADOW', type: 'img', path: '/assets/arcane/portrait-shadow.webp' },
+          { key: 'ground_runic', type: 'img', path: '/assets/arcane/ground-runic.webp' },
+          { key: 'app_icon', type: 'img', path: '/assets/arcane/icon-192.png' },
+          { key: 'bgm_lobby', type: 'audio', path: '/assets/arcane/audio/lobby-theme.mp3' },
+          { key: 'bgm_combat', type: 'audio', path: '/assets/arcane/audio/arena-combat.mp3' },
+          { key: 'bgm_climax', type: 'audio', path: '/assets/arcane/audio/storm-climax.mp3' }
         ],
 
         load(onProgress) {
@@ -6997,15 +7420,24 @@
           }
           const promises = this.manifest.map(item => {
             return new Promise((resolve) => {
-              const url = ASSET_BASE + item.path;
+              const url = item.path;
               let resolved = false;
               const finish = (success, data) => {
                 if (resolved) return;
                 resolved = true;
                 clearTimeout(timeoutId);
                 if (success) {
-                  if (item.type === 'img') this.images[item.key] = data;
-                  else if (item.type === 'audio') this.buffers[item.key] = data;
+                  if (item.type === 'img') {
+                    this.images[item.key] = data;
+                    if (item.key === 'ground_runic') {
+                      this.groundPattern = null;
+                      if (typeof TerrainCache !== 'undefined' && TerrainCache.invalidate) {
+                        TerrainCache.invalidate();
+                      }
+                    }
+                  } else if (item.type === 'audio') {
+                    this.rawAudio[item.key] = data;
+                  }
                 } else {
                   this.failed.add(item.key);
                 }
@@ -7014,28 +7446,21 @@
                 resolve();
               };
 
-              const timeoutId = setTimeout(() => finish(false), 10000);
+              const timeoutId = setTimeout(() => finish(false), 8000);
 
               if (item.type === 'img') {
                 const img = new Image();
-                if (/^https?:/i.test(url)) img.crossOrigin = 'anonymous';
+                img.referrerPolicy = 'no-referrer';
                 img.onload = () => finish(true, img);
                 img.onerror = () => finish(false);
                 img.src = url;
               } else {
-                fetch(url)
+                fetch(url, { cache: 'force-cache' })
                   .then(r => {
                     if (!r.ok) throw new Error();
                     return r.arrayBuffer();
                   })
-                  .then(buf => {
-                    AudioEngine.init();
-                    if (AudioEngine.ctx) {
-                      return AudioEngine.ctx.decodeAudioData(buf);
-                    }
-                    throw new Error();
-                  })
-                  .then(audioBuffer => finish(true, audioBuffer))
+                  .then(buf => finish(true, buf))
                   .catch(() => finish(false));
               }
             });
@@ -7043,39 +7468,135 @@
           return Promise.all(promises);
         },
 
+        async decodeAudioKey(key) {
+          if (this.buffers[key]) return this.buffers[key];
+          const raw = this.rawAudio[key];
+          if (!raw || !AudioEngine.ctx) return null;
+          try {
+            const copy = raw.slice(0);
+            const decoded = await AudioEngine.ctx.decodeAudioData(copy);
+            this.buffers[key] = decoded;
+            return decoded;
+          } catch (_) {
+            return null;
+          }
+        },
+
+        getGroundPattern(ctx) {
+          const img = this.images.ground_runic;
+          if (!img || !img.complete || !img.naturalWidth || !ctx || typeof ctx.createPattern !== 'function') {
+            return null;
+          }
+          if (!this.groundPattern) {
+            try {
+              this.groundPattern = ctx.createPattern(img, 'repeat');
+            } catch (_) {
+              return null;
+            }
+          }
+          return this.groundPattern;
+        },
+
         getSprite(charKey) { return this.images['sprite_' + charKey] || null; },
         getObstacle(obsKey) { return this.images['obs_' + obsKey] || null; },
         getLoot(lootType) { return this.images['loot_' + lootType] || null; },
         getDecal(index) { return this.images['decal_' + index] || null; },
         getPortrait(charKey) { return this.images['portrait_' + charKey] || null; },
+        getPortraitSrc(charKey) {
+          if (charKey === 'TIDECALLER') return '/assets/arcane/portrait-tidecaller.webp';
+          if (charKey === 'SHADOW') return '/assets/arcane/portrait-shadow.webp';
+          return '/assets/arcane/portrait-berserker.webp';
+        },
         getMap() { return this.images.map || null; },
         getFog() { return this.images['fog'] || null; },
         getBuffer(key) { return this.buffers[key] || null; }
       };
 
       // ==========================================
-      // MUSIC ENGINE (PART B)
+      // ADAPTIVE MULTI-STATE MUSIC ENGINE (1.5s CROSSFADE + SYNTH FALLBACK)
       // ==========================================
       const Music = {
         currentGain: null,
+        currentSource: null,
         currentTrack: null,
         timer: null,
         nextNoteTime: 0,
         step: 0,
+        crossfadeSec: 1.5,
+
+        resolveStem(track) {
+          if (track === 'climax') return 'climax';
+          if (track === 'battle' || track === 'combat') return 'combat';
+          return 'lobby';
+        },
 
         start(track) {
-          if (this.currentTrack === track && this.timer) return;
-          this.stop();
-          this.currentTrack = track;
+          const stem = this.resolveStem(track);
+          if (this.currentTrack === stem && (this.currentSource || this.timer)) return;
           AudioEngine.init();
           const ctx = AudioEngine.ctx;
-          if (!ctx) return;
+          if (!ctx) {
+            this.currentTrack = stem;
+            return;
+          }
+
+          const prevGain = this.currentGain;
+          const prevSource = this.currentSource;
+          const prevTimer = this.timer;
+          const isCrossfade = Boolean(prevGain && this.currentTrack && this.currentTrack !== stem);
+          const fadeSec = isCrossfade ? this.crossfadeSec : 0.25;
+
+          if (prevTimer) {
+            clearInterval(prevTimer);
+            this.timer = null;
+          }
+          if (prevGain) {
+            const now = ctx.currentTime;
+            prevGain.gain.cancelScheduledValues(now);
+            prevGain.gain.setValueAtTime(Math.max(0.0001, prevGain.gain.value), now);
+            prevGain.gain.linearRampToValueAtTime(0.0001, now + fadeSec);
+            setTimeout(() => {
+              try { if (prevSource) prevSource.stop(); } catch (_) {}
+              try { if (prevSource) prevSource.disconnect(); } catch (_) {}
+              try { prevGain.disconnect(); } catch (_) {}
+            }, Math.round((fadeSec + 0.12) * 1000));
+          }
+
+          this.currentTrack = stem;
+          this.currentSource = null;
 
           const gain = ctx.createGain();
-          gain.gain.setValueAtTime(0, ctx.currentTime);
-          gain.gain.setTargetAtTime(PlayerData.musicVolume, ctx.currentTime, 0.08);
+          const targetVol = AudioEngine.isExternallyMuted() ? 0 : Math.max(0, Math.min(1, PlayerData.musicVolume));
+          const now = ctx.currentTime;
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(Math.max(0.0001, targetVol), now + fadeSec);
           gain.connect(ctx.destination);
           this.currentGain = gain;
+
+          const audioKey = stem === 'climax' ? 'bgm_climax' : (stem === 'combat' ? 'bgm_combat' : 'bgm_lobby');
+          AssetLoader.decodeAudioKey(audioKey).then(buffer => {
+            if (this.currentTrack !== stem || this.currentGain !== gain || !AudioEngine.ctx) return;
+            if (buffer) {
+              if (this.timer) { clearInterval(this.timer); this.timer = null; }
+              const src = AudioEngine.ctx.createBufferSource();
+              src.buffer = buffer;
+              src.loop = true;
+              src.connect(gain);
+              src.start(0);
+              this.currentSource = src;
+            } else {
+              this.startSynthFallback(stem);
+            }
+          }).catch(() => {
+            if (this.currentTrack === stem && this.currentGain === gain) {
+              this.startSynthFallback(stem);
+            }
+          });
+        },
+
+        startSynthFallback(stem) {
+          const ctx = AudioEngine.ctx;
+          if (!ctx || !this.currentGain || this.timer) return;
           this.nextNoteTime = ctx.currentTime + 0.06;
           this.step = 0;
           this.timer = setInterval(() => this.schedule(), 90);
@@ -7087,16 +7608,17 @@
           if (!ctx || !this.currentGain || ctx.state !== 'running') return;
           const lobbyNotes = [220, 277.18, 329.63, 440, 329.63, 277.18, 246.94, 329.63];
           const battleNotes = [110, 164.81, 220, 146.83, 196, 246.94, 220, 174.61];
-          const notes = this.currentTrack === 'battle' ? battleNotes : lobbyNotes;
-          const beat = this.currentTrack === 'battle' ? 0.24 : 0.42;
+          const climaxNotes = [146.83, 155.56, 220, 233.08, 293.66, 233.08, 220, 155.56];
+          const notes = this.currentTrack === 'climax' ? climaxNotes : (this.currentTrack === 'combat' ? battleNotes : lobbyNotes);
+          const beat = this.currentTrack === 'climax' ? 0.19 : (this.currentTrack === 'combat' ? 0.24 : 0.42);
           while (this.nextNoteTime < ctx.currentTime + 0.32) {
             const index = this.step % notes.length;
-            this.scheduleTone(notes[index], this.nextNoteTime, beat * 0.78, this.currentTrack === 'battle' ? 'triangle' : 'sine', 0.055);
+            this.scheduleTone(notes[index], this.nextNoteTime, beat * 0.78, this.currentTrack === 'lobby' ? 'sine' : 'triangle', 0.055);
             if (index % 4 === 0) {
               this.scheduleTone(notes[index] / 2, this.nextNoteTime, beat * 3.2, 'sine', 0.075);
             }
-            if (this.currentTrack === 'battle' && index % 2 === 0) {
-              this.scheduleTone(55, this.nextNoteTime, 0.055, 'square', 0.025);
+            if (this.currentTrack !== 'lobby' && index % 2 === 0) {
+              this.scheduleTone(55, this.nextNoteTime, 0.055, 'square', this.currentTrack === 'climax' ? 0.036 : 0.025);
             }
             this.step++;
             this.nextNoteTime += beat;
@@ -7128,12 +7650,20 @@
           this.timer = null;
           const ctx = AudioEngine.ctx;
           const gain = this.currentGain;
+          const src = this.currentSource;
           if (gain && ctx) {
             gain.gain.cancelScheduledValues(ctx.currentTime);
-            gain.gain.setTargetAtTime(0, ctx.currentTime, 0.035);
-            setTimeout(() => gain.disconnect(), 250);
+            gain.gain.setTargetAtTime(0, ctx.currentTime, 0.04);
+            setTimeout(() => {
+              try { if (src) src.stop(); } catch (_) {}
+              try { if (src) src.disconnect(); } catch (_) {}
+              try { gain.disconnect(); } catch (_) {}
+            }, 260);
+          } else if (src) {
+            try { src.stop(); src.disconnect(); } catch (_) {}
           }
           this.currentGain = null;
+          this.currentSource = null;
           this.currentTrack = null;
         },
 
@@ -7188,10 +7718,14 @@
       }
 
       let transitionBusy = false;
+      let pendingTransitionFn = null;
       function transitionTo(fn) {
-        if (transitionBusy) return false;
+        if (transitionBusy) {
+          if (typeof fn === 'function') pendingTransitionFn = fn;
+          return true;
+        }
         const overlay = document.getElementById('transition-overlay');
-        if (!overlay) {
+        if (!overlay || PlayerData.reducedMotion) {
           if (typeof fn === 'function') fn();
           return true;
         }
@@ -7204,6 +7738,11 @@
             setTimeout(() => {
               overlay.classList.remove('active');
               transitionBusy = false;
+              if (pendingTransitionFn) {
+                const nextFn = pendingTransitionFn;
+                pendingTransitionFn = null;
+                transitionTo(nextFn);
+              }
             }, 60);
           }
         }, 180);
@@ -7764,15 +8303,19 @@
           }
         }
 
-        // Step 5: Axis-separated obstacle sliding (X then Y) so diagonal movement slides smoothly along rocks/trees
+        // Step 5: Axis-separated obstacle & solid destructible sliding + WALL SLAM detection
         let slideX = rx;
         let slideY = prevY;
+        let wallImpact = false;
+        let impactNx = 0;
+        let impactNy = 0;
         for (let i = 0; i < obstaclePool.length; i++) {
           const obs = obstaclePool[i];
           if (z >= (obs.zHeight || 30)) continue;
           if (overlapsObstacleCircle(slideX, slideY, r, obs)) {
-            if (rx > prevX) slideX = Math.min(slideX, obs.x - r - 0.1);
-            else if (rx < prevX) slideX = Math.max(slideX, obs.x + obs.w + r + 0.1);
+            wallImpact = true;
+            if (rx > prevX) { slideX = Math.min(slideX, obs.x - r - 0.1); impactNx = -1; }
+            else if (rx < prevX) { slideX = Math.max(slideX, obs.x + obs.w + r + 0.1); impactNx = 1; }
           }
         }
         slideY = ry;
@@ -7780,12 +8323,37 @@
           const obs = obstaclePool[i];
           if (z >= (obs.zHeight || 30)) continue;
           if (overlapsObstacleCircle(slideX, slideY, r, obs)) {
-            if (ry > prevY) slideY = Math.min(slideY, obs.y - r - 0.1);
-            else if (ry < prevY) slideY = Math.max(slideY, obs.y + obs.h + r + 0.1);
+            wallImpact = true;
+            if (ry > prevY) { slideY = Math.min(slideY, obs.y - r - 0.1); impactNy = -1; }
+            else if (ry < prevY) { slideY = Math.max(slideY, obs.y + obs.h + r + 0.1); impactNy = 1; }
           }
         }
         rx = slideX;
         ry = slideY;
+
+        // Collide against active solid destructible props (Crystal Cover Pillars, Crates, Barrels)
+        if (typeof destructiblePropPool !== 'undefined' && z < 36) {
+          for (let i = 0; i < destructiblePropPool.length; i++) {
+            const prop = destructiblePropPool[i];
+            if (!prop.active) continue;
+            const pdx = rx - prop.x;
+            const pdy = ry - prop.y;
+            const pdist = Math.hypot(pdx, pdy);
+            const minD = r + prop.radius;
+            if (pdist < minD) {
+              const nx = pdist > 0.001 ? (pdx / pdist) : 1;
+              const ny = pdist > 0.001 ? (pdy / pdist) : 0;
+              rx = prop.x + nx * (minD + 0.5);
+              ry = prop.y + ny * (minD + 0.5);
+              wallImpact = true;
+              impactNx = nx;
+              impactNy = ny;
+              if (Math.hypot(ent.knockbackVx || 0, ent.knockbackVy || 0) >= 4.0) {
+                damageDestructibleProp(prop, 35, ent.lastAttacker || ent, null);
+              }
+            }
+          }
+        }
 
         // Step 6: Post-dash / post-teleport unstuck pass (nearest-edge eject prevents trapping inside obstacles)
         for (let pass = 0; pass < 2; pass++) {
@@ -7798,28 +8366,72 @@
             const distY = ry - testY;
             const dist = Math.hypot(distX, distY);
             if (dist < r) {
+              wallImpact = true;
               if (dist < 0.001) {
                 const dLeft = Math.abs(rx - obs.x);
                 const dRight = Math.abs(obs.x + obs.w - rx);
                 const dTop = Math.abs(ry - obs.y);
                 const dBottom = Math.abs(obs.y + obs.h - ry);
                 const minEdge = Math.min(dLeft, dRight, dTop, dBottom);
-                if (minEdge === dLeft) rx = obs.x - r - 1;
-                else if (minEdge === dRight) rx = obs.x + obs.w + r + 1;
-                else if (minEdge === dTop) ry = obs.y - r - 1;
-                else ry = obs.y + obs.h + r + 1;
+                if (minEdge === dLeft) { rx = obs.x - r - 1; impactNx = -1; }
+                else if (minEdge === dRight) { rx = obs.x + obs.w + r + 1; impactNx = 1; }
+                else if (minEdge === dTop) { ry = obs.y - r - 1; impactNy = -1; }
+                else { ry = obs.y + obs.h + r + 1; impactNy = 1; }
               } else {
                 const overlap = r - dist + 0.5;
-                rx += (distX / dist) * overlap;
-                ry += (distY / dist) * overlap;
+                impactNx = distX / dist;
+                impactNy = distY / dist;
+                rx += impactNx * overlap;
+                ry += impactNy * overlap;
               }
             }
           }
         }
 
         // Step 7: Clamp to arena bounds
+        if (rx < r || rx > ARENA_WIDTH - r) {
+          wallImpact = true;
+          impactNx = rx < r ? 1 : -1;
+        }
+        if (ry < r || ry > ARENA_HEIGHT - r) {
+          wallImpact = true;
+          impactNy = ry < r ? 1 : -1;
+        }
         ent.x = Math.max(r, Math.min(ARENA_WIDTH - r, rx));
         ent.y = Math.max(r, Math.min(ARENA_HEIGHT - r, ry));
+
+        // Step 8: High-velocity knockback WALL SLAM! (0.45s stun + 28-75 crush damage + sparks + SFX)
+        if (wallImpact && ent.isAlive && typeof Game !== 'undefined' && Game.state === 'PLAYING') {
+          const kbSpeed = Math.hypot(ent.knockbackVx || 0, ent.knockbackVy || 0);
+          if (kbSpeed >= 4.0 && (Game.time - (ent.lastWallSlamTime || -9)) >= 0.65) {
+            ent.lastWallSlamTime = Game.time;
+            ent.stunTimer = Math.max(ent.stunTimer || 0, 0.45);
+            const slamDmg = Math.max(28, Math.min(75, Math.round(28 + (kbSpeed - 4.0) * 6.5)));
+            ent.knockbackVx *= -0.25;
+            ent.knockbackVy *= -0.25;
+            const visible = ent.isPlayer || (ent.lastAttacker && ent.lastAttacker.isPlayer) || isEntityInCameraView(ent, 140);
+            if (visible) {
+              spawnParticles(ent.x, ent.y, 14, '#fb923c', 5.5, 0.04);
+              spawnParticles(ent.x, ent.y, 6, '#fef08a', 4.0, 0.05);
+              spawnDamageText(ent.x, ent.y - 34, `💥 WALL SLAM! -${slamDmg}`, '#fb923c', true);
+              AudioEngine.sfxWallSlam();
+              if ((ent.isPlayer || (ent.lastAttacker && ent.lastAttacker.isPlayer)) && !PlayerData.reducedMotion) {
+                Camera.kickDirectional(Math.atan2(impactNy || 0, impactNx || 1), 4.0, 0.12);
+                haptic([28, 16, 28]);
+              }
+            }
+            ent.takeDamage(slamDmg, ent.lastAttacker || null, false, 0, {
+              kind: 'WALL_SLAM',
+              projectileType: 'WALL SLAM',
+              color: '#fb923c',
+              originX: ent.x - (impactNx || 0) * 28,
+              originY: ent.y - (impactNy || 0) * 28,
+              hitX: ent.x,
+              hitY: ent.y,
+              damage: slamDmg
+            });
+          }
+        }
       }
 
       function validateMapData() {
@@ -8109,11 +8721,255 @@
           }
         }
         spawnParticles(crate.x, crate.y, 18, '#fbbf24', 5.5, 0.04);
+        if (entity && entity.isAlive) {
+          // 12s Arcane Shrine Buff (+20% Damage & +15% Speed)
+          entity.shrineBuffUntil = Math.max(entity.shrineBuffUntil || 0, Game.time + 12.0);
+        }
         if (entity && entity.isPlayer) {
           AudioEngine.sfxSupplyCrate();
-          spawnDamageText(crate.x, crate.y - 26, 'SUPPLY CRATE OPENED!', '#fbbf24', true);
+          spawnDamageText(crate.x, crate.y - 26, '⚡ SUPPLY DROP · +20% DMG +15% SPD!', '#fbbf24', true);
           haptic([25, 20, 25]);
           Game.matchCratesOpened = (Game.matchCratesOpened || 0) + 1;
+        }
+      }
+
+      // ==========================================
+      // DESTRUCTIBLE ARENA PROPS, FROST PATCHES & GEOTHERM VENTS (ZERO-ALLOC POOLS)
+      // ==========================================
+      const MAX_DESTRUCTIBLES = 54;
+      const destructiblePropPool = [];
+      for (let i = 0; i < MAX_DESTRUCTIBLES; i++) {
+        destructiblePropPool.push({
+          active: false, kind: 'CRATE', x: 0, y: 0, radius: 22, hp: 45, maxHp: 45,
+          hitFlash: 0, chainFuse: -1, chainAttacker: null
+        });
+      }
+
+      function spawnArenaDestructibles() {
+        const kinds = ['CRATE', 'CRYSTAL_PILLAR', 'BARREL'];
+        for (let i = 0; i < MAX_DESTRUCTIBLES; i++) {
+          const prop = destructiblePropPool[i];
+          const kind = kinds[i % 3];
+          let px = 1400 + Math.random() * 17200;
+          let py = 1400 + Math.random() * 17200;
+          for (let attempt = 0; attempt < 18; attempt++) {
+            const tx = 1400 + Math.random() * 17200;
+            const ty = 1400 + Math.random() * 17200;
+            if (isSafeDeployment(tx, ty, 44)) { px = tx; py = ty; break; }
+          }
+          prop.active = true;
+          prop.kind = kind;
+          prop.x = px;
+          prop.y = py;
+          prop.radius = kind === 'CRYSTAL_PILLAR' ? 28 : (kind === 'BARREL' ? 19 : 21);
+          prop.maxHp = kind === 'CRYSTAL_PILLAR' ? 110 : (kind === 'BARREL' ? 35 : 45);
+          prop.hp = prop.maxHp;
+          prop.hitFlash = 0;
+          prop.chainFuse = -1;
+          prop.chainAttacker = null;
+        }
+      }
+
+      function detonateEmberBarrel(barrel, attacker) {
+        if (!barrel || !barrel.active) return;
+        barrel.active = false;
+        barrel.chainFuse = -1;
+        const bx = barrel.x;
+        const by = barrel.y;
+        const blastRadius = 145;
+        const blastDamage = 42;
+        const visible = (Game.player && Math.hypot(Game.player.x - bx, Game.player.y - by) <= VISION_RADIUS + 140);
+        if (visible) {
+          spawnReactionRing(bx, by, blastRadius, 0.42, '#f97316', '#fde047', 'SHADOWFLAME');
+          spawnParticles(bx, by, 20, '#f97316', 6.5, 0.035);
+          spawnParticles(bx, by, 10, '#fde047', 4.5, 0.045);
+          spawnDamageText(bx, by - 26, '🔥 EMBER BLAST!', '#fb923c', true);
+          AudioEngine.sfxBarrelExplode();
+          if (!PlayerData.reducedMotion && Game.player && Math.hypot(Game.player.x - bx, Game.player.y - by) <= 440) {
+            Camera.shakeAmount = Math.max(Camera.shakeAmount, 4.0);
+          }
+        }
+        // Apply blast damage, Fire burn, radial knockback, and live elemental reactions (Vaporize / Shadowflame)
+        for (let i = 0; i < Game.entities.length; i++) {
+          const other = Game.entities[i];
+          if (!other.isAlive) continue;
+          const dx = other.x - bx;
+          const dy = other.y - by;
+          const dist = Math.hypot(dx, dy);
+          if (dist <= blastRadius + other.radius) {
+            const falloff = Math.max(0.45, 1 - (dist / (blastRadius + other.radius)) * 0.5);
+            const dmg = Math.round(blastDamage * falloff);
+            const ka = dist > 1 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
+            other.takeDamage(dmg, attacker || null, true, 12, {
+              kind: 'BARREL', projectileType: 'EMBER BARREL', color: '#f97316',
+              originX: bx, originY: by, hitX: other.x, hitY: other.y, damage: dmg
+            });
+            if (other.isAlive && Game.time >= (other.cleaveArmorUntil || 0)) {
+              other.knockbackVx += Math.cos(ka) * 10.5 * falloff;
+              other.knockbackVy += Math.sin(ka) * 10.5 * falloff;
+            }
+            if (other.isAlive) {
+              other.effects.push({ type: 'BURN', duration: 3.0, tickTimer: 0, dps: 8, source: attacker || null });
+              const credit = (attacker && attacker !== other) ? attacker : { isPlayer: false, isAlive: true, x: bx, y: by, element: 'FIRE', mana: 0, maxMana: 100 };
+              applyElementalAbilityHit(other, credit, 'FIRE', dmg, Game.time);
+            }
+          }
+        }
+        // Chain-detonate nearby Ember Barrels with 0.14s stagger
+        for (let i = 0; i < MAX_DESTRUCTIBLES; i++) {
+          const otherProp = destructiblePropPool[i];
+          if (!otherProp.active || otherProp === barrel) continue;
+          const d = Math.hypot(otherProp.x - bx, otherProp.y - by);
+          if (d <= blastRadius + otherProp.radius) {
+            if (otherProp.kind === 'BARREL' && otherProp.chainFuse < 0) {
+              otherProp.chainFuse = 0.14;
+              otherProp.chainAttacker = attacker || null;
+            } else {
+              damageDestructibleProp(otherProp, 40, attacker, 'FIRE');
+            }
+          }
+        }
+      }
+
+      function damageDestructibleProp(prop, dmg, attacker, _element) {
+        if (!prop || !prop.active) return false;
+        prop.hp -= Math.max(1, dmg);
+        prop.hitFlash = 0.12;
+        const visible = Game.player && Math.hypot(Game.player.x - prop.x, Game.player.y - prop.y) <= VISION_RADIUS + 80;
+        if (visible) {
+          const sparkColor = prop.kind === 'CRYSTAL_PILLAR' ? '#38bdf8' : (prop.kind === 'BARREL' ? '#fb923c' : '#d97706');
+          spawnParticles(prop.x, prop.y, 5, sparkColor, 3.6, 0.05);
+        }
+        if (prop.hp <= 0) {
+          if (prop.kind === 'BARREL') {
+            detonateEmberBarrel(prop, attacker);
+          } else if (prop.kind === 'CRYSTAL_PILLAR') {
+            prop.active = false;
+            if (visible) {
+              spawnParticles(prop.x, prop.y, 16, '#7dd3fc', 5.4, 0.04);
+              spawnDamageText(prop.x, prop.y - 22, '💎 COVER SHATTERED', '#7dd3fc', false);
+              AudioEngine.sfxWallSlam();
+            }
+            spawnLoot(prop.x, prop.y, 'MANA', (Math.random() - 0.5) * 2.2, (Math.random() - 0.5) * 2.2, 10, 140, 'RARE', Game.time + 0.1);
+          } else {
+            // Arcane Crate breaks -> drops HP & MP restoration orbs
+            prop.active = false;
+            if (visible) {
+              spawnParticles(prop.x, prop.y, 12, '#f59e0b', 4.5, 0.045);
+            }
+            spawnLoot(prop.x - 10, prop.y, 'MEDKIT', -1.8, -1.2, 10, 145, 'COMMON', Game.time + 0.1);
+            spawnLoot(prop.x + 10, prop.y, 'MANA', 1.8, 1.2, 10, 145, 'COMMON', Game.time + 0.1);
+          }
+        }
+        return true;
+      }
+
+      const MAX_FROST_PATCHES = 18;
+      const frostPatchPool = [];
+      for (let i = 0; i < MAX_FROST_PATCHES; i++) {
+        frostPatchPool.push({ active: false, x: 0, y: 0, rx: 140, ry: 96, rot: 0 });
+      }
+      function spawnFrostPatches() {
+        for (let i = 0; i < MAX_FROST_PATCHES; i++) {
+          const fp = frostPatchPool[i];
+          fp.active = true;
+          // Bias half in northern/western tundra & half scattered across inner arena
+          const north = i < 9;
+          fp.x = north ? (1600 + Math.random() * 8800) : (4800 + Math.random() * 10400);
+          fp.y = north ? (1600 + Math.random() * 7200) : (4800 + Math.random() * 10400);
+          fp.rx = 115 + Math.random() * 55;
+          fp.ry = 78 + Math.random() * 38;
+          fp.rot = (Math.random() - 0.5) * 0.6;
+        }
+      }
+      function isPointOnFrostPatch(x, y) {
+        for (let i = 0; i < MAX_FROST_PATCHES; i++) {
+          const fp = frostPatchPool[i];
+          if (!fp.active) continue;
+          const dx = x - fp.x;
+          const dy = y - fp.y;
+          if (Math.abs(dx) > fp.rx || Math.abs(dy) > fp.ry) continue;
+          const norm = (dx * dx) / (fp.rx * fp.rx) + (dy * dy) / (fp.ry * fp.ry);
+          if (norm <= 1) return true;
+        }
+        return false;
+      }
+
+      const MAX_GEOTHERM_VENTS = 14;
+      const geothermVentPool = [];
+      for (let i = 0; i < MAX_GEOTHERM_VENTS; i++) {
+        geothermVentPool.push({
+          active: false, x: 0, y: 0, radius: 76, phase: 'IDLE', timer: 3.0, eruptedThisCycle: false
+        });
+      }
+      function spawnGeothermVents() {
+        for (let i = 0; i < MAX_GEOTHERM_VENTS; i++) {
+          const v = geothermVentPool[i];
+          let vx = 3200 + Math.random() * 13600;
+          let vy = 3200 + Math.random() * 13600;
+          for (let attempt = 0; attempt < 14; attempt++) {
+            const tx = 3200 + Math.random() * 13600;
+            const ty = 3200 + Math.random() * 13600;
+            if (isSafeDeployment(tx, ty, 64)) { vx = tx; vy = ty; break; }
+          }
+          v.active = true;
+          v.x = vx;
+          v.y = vy;
+          v.radius = 76;
+          v.phase = 'IDLE';
+          v.timer = 2.0 + (i % 6) * 1.1;
+          v.eruptedThisCycle = false;
+        }
+      }
+      function updateGeothermVents(deltaTime, gameTime) {
+        for (let i = 0; i < MAX_GEOTHERM_VENTS; i++) {
+          const v = geothermVentPool[i];
+          if (!v.active) continue;
+          v.timer -= deltaTime;
+          if (v.phase === 'IDLE' && v.timer <= 0) {
+            v.phase = 'TELEGRAPH';
+            v.timer = 1.6;
+            v.eruptedThisCycle = false;
+          } else if (v.phase === 'TELEGRAPH' && v.timer <= 0) {
+            v.phase = 'ERUPTING';
+            v.timer = 0.5;
+            if (!v.eruptedThisCycle) {
+              v.eruptedThisCycle = true;
+              const visible = Game.player && Math.hypot(Game.player.x - v.x, Game.player.y - v.y) <= VISION_RADIUS + 120;
+              if (visible) {
+                spawnReactionRing(v.x, v.y, v.radius + 18, 0.45, '#f97316', '#fde047', 'SHADOWFLAME');
+                spawnParticles(v.x, v.y, 16, '#fb923c', 6.0, 0.04);
+                AudioEngine.sfxGeothermErupt();
+              }
+              for (let j = 0; j < Game.entities.length; j++) {
+                const ent = Game.entities[j];
+                if (!ent.isAlive || ent.z > 40) continue;
+                const dx = ent.x - v.x;
+                const dy = ent.y - v.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist <= v.radius + ent.radius * 0.5) {
+                  const ka = dist > 1 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
+                  ent.vz = 320;
+                  ent.isGrounded = false;
+                  if (gameTime >= (ent.cleaveArmorUntil || 0)) {
+                    ent.knockbackVx += Math.cos(ka) * 8.5;
+                    ent.knockbackVy += Math.sin(ka) * 8.5;
+                  }
+                  ent.takeDamage(24, null, true, 10, {
+                    kind: 'GEOTHERM', projectileType: 'GEOTHERM VENT', color: '#f97316',
+                    originX: v.x, originY: v.y, hitX: ent.x, hitY: ent.y, damage: 24
+                  });
+                  if (ent.isAlive) {
+                    const ventSrc = { isPlayer: false, isAlive: true, x: v.x, y: v.y, element: 'FIRE', mana: 0, maxMana: 100 };
+                    applyElementalAbilityHit(ent, ventSrc, 'FIRE', 24, gameTime);
+                  }
+                }
+              }
+            }
+          } else if (v.phase === 'ERUPTING' && v.timer <= 0) {
+            v.phase = 'IDLE';
+            v.timer = 6.5;
+          }
         }
       }
 
@@ -8766,8 +9622,9 @@
           const player = Game.player;
           if (!player || !player.isAlive) return;
           const zoom = Camera.getZoom();
-          const screenX = window.innerWidth / 2 + (player.x - Camera.x) * zoom;
-          const screenY = window.innerHeight / 2 + (player.y - Camera.y) * zoom * CAMERA_PITCH - (player.z || 0) * zoom;
+          const focal = Camera.getFocalPoint();
+          const screenX = focal.x + (player.x - Camera.x) * zoom;
+          const screenY = focal.y + (player.y - Camera.y) * zoom * CAMERA_PITCH - (player.z || 0) * zoom;
           const worldDX = (clientX - screenX) / Math.max(0.001, zoom);
           const worldDY = (clientY - screenY) / Math.max(0.001, zoom * CAMERA_PITCH);
           if (Math.abs(worldDX) + Math.abs(worldDY) < 2) return;
@@ -8775,12 +9632,32 @@
           player.facingAngle = aimAngle;
         },
 
+        actionBuffer: { dash: 0, spell: 0, art: 0, sword: 0, mana: 0 },
+
+        bufferAction(action) {
+          if (action && this.actionBuffer[action] !== undefined) {
+            this.actionBuffer[action] = performance.now();
+          }
+        },
+
+        consumeBufferedAction(action, windowMs = 120) {
+          const ts = this.actionBuffer[action];
+          if (!ts) return false;
+          const age = performance.now() - ts;
+          if (age >= 0 && age <= windowMs) {
+            this.actionBuffer[action] = 0;
+            return true;
+          }
+          if (age > windowMs) this.actionBuffer[action] = 0;
+          return false;
+        },
+
         handleJoystickMove(clientX, clientY, stick) {
           let dx = clientX - this.joystickCenterX;
           let dy = clientY - this.joystickCenterY;
           let distance = Math.hypot(dx, dy);
           const maxRange = this.maxRange || 45;
-          const deadzone = maxRange * 0.24;
+          const deadzone = maxRange * 0.14;
           if (distance > maxRange) {
             dx = dx / distance * maxRange;
             dy = dy / distance * maxRange;
@@ -8791,10 +9668,11 @@
             this.joystickX = 0;
             this.joystickY = 0;
           } else {
-            // Rescale beyond the deadzone for precise low-speed movement.
-            const magnitude = (distance - deadzone) / (maxRange - deadzone);
-            this.joystickX = dx / distance * magnitude;
-            this.joystickY = dy / distance * magnitude;
+            // Smooth quadratic analog stick acceleration curve: pinpoint slow-aim + crisp full-tilt sprint
+            const remapped = Math.min(1, (distance - deadzone) / (maxRange - deadzone));
+            const curved = remapped * remapped;
+            this.joystickX = (dx / distance) * curved;
+            this.joystickY = (dy / distance) * curved;
           }
           this.syncMovement();
         },
@@ -8824,6 +9702,11 @@
           this.superSprintTouchId = null;
           this.buttonPointerIds = {};
           this.buttonTouchIds = {};
+          this.actionBuffer.dash = 0;
+          this.actionBuffer.spell = 0;
+          this.actionBuffer.art = 0;
+          this.actionBuffer.sword = 0;
+          this.actionBuffer.mana = 0;
           isAiming = false;
           aimAction = null;
           aimPointerId = null;
@@ -8844,7 +9727,7 @@
       };
 
       // ==========================================
-      // CAMERA (SMOOTH LERP & SHAKE & ADAPTIVE ZOOM)
+      // CAMERA (EQUAL-AREA PORTRAIT/LANDSCAPE FAIRNESS & DIRECTIONAL SHAKE)
       // ==========================================
       const Camera = {
         x: 1500,
@@ -8856,6 +9739,30 @@
         dirShakeDuration: 0.11,
         zoomPunch: 0,
         zoomMode: 'auto',
+
+        getPlayableViewport() {
+          const vw = Math.max(240, window.innerWidth || 844);
+          const vh = Math.max(240, window.innerHeight || 390);
+          const isPortrait = DeviceOptimizer.current && DeviceOptimizer.current.orientation === 'portrait';
+          const playableW = vw;
+          const playableH = isPortrait ? Math.round(vh * 0.64) : vh;
+          return {
+            orientation: isPortrait ? 'portrait' : 'landscape',
+            viewportW: vw,
+            viewportH: vh,
+            playableX: 0,
+            playableY: 0,
+            playableW,
+            playableH,
+            focalX: playableW * 0.5,
+            focalY: playableH * 0.5
+          };
+        },
+
+        getFocalPoint() {
+          const vp = this.getPlayableViewport();
+          return { x: vp.focalX, y: vp.focalY };
+        },
 
         kickDirectional(angle, magnitude = 3.2, duration = 0.11) {
           if (PlayerData.reducedMotion) return;
@@ -8872,12 +9779,9 @@
           else if (this.zoomMode === '0.8') base = 0.8;
           else if (this.zoomMode === '1.0') base = 1.0;
           else {
-            const minDim = Math.min(window.innerWidth, window.innerHeight);
-            const targetCombatSpan = (typeof DeviceOptimizer !== 'undefined' && DeviceOptimizer.current)
-              ? DeviceOptimizer.current.targetCombatSpan
-              : 620;
-            const z = minDim / targetCombatSpan;
-            base = Math.max(0.5, Math.min(1.05, z));
+            const vp = this.getPlayableViewport();
+            // Equal visible world area across Portrait (64dvh arena) and Landscape (100dvh)
+            base = Math.max(0.55, Math.min(1.85, Math.sqrt((vp.playableW * vp.playableH) / BASE_PLAYABLE_AREA)));
           }
           return base * (1 + (this.zoomPunch || 0));
         },
@@ -8917,7 +9821,8 @@
             }
           }
           const z = this.getZoom();
-          ctx.translate(Math.round(window.innerWidth / 2 + ox), Math.round(window.innerHeight / 2 + oy));
+          const focal = this.getFocalPoint();
+          ctx.translate(Math.round(focal.x + ox), Math.round(focal.y + oy));
           ctx.scale(z, z * CAMERA_PITCH);
           ctx.translate(-this.x, -this.y);
         },
@@ -9906,6 +10811,11 @@
           this.aiLootTarget = null;
           this.damageDealt = 0;
           this.killStreak = 0;
+          this.stunTimer = 0;
+          this.lastWallSlamTime = -9;
+          this.shrineBuffUntil = 0;
+          this.slideVx = 0;
+          this.slideVy = 0;
         }
 
         update(deltaTime, gameTime) {
@@ -9996,9 +10906,12 @@
             if (this.itemChannel.remaining <= 0) completeItemChannel(this, gameTime);
           }
 
-          // Speed modifiers: weather, Haste, Swift Stride rune (+10% OOC), Abyssal Undertow slow, Burn DoT
+          if (this.stunTimer > 0) this.stunTimer = Math.max(0, this.stunTimer - deltaTime);
+
+          // Speed modifiers: weather, Haste, Arcane Shrine Buff (+15%), Swift Stride rune (+10% OOC), Abyssal Undertow slow, Burn DoT
           let speedMultiplier = weatherMods.speedMultiplier;
           if (this.hasteTimer > 0) speedMultiplier += ITEM_DEFS.HASTE.speed;
+          if (gameTime < (this.shrineBuffUntil || 0)) speedMultiplier *= 1.15;
           if (this.equippedRune === 'SWIFT_STRIDE' && (gameTime - (this.lastCombatTime || -99)) >= 4.0) {
             speedMultiplier *= 1.10;
           }
@@ -10098,9 +11011,15 @@
             this.sprintTrailTimer = this.superSprintActive ? 0.07 : 0.14;
           }
 
-          // PHASE 2 - FIX 2: MERGED MOVEMENT BLOCK
+          if (this.stunTimer > 0) {
+            moveX = 0;
+            moveY = 0;
+          }
+
+          // PHASE 2 - FIX 2: MERGED MOVEMENT BLOCK WITH FROST PATCH DRIFT & EXPONENTIAL FRICTION
           let candX = this.x;
           let candY = this.y;
+          const onFrost = this.isGrounded && Game.state === 'PLAYING' && isPointOnFrostPatch(this.x, this.y);
           if (this.isDashing) {
             candX += this.dashVx * (deltaTime * 60);
             candY += this.dashVy * (deltaTime * 60);
@@ -10110,8 +11029,20 @@
             candY += moveY * steerSpd * (deltaTime * 60);
           } else {
             const finalSpeed = this.speed * speedMultiplier;
-            candX += (moveX * finalSpeed + this.knockbackVx) * (deltaTime * 60);
-            candY += (moveY * finalSpeed + this.knockbackVy) * (deltaTime * 60);
+            let velX = moveX * finalSpeed;
+            let velY = moveY * finalSpeed;
+            if (onFrost) {
+              const blend = Math.min(1, deltaTime * 3.6);
+              this.slideVx += (velX - this.slideVx) * blend;
+              this.slideVy += (velY - this.slideVy) * blend;
+              velX = this.slideVx;
+              velY = this.slideVy;
+            } else {
+              this.slideVx = velX;
+              this.slideVy = velY;
+            }
+            candX += (velX + this.knockbackVx) * (deltaTime * 60);
+            candY += (velY + this.knockbackVy) * (deltaTime * 60);
 
             if (this.jumpPadTimer > 0) {
               this.jumpPadTimer = Math.max(0, this.jumpPadTimer - deltaTime);
@@ -10122,9 +11053,9 @@
               this.jumpPadVy *= airDamp;
             }
 
-            const friction = Math.pow(0.9, deltaTime * 60);
-            this.knockbackVx *= friction;
-            this.knockbackVy *= friction;
+            const kbFriction = Math.exp(-(onFrost ? 1.9 : 6.4) * deltaTime);
+            this.knockbackVx *= kbFriction;
+            this.knockbackVy *= kbFriction;
             if (Math.abs(this.knockbackVx) < 0.05) this.knockbackVx = 0;
             if (Math.abs(this.knockbackVy) < 0.05) this.knockbackVy = 0;
           }
@@ -10174,12 +11105,13 @@
             else if (Game.storm.phase <= 3 && Game.aliveCount <= 14) pacingScale *= 0.55;
           }
 
-          // Champion Balance defensive modifiers: Berserker Cleave 25% DR & Shadow +12% vulnerability
+          // Champion Balance defensive modifiers + Arcane Shrine Buff (+20% DMG)
           let defMult = 1.0;
           if (Game.time < (this.cleaveArmorUntil || 0)) defMult *= 0.75;
           if (Game.time < (this.shadowVulnerableUntil || 0)) defMult *= 1.12;
+          const atkMult = (source && Game.time < (source.shrineBuffUntil || 0)) ? 1.20 : 1.0;
 
-          const incoming = Math.max(0, amount * pacingScale * defMult);
+          const incoming = Math.max(0, amount * pacingScale * defMult * atkMult);
 
           if (hitMeta) {
             this.lastDamageMeta = Object.assign({}, hitMeta, { damage: incoming });
@@ -10216,16 +11148,26 @@
             if (absorbed > 0) spawnDamageText(this.x, this.y - 12, `⬡ ${Math.round(absorbed)}`, '#67e8f9');
           }
 
-          // Parabolic knockback arc on heavy hits (respects Berserker Cleave knockback resistance)
-          if (incoming >= 25 && this.isGrounded && Game.time >= (this.cleaveArmorUntil || 0)) {
-            this.vz = Math.min(340, Math.max(140, incoming * 4.5));
-            this.isGrounded = false;
+          // Parabolic knockback arc + 2D velocity impulse on heavy hits (enables WALL SLAM!)
+          if (incoming >= 25 && Game.time >= (this.cleaveArmorUntil || 0) && (!hitMeta || hitMeta.kind !== 'WALL_SLAM')) {
+            if (this.isGrounded) {
+              this.vz = Math.min(340, Math.max(140, incoming * 4.5));
+              this.isGrounded = false;
+            }
+            const srcX = (hitMeta && Number.isFinite(hitMeta.originX)) ? hitMeta.originX : (source ? source.x : this.x);
+            const srcY = (hitMeta && Number.isFinite(hitMeta.originY)) ? hitMeta.originY : (source ? source.y : this.y);
+            if (Math.hypot(this.x - srcX, this.y - srcY) > 1) {
+              const kbAng = Math.atan2(this.y - srcY, this.x - srcX);
+              const impulse = Math.min(11.0, 4.2 + incoming * 0.12);
+              this.knockbackVx += Math.cos(kbAng) * impulse;
+              this.knockbackVy += Math.sin(kbAng) * impulse;
+            }
           }
-          // Crisp 30ms impact hit-stop on heavy signature spells / heavy strikes
-          if (onScreen && incoming >= 25 && (this.isPlayer || (source && source.isPlayer))) {
+          // Crisp 30ms impact hit-stop on heavy signature spells / heavy strikes (disabled on Reduced Motion)
+          if (onScreen && !PlayerData.reducedMotion && incoming >= 25 && (this.isPlayer || (source && source.isPlayer))) {
             Game.hitStopTimer = Math.max(Game.hitStopTimer, 0.03);
           }
-          if (onScreen && incoming >= 40 && (this.isPlayer || (source && source.isPlayer))) Camera.zoomPunch = 0.04;
+          if (onScreen && !PlayerData.reducedMotion && incoming >= 40 && (this.isPlayer || (source && source.isPlayer))) Camera.zoomPunch = 0.04;
 
           if (this.isPlayer && triggerShake) {
             const srcX = (hitMeta && Number.isFinite(hitMeta.originX)) ? hitMeta.originX : (source ? source.x : this.x);
@@ -10246,12 +11188,10 @@
             haptic([20]);
             if (hpDamage > 0) spawnDamageText(this.x, this.y, Math.round(hpDamage).toString(), '#fca5a5');
           } else if (source && source.isPlayer) {
-            if (incoming >= 25) {
+            if (incoming >= 25 && !PlayerData.reducedMotion) {
               const strikeAngle = Math.atan2(this.y - source.y, this.x - source.x);
               Camera.kickDirectional(strikeAngle, Math.min(4.0, 2.4 + incoming * 0.035), 0.11);
             }
-            this.knockbackVx = 0;
-            this.knockbackVy = 0;
             spawnDamageText(this.x, this.y, `💥 ${Math.round(incoming)}`, '#fef08a');
             AudioEngine.sfxHit();
           } else if (onScreen && hpDamage > 0) {
@@ -10309,6 +11249,7 @@
             spawnParticles(this.x, this.y, 10, '#ffffff', 5.2, 0.055);
             if (killer && killer.isPlayer) {
               spawnDamageText(this.x, this.y - 30, `ELIMINATED ${this.name}`, '#fbbf24', true);
+              if (!PlayerData.reducedMotion) Game.hitStopTimer = Math.max(Game.hitStopTimer, 0.035);
             } else {
               spawnDamageText(this.x, this.y - 26, 'ELIMINATED', '#f8fafc', true);
             }
@@ -10681,6 +11622,16 @@
               spawnParticles(other.x, other.y, 8, '#ffffff', 4);
             }
           }
+
+          // Sword strikes also smash Destructible Arena Props (Crates, Crystal Pillars, Ember Barrels)
+          for (let i = 0; i < MAX_DESTRUCTIBLES; i++) {
+            const prop = destructiblePropPool[i];
+            if (!prop.active || this.swordHitEntities.has(prop)) continue;
+            if (Math.hypot(prop.x - hx, prop.y - hy) < hitRadius + prop.radius) {
+              this.swordHitEntities.add(prop);
+              damageDestructibleProp(prop, this.swordDamage, this, this.element);
+            }
+          }
         }
 
         // Challenging Level-Scaled Bot AI (Levels 1-100) with smooth strafing,
@@ -10732,9 +11683,43 @@
           const weatherMods = WeatherSystem.getModifiersAt(this.x, this.y, gameTime);
           const inBlizzard = !!(weatherMods.activeEvent && weatherMods.activeEvent.kind === 'SNOWSTORM');
           const visionScale = inBlizzard ? 0.55 : 1.0;
-          const maxVisionRange = 900 * visionScale;
-          const engageRange = 540 * visionScale;
-          const chaseRange = 740 * visionScale;
+          // True Zero-Advantage Fairness: hard 520u bot vision cap matches human circular fog-of-war
+          const maxVisionRange = Math.min(VISION_RADIUS, 520 * visionScale);
+          const engageRange = Math.min(maxVisionRange, 480 * visionScale);
+          const chaseRange = maxVisionRange;
+
+          // Tactical Hazard Avoidance: sidestep telegraphing Geotherm Vents & chain-fusing Ember Barrels
+          for (let vi = 0; vi < MAX_GEOTHERM_VENTS; vi++) {
+            const vent = geothermVentPool[vi];
+            if (!vent.active || vent.phase === 'IDLE') continue;
+            const vdx = this.x - vent.x;
+            const vdy = this.y - vent.y;
+            const vdist = Math.hypot(vdx, vdy);
+            if (vdist < vent.radius + 48) {
+              const escAngle = vdist > 1 ? Math.atan2(vdy, vdx) : this.wanderAngle;
+              const steered = applyThreeFeelerSteering(this, Math.cos(escAngle), Math.sin(escAngle));
+              this.aiMoveX = steered.x;
+              this.aiMoveY = steered.y;
+              this.aiSuperSprint = this.stamina > 12;
+              return;
+            }
+          }
+          for (let bi = 0; bi < MAX_DESTRUCTIBLES; bi++) {
+            const prop = destructiblePropPool[bi];
+            if (!prop.active || prop.kind !== 'BARREL') continue;
+            if (prop.chainFuse > 0 || prop.hp < prop.maxHp) {
+              const bdx = this.x - prop.x;
+              const bdy = this.y - prop.y;
+              const bdist = Math.hypot(bdx, bdy);
+              if (bdist < 165) {
+                const escAngle = bdist > 1 ? Math.atan2(bdy, bdx) : this.wanderAngle;
+                const steered = applyThreeFeelerSteering(this, Math.cos(escAngle), Math.sin(escAngle));
+                this.aiMoveX = steered.x;
+                this.aiMoveY = steered.y;
+                return;
+              }
+            }
+          }
 
           const playerAllowed = !Game.playerAggroSet || Game.playerAggroSet.has(this);
           let closestEnemy = null;
@@ -11619,9 +12604,11 @@
           }
 
           if (involvedPlayer) {
-            const kickAngle = Math.atan2(target.y - attacker.y, target.x - attacker.x);
-            Camera.kickDirectional(kickAngle, 3.8, 0.11);
-            Game.hitStopTimer = Math.max(Game.hitStopTimer, 0.03);
+            if (!PlayerData.reducedMotion) {
+              const kickAngle = Math.atan2(target.y - attacker.y, target.x - attacker.x);
+              Camera.kickDirectional(kickAngle, 3.8, 0.11);
+              Game.hitStopTimer = Math.max(Game.hitStopTimer, 0.035);
+            }
             haptic([24, 15, 24]);
           }
           return reactionType;
@@ -12173,6 +13160,7 @@
         jumpPads: [],
 
         init(spawnX, spawnY) {
+          isPaused = false;
           this.state = 'DROPPING';
           document.body.dataset.state = 'dropping';
           this.time = 0;
@@ -12227,8 +13215,14 @@
           for (let i = 0; i < MAX_HIT_ARCS; i++) hitArcPool[i].active = false;
           this.matchReactionsTriggered = 0;
           this.matchCratesOpened = 0;
+          this.supplyDropSchedule = [42, 105];
+          this.supplyDropsTriggered = 0;
+          this.climaxMusicActive = false;
 
           spawnDecals();
+          spawnArenaDestructibles();
+          spawnFrostPatches();
+          spawnGeothermVents();
 
           for (let i = 0; i < LOOT_SPAWN_COUNT; i++) {
             let type;
@@ -12453,15 +13447,81 @@
             Announcer.play('one_alive');
           }
 
-          // Mobile Hold-To-Attack for Sword
-          if (Input.isHoldingSword && this.player && this.player.isAlive) {
-            this.playerAction('sword');
+          // Mobile Hold-To-Attack for Sword & 120ms Input Buffer flush
+          if (this.player && this.player.isAlive && (this.player.stunTimer || 0) <= 0) {
+            if (Input.isHoldingSword) this.playerAction('sword');
+            const bufferedActions = ['dash', 'art', 'spell', 'sword', 'mana'];
+            for (let bi = 0; bi < bufferedActions.length; bi++) {
+              const act = bufferedActions[bi];
+              if (Input.actionBuffer[act] > 0) {
+                if (this.tryExecutePlayerAction(act)) {
+                  Input.actionBuffer[act] = 0;
+                  break;
+                } else if (performance.now() - Input.actionBuffer[act] > 120) {
+                  Input.actionBuffer[act] = 0;
+                }
+              }
+            }
           }
 
           this.storm.update(deltaTime, this.time);
           this.weather.update(deltaTime, this.time);
           this.refreshPlayerAggroSet();
           this.recomputeBountyLeader(false);
+
+          // Adaptive Climax Music Crossfade (alive <= 10 or Storm Phase >= 4)
+          if (!this.climaxMusicActive && (this.aliveCount <= 10 || (this.storm && this.storm.phase >= 4))) {
+            this.climaxMusicActive = true;
+            Music.start('climax');
+          }
+
+          // 2x Mid-Match Arcane Supply Drops (42s & 105s) with 6s descending sky beam
+          if (this.supplyDropSchedule && this.supplyDropsTriggered < this.supplyDropSchedule.length) {
+            if (this.time >= this.supplyDropSchedule[this.supplyDropsTriggered]) {
+              this.supplyDropsTriggered++;
+              const cx = this.storm ? this.storm.currentCenterX : 10000;
+              const cy = this.storm ? this.storm.currentCenterY : 10000;
+              const maxR = Math.max(220, ((this.storm ? this.storm.currentRadius : 5000) * 0.52));
+              let sx = cx;
+              let sy = cy;
+              for (let attempt = 0; attempt < 20; attempt++) {
+                const a = Math.random() * Math.PI * 2;
+                const d = (0.15 + Math.random() * 0.65) * maxR;
+                const tx = Math.max(240, Math.min(ARENA_WIDTH - 240, cx + Math.cos(a) * d));
+                const ty = Math.max(240, Math.min(ARENA_HEIGHT - 240, cy + Math.sin(a) * d));
+                if (isSafeDeployment(tx, ty, 38)) { sx = tx; sy = ty; break; }
+              }
+              for (let ci = 0; ci < MAX_SUPPLY_CRATES; ci++) {
+                const c = supplyCratePool[ci];
+                if (!c.active) {
+                  c.active = true;
+                  c.x = sx;
+                  c.y = sy;
+                  c.z = 1320; // 1320 / 220 = exact 6.0s sky-beam descent
+                  c.phase = this.storm ? this.storm.phase : 2;
+                  c.pulse = 0;
+                  c.opened = false;
+                  showToast('⚡ Arcane Supply Drop descending — claim Mythic Loot & Shrine Buff!', '#fbbf24', 3200);
+                  AudioEngine.sfxSupplyCrate();
+                  break;
+                }
+              }
+            }
+          }
+
+          // Update Geotherm Vents & Ember Barrel chain-detonation timers
+          updateGeothermVents(deltaTime, this.time);
+          for (let di = 0; di < MAX_DESTRUCTIBLES; di++) {
+            const prop = destructiblePropPool[di];
+            if (!prop.active) continue;
+            if (prop.hitFlash > 0) prop.hitFlash = Math.max(0, prop.hitFlash - deltaTime);
+            if (prop.kind === 'BARREL' && prop.chainFuse >= 0) {
+              prop.chainFuse -= deltaTime;
+              if (prop.chainFuse <= 0) {
+                detonateEmberBarrel(prop, prop.chainAttacker);
+              }
+            }
+          }
 
           for (let i = 0; i < this.entities.length; i++) {
             this.entities[i].update(deltaTime, this.time);
@@ -12509,6 +13569,25 @@
                   p.vx = 0; p.vy = 0;
                 } else p.active = false;
                 hitWall = true; spawnParticles(p.x, p.y, 4, p.color, 2); break;
+              }
+            }
+            // Projectiles collide with Destructible Arena Props (Crystal Cover Pillars block shots until shattered)
+            if (!hitWall) {
+              for (let di = 0; di < MAX_DESTRUCTIBLES; di++) {
+                const prop = destructiblePropPool[di];
+                if (!prop.active) continue;
+                if (distToSegment(prop.x, prop.y, previousProjectileX, previousProjectileY, p.x, p.y) < prop.radius + p.radius + 4) {
+                  damageDestructibleProp(prop, p.damage || 22, p.owner, p.owner ? p.owner.element : null);
+                  if (p.type === 'BOMB') {
+                    p.vx = 0; p.vy = 0;
+                  } else if (prop.kind === 'CRYSTAL_PILLAR' || p.pierce <= 0) {
+                    p.active = false;
+                  } else {
+                    p.pierce--;
+                  }
+                  hitWall = true;
+                  break;
+                }
               }
             }
             if (hitWall) continue;
@@ -12706,8 +13785,9 @@
           this.resolveMatchEnd();
         },
 
-        playerAction(action) {
-          if (this.state !== "PLAYING" || !this.player || !this.player.isAlive) return;
+        tryExecutePlayerAction(action) {
+          if (this.state !== "PLAYING" || !this.player || !this.player.isAlive) return false;
+          if ((this.player.stunTimer || 0) > 0) return false;
 
           // FIX 8: Dynamic Auto-Aim Range (Sword: 130, Spell: spellMaxRange, Art: 180)
           if (PlayerData.autoAimEnabled) {
@@ -12718,18 +13798,28 @@
             else if (action === 'art') autoAimRange = 180;
 
             if (autoAimRange > 0) {
-              const nearestEnemy = getNearestEnemy(this.player, autoAimRange);
+              const nearestEnemy = getNearestEnemy(this.player, Math.min(VISION_RADIUS, autoAimRange));
               if (nearestEnemy) {
                 this.player.facingAngle = Math.atan2(nearestEnemy.y - this.player.y, nearestEnemy.x - this.player.x);
               }
             }
           }
 
-          if (action === 'sword') this.player.useSword(this.time);
-          if (action === 'spell') this.player.useSpell(this.time);
-          if (action === 'mana') this.player.useManaBullet(this.time);
-          if (action === 'dash') this.player.useDash(this.time);
-          if (action === 'art') this.player.useArt(this.time);
+          if (action === 'sword') return !!this.player.useSword(this.time);
+          if (action === 'spell') return !!this.player.useSpell(this.time);
+          if (action === 'mana') return !!this.player.useManaBullet(this.time);
+          if (action === 'dash') return !!this.player.useDash(this.time);
+          if (action === 'art') return !!this.player.useArt(this.time);
+          return false;
+        },
+
+        playerAction(action) {
+          if (this.state !== "PLAYING" || !this.player || !this.player.isAlive) return;
+          const fired = this.tryExecutePlayerAction(action);
+          if (!fired) {
+            // 120ms responsive input buffer so slightly early taps execute cleanly on cooldown/stun recovery
+            Input.bufferAction(action);
+          }
         },
 
         handlePlayerDeath() {
@@ -12860,9 +13950,12 @@
             placement
           });
           const bountyXp = this.bountyBonusXp || 0;
-          const earnedXp = xpBreakdown.totalXp + (this.bonusLootXp || 0) + bountyXp;
-          PlayerData.spendableXp = Math.min(999999999, (PlayerData.spendableXp || 0) + xpBreakdown.totalXp + bountyXp);
-          PlayerData.totalXpEarned = Math.min(999999999, (PlayerData.totalXpEarned || 0) + xpBreakdown.totalXp + bountyXp);
+          const rawEarnedXp = xpBreakdown.totalXp + (this.bonusLootXp || 0) + bountyXp;
+          const passMult = PlayerData.arcanePassOwned ? 1.2 : 1.0;
+          const earnedXp = Math.round(rawEarnedXp * passMult);
+          const earnedSpendableXp = Math.round((xpBreakdown.totalXp + bountyXp) * passMult);
+          PlayerData.spendableXp = Math.min(999999999, (PlayerData.spendableXp || 0) + earnedSpendableXp);
+          PlayerData.totalXpEarned = Math.min(999999999, (PlayerData.totalXpEarned || 0) + earnedSpendableXp);
 
           const progression = applyPlayerLevelProgression(PlayerData.level || 1, PlayerData.xp || 0, earnedXp);
           PlayerData.level = progression.level;
@@ -12910,6 +14003,19 @@
           completedMatchesSession += 1;
           interstitialShownForMatch = false;
           flushPlayerSave();
+          if (typeof CloudBridge !== 'undefined') {
+            const durSec = Math.max(5, Number(this.time) || 5);
+            const avgDps = damageRounded / Math.max(1, durSec);
+            CloudBridge.submitMatch({
+              durationSec: Math.min(1800, durSec),
+              kills,
+              maxDps: Math.min(2500, Math.round(avgDps * 3.5)),
+              placement,
+              damageDealt: damageRounded,
+              champion: this.player ? this.player.charKey : (PlayerData.selectedFighter || 'BERSERKER')
+            });
+            CloudBridge.syncProfile(true);
+          }
           clearMapPing(true);
           Input.reset();
 
@@ -12968,16 +14074,16 @@
         if (!activePing || isMapExpanded || !Game.player ||
             (Game.state !== 'PLAYING' && Game.state !== 'DROPPING')) return;
         const zoom = Camera.getZoom();
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-        const targetX = centerX + (activePing.x - Camera.x) * zoom;
-        const targetY = centerY + (activePing.y - Camera.y) * zoom * CAMERA_PITCH;
-        const margin = 62;
-        if (targetX >= margin && targetX <= window.innerWidth - margin && targetY >= margin && targetY <= window.innerHeight - margin) return;
-        const angle = Math.atan2(targetY - centerY, targetX - centerX);
-        const radius = Math.min(window.innerWidth, window.innerHeight) * 0.36;
-        const x = Math.max(margin, Math.min(window.innerWidth - margin, centerX + Math.cos(angle) * radius));
-        const y = Math.max(margin, Math.min(window.innerHeight - margin, centerY + Math.sin(angle) * radius));
+        const vp = Camera.getPlayableViewport();
+        const focal = Camera.getFocalPoint();
+        const targetX = focal.x + (activePing.x - Camera.x) * zoom;
+        const targetY = focal.y + (activePing.y - Camera.y) * zoom * CAMERA_PITCH;
+        const margin = 48;
+        if (targetX >= margin && targetX <= vp.w - margin && targetY >= margin && targetY <= vp.h - margin) return;
+        const angle = Math.atan2(targetY - focal.y, targetX - focal.x);
+        const radius = Math.min(vp.w, vp.h) * 0.36;
+        const x = Math.max(margin, Math.min(vp.w - margin, focal.x + Math.cos(angle) * radius));
+        const y = Math.max(margin, Math.min(vp.h - margin, focal.y + Math.sin(angle) * radius));
         const distance = Math.hypot(Game.player.x - activePing.x, Game.player.y - activePing.y);
         CTX.save();
         CTX.translate(x, y);
@@ -12985,23 +14091,137 @@
         CTX.strokeStyle = '#67e8f9';
         CTX.lineWidth = 2;
         CTX.beginPath();
-        CTX.arc(0, 0, 23, 0, Math.PI * 2);
+        CTX.arc(0, 0, 21, 0, Math.PI * 2);
         CTX.fill();
         CTX.stroke();
         CTX.rotate(angle);
         CTX.fillStyle = '#22d3ee';
         CTX.beginPath();
-        CTX.moveTo(13, 0);
-        CTX.lineTo(-7, -8);
-        CTX.lineTo(-7, 8);
+        CTX.moveTo(12, 0);
+        CTX.lineTo(-6, -7);
+        CTX.lineTo(-6, 7);
         CTX.closePath();
         CTX.fill();
         CTX.rotate(-angle);
         CTX.fillStyle = '#ecfeff';
-        CTX.font = '800 11px system-ui, sans-serif';
+        CTX.font = '800 10px system-ui, sans-serif';
         CTX.textAlign = 'center';
-        CTX.fillText(formatWorldDistance(distance), 0, 38);
+        CTX.fillText(formatWorldDistance(distance), 0, 34);
         CTX.restore();
+      }
+
+      // Zero-Allocation Pooled Directional Edge Threat Chevrons (18px inside unobstructed arena bounds)
+      const MAX_EDGE_CHEVRONS = 10;
+      const edgeChevronPool = [];
+      for (let i = 0; i < MAX_EDGE_CHEVRONS; i++) {
+        edgeChevronPool.push({ x: 0, y: 0, angle: 0, kind: 'ENEMY', urgency: 1 });
+      }
+
+      function drawEdgeThreatChevrons() {
+        if (Game.state !== 'PLAYING' || isMapExpanded || !Game.player || !Game.player.isAlive) return;
+        const vp = Camera.getPlayableViewport();
+        const focal = Camera.getFocalPoint();
+        const zoom = Camera.getZoom();
+        const inset = 18;
+        const minX = inset;
+        const maxX = Math.max(inset + 20, vp.w - inset);
+        const minY = inset;
+        const maxY = Math.max(inset + 20, vp.h - inset);
+        const halfBoxW = (maxX - minX) * 0.5;
+        const halfBoxH = (maxY - minY) * 0.5;
+        const boxCx = (minX + maxX) * 0.5;
+        const boxCy = (minY + maxY) * 0.5;
+        let count = 0;
+
+        const pushChevron = (wx, wy, kind, urgency) => {
+          if (count >= MAX_EDGE_CHEVRONS) return;
+          const sx = focal.x + (wx - Camera.x) * zoom;
+          const sy = focal.y + (wy - Camera.y) * zoom * CAMERA_PITCH;
+          if (sx >= minX && sx <= maxX && sy >= minY && sy <= maxY) return;
+          const dx = sx - boxCx;
+          const dy = sy - boxCy;
+          const scaleX = Math.abs(dx) > 0.001 ? halfBoxW / Math.abs(dx) : Infinity;
+          const scaleY = Math.abs(dy) > 0.001 ? halfBoxH / Math.abs(dy) : Infinity;
+          const t = Math.min(scaleX, scaleY);
+          const slot = edgeChevronPool[count++];
+          slot.x = Math.max(minX, Math.min(maxX, boxCx + dx * t));
+          slot.y = Math.max(minY, Math.min(maxY, boxCy + dy * t));
+          slot.angle = Math.atan2(dy, dx);
+          slot.kind = kind;
+          slot.urgency = urgency;
+        };
+
+        const px = Game.player.x;
+        const py = Game.player.y;
+
+        // 1. Pulsing crimson chevrons for incoming enemy projectiles inside 520u
+        for (let i = 0; i < projectilePool.length && count < 4; i++) {
+          const p = projectilePool[i];
+          if (!p.active || !p.owner || p.owner === Game.player) continue;
+          const dx = px - p.x;
+          const dy = py - p.y;
+          const d = Math.hypot(dx, dy);
+          if (d > VISION_RADIUS || d < 24) continue;
+          const dot = dx * p.vx + dy * p.vy;
+          if (dot > 0) {
+            pushChevron(p.x, p.y, 'PROJECTILE', 1.25);
+          }
+        }
+
+        // 2. Amber chevrons for off-screen enemies inside 520u circular vision radius
+        for (let i = 0; i < Game.entities.length && count < 8; i++) {
+          const ent = Game.entities[i];
+          if (!ent.isAlive || ent.isPlayer) continue;
+          const d = Math.hypot(ent.x - px, ent.y - py);
+          if (d <= VISION_RADIUS) {
+            pushChevron(ent.x, ent.y, 'ENEMY', Math.max(0.55, 1 - d / VISION_RADIUS));
+          }
+        }
+
+        // 3. Gold/Cyan chevrons for off-screen Supply Drops or Safe Zone center when outside storm
+        for (let i = 0; i < MAX_SUPPLY_CRATES && count < MAX_EDGE_CHEVRONS; i++) {
+          const c = supplyCratePool[i];
+          if (!c.active) continue;
+          pushChevron(c.x, c.y, 'SUPPLY', 1.0);
+        }
+        if (Game.storm && Math.hypot(px - Game.storm.currentCenterX, py - Game.storm.currentCenterY) > Game.storm.currentRadius * 0.85) {
+          pushChevron(Game.storm.currentCenterX, Game.storm.currentCenterY, 'SAFEZONE', 1.0);
+        }
+
+        const pulse = PlayerData.reducedMotion ? 1.0 : (0.78 + 0.22 * Math.sin(Game.time * 12));
+        for (let i = 0; i < count; i++) {
+          const ch = edgeChevronPool[i];
+          CTX.save();
+          CTX.translate(ch.x, ch.y);
+          CTX.rotate(ch.angle);
+          if (ch.kind === 'PROJECTILE') {
+            CTX.globalAlpha = 0.92 * pulse;
+            CTX.fillStyle = '#ef4444';
+            CTX.strokeStyle = '#fecaca';
+          } else if (ch.kind === 'ENEMY') {
+            CTX.globalAlpha = 0.82;
+            CTX.fillStyle = '#f59e0b';
+            CTX.strokeStyle = '#fef3c7';
+          } else if (ch.kind === 'SUPPLY') {
+            CTX.globalAlpha = 0.9;
+            CTX.fillStyle = '#fbbf24';
+            CTX.strokeStyle = '#ffffff';
+          } else {
+            CTX.globalAlpha = 0.85;
+            CTX.fillStyle = '#38bdf8';
+            CTX.strokeStyle = '#e0f2fe';
+          }
+          CTX.lineWidth = 1.6;
+          CTX.beginPath();
+          CTX.moveTo(9, 0);
+          CTX.lineTo(-6, -6.5);
+          CTX.lineTo(-2.5, 0);
+          CTX.lineTo(-6, 6.5);
+          CTX.closePath();
+          CTX.fill();
+          CTX.stroke();
+          CTX.restore();
+        }
       }
 
       // ==========================================
@@ -13015,7 +14235,8 @@
         fingerprint: '',
 
         computeFingerprint() {
-          return `${BIOME_ZONES.length}|${BEACH_LAYOUT.length}|${PATH_LAYOUT.length}|${WATER_LAYOUT.length}|${BRIDGE_LAYOUT.length}|${LANDMARK_LAYOUT.length}|${decalPool.length}`;
+          const texReady = (typeof AssetLoader !== 'undefined' && AssetLoader.groundTex && AssetLoader.groundTex.complete && AssetLoader.groundTex.naturalWidth > 0) ? 1 : 0;
+          return `${BIOME_ZONES.length}|${BEACH_LAYOUT.length}|${PATH_LAYOUT.length}|${WATER_LAYOUT.length}|${BRIDGE_LAYOUT.length}|${LANDMARK_LAYOUT.length}|${decalPool.length}|${texReady}`;
         },
 
         invalidate() {
@@ -13055,6 +14276,16 @@
           tctx.fillRect(wx, wy, size, size);
 
           if (isBlankMap) {
+            // Tile low-contrast dark-arcane runic basalt texture via cached CanvasPattern
+            const blankGroundPat = typeof AssetLoader !== 'undefined' ? AssetLoader.getGroundPattern(tctx) : null;
+            if (blankGroundPat) {
+              tctx.save();
+              tctx.globalAlpha = 0.36;
+              tctx.fillStyle = blankGroundPat;
+              tctx.fillRect(wx, wy, size, size);
+              tctx.restore();
+            }
+
             const gridMinor = 500;
             const startX = Math.max(0, Math.floor(wx / gridMinor) * gridMinor);
             const endX = Math.min(ARENA_WIDTH, Math.ceil(wx2 / gridMinor) * gridMinor);
@@ -13107,6 +14338,15 @@
                 tctx.fillStyle = z.colorTop;
                 tctx.fillRect(z.x, z.y, z.w, z.h);
               }
+            }
+            // Tile low-contrast dark-arcane runic basalt texture via cached CanvasPattern
+            const groundPat = typeof AssetLoader !== 'undefined' ? AssetLoader.getGroundPattern(tctx) : null;
+            if (groundPat) {
+              tctx.save();
+              tctx.globalAlpha = 0.24;
+              tctx.fillStyle = groundPat;
+              tctx.fillRect(wx, wy, size, size);
+              tctx.restore();
             }
             for (let i = 0; i < PATH_LAYOUT.length; i++) {
               const pt = PATH_LAYOUT[i];
@@ -13235,13 +14475,82 @@
           CTX.restore();
         }
 
-        // LAYER 1: Ground Effects & Storm
+        // LAYER 1: Ground Effects, Frost Patches, Geotherm Vents & Storm
+        for (let i = 0; i < MAX_FROST_PATCHES; i++) {
+          const fp = frostPatchPool[i];
+          if (!fp.active || fp.x + fp.rx < viewLeft || fp.x - fp.rx > viewRight || fp.y + fp.ry < viewTop || fp.y - fp.ry > viewBottom) continue;
+          CTX.save();
+          CTX.translate(fp.x, fp.y);
+          CTX.rotate(fp.rot);
+          CTX.fillStyle = 'rgba(125, 211, 252, 0.24)';
+          CTX.strokeStyle = 'rgba(224, 242, 254, 0.48)';
+          CTX.lineWidth = 2.5;
+          CTX.beginPath();
+          CTX.ellipse(0, 0, fp.rx, fp.ry, 0, 0, Math.PI * 2);
+          CTX.fill();
+          CTX.stroke();
+          CTX.strokeStyle = 'rgba(186, 230, 253, 0.35)';
+          CTX.lineWidth = 1.5;
+          CTX.beginPath();
+          CTX.moveTo(-fp.rx * 0.45, -fp.ry * 0.2);
+          CTX.lineTo(fp.rx * 0.35, fp.ry * 0.15);
+          CTX.moveTo(-fp.rx * 0.2, fp.ry * 0.35);
+          CTX.lineTo(fp.rx * 0.4, -fp.ry * 0.3);
+          CTX.stroke();
+          CTX.restore();
+        }
+        for (let i = 0; i < MAX_GEOTHERM_VENTS; i++) {
+          const v = geothermVentPool[i];
+          if (!v.active || v.x + v.radius < viewLeft || v.x - v.radius > viewRight || v.y + v.radius < viewTop || v.y - v.radius > viewBottom) continue;
+          CTX.save();
+          CTX.fillStyle = 'rgba(30, 18, 12, 0.72)';
+          CTX.strokeStyle = v.phase === 'IDLE' ? '#7c2d12' : '#f97316';
+          CTX.lineWidth = v.phase === 'IDLE' ? 2.5 : 4;
+          CTX.beginPath();
+          CTX.ellipse(v.x, v.y, 26, 17, 0, 0, Math.PI * 2);
+          CTX.fill();
+          CTX.stroke();
+          if (v.phase === 'TELEGRAPH') {
+            const prog = Math.max(0, Math.min(1, 1 - v.timer / 1.6));
+            CTX.fillStyle = `rgba(249, 115, 22, ${0.14 + prog * 0.24})`;
+            CTX.strokeStyle = '#fbbf24';
+            CTX.lineWidth = 3;
+            CTX.setLineDash([8, 6]);
+            CTX.beginPath();
+            CTX.ellipse(v.x, v.y, v.radius, v.radius * 0.68, 0, 0, Math.PI * 2);
+            CTX.fill();
+            CTX.stroke();
+            CTX.setLineDash([]);
+            CTX.strokeStyle = '#fef08a';
+            CTX.lineWidth = 2;
+            CTX.beginPath();
+            CTX.ellipse(v.x, v.y, v.radius * prog, v.radius * 0.68 * prog, 0, 0, Math.PI * 2);
+            CTX.stroke();
+          } else if (v.phase === 'ERUPTING') {
+            drawGlowSprite(CTX, 'fire', v.x, v.y, v.radius * 1.4, 0.65);
+            CTX.fillStyle = 'rgba(251, 146, 60, 0.42)';
+            CTX.beginPath();
+            CTX.ellipse(v.x, v.y, v.radius, v.radius * 0.68, 0, 0, Math.PI * 2);
+            CTX.fill();
+          }
+          CTX.restore();
+        }
+
         Game.storm.draw(CTX);
 
-        // LAYER 2: Glowing Projectiles with Bloom & Screen Blending
+        const fogActive = Game.state === 'PLAYING' && Game.player && Game.player.isAlive;
+        const fogPx = fogActive ? Game.player.x : Camera.x;
+        const fogPy = fogActive ? Game.player.y : Camera.y;
+
+        // LAYER 2: Glowing Projectiles with Bloom & 520u Fog-of-War Culling
         for (let i = 0; i < projectilePool.length; i++) {
           const p = projectilePool[i];
           if (!p.active || p.x < viewLeft || p.x > viewRight || p.y < viewTop || p.y > viewBottom) continue;
+          let projFogAlpha = 1;
+          if (fogActive && p.owner !== Game.player) {
+            projFogAlpha = computeVisionAlpha(Math.hypot(p.x - fogPx, p.y - fogPy));
+            if (projFogAlpha <= 0.01) continue;
+          }
 
           // Directional shadow on floor
           drawDirectionalShadow(CTX, p.x, p.y, p.z || 16, p.radius * 0.75, false);
@@ -13515,10 +14824,27 @@
             slot.ref = c;
           }
         }
+        for (let i = 0; i < MAX_DESTRUCTIBLES && sortCount < MAX_YSORT_ITEMS; i++) {
+          const prop = destructiblePropPool[i];
+          if (!prop.active) continue;
+          if (prop.x + 40 > viewLeft && prop.x - 40 < viewRight && prop.y + 40 > viewTop && prop.y - 60 < viewBottom) {
+            const slot = worldSortQueue[sortCount++];
+            slot.kind = 5;
+            slot.sortY = prop.y + prop.radius * 0.5;
+            slot.ref = prop;
+          }
+        }
         for (let i = 0; i < Game.entities.length && sortCount < MAX_YSORT_ITEMS; i++) {
           const ent = Game.entities[i];
           if (ent.despawned) continue;
           if (ent.x < viewLeft || ent.x > viewRight || ent.y < viewTop || ent.y > viewBottom) continue;
+          if (fogActive && !ent.isPlayer && ent.isAlive) {
+            const vAlpha = computeVisionAlpha(Math.hypot(ent.x - fogPx, ent.y - fogPy));
+            if (vAlpha <= 0.01) continue;
+            ent._fogAlpha = vAlpha;
+          } else {
+            ent._fogAlpha = 1;
+          }
           const slot = worldSortQueue[sortCount++];
           slot.kind = 4;
           slot.sortY = ent.y;
@@ -13645,15 +14971,114 @@
             CTX.fillText('ARCANE CRATE', cx, czY - 28);
             CTX.restore();
           } else if (item.kind === 4) {
-            item.ref.drawBody(CTX);
+            const entAlpha = item.ref._fogAlpha !== undefined ? item.ref._fogAlpha : 1;
+            if (entAlpha < 0.99) {
+              CTX.save();
+              CTX.globalAlpha = entAlpha;
+              item.ref.drawBody(CTX);
+              CTX.restore();
+            } else {
+              item.ref.drawBody(CTX);
+            }
+          } else if (item.kind === 5) {
+            // Destructible Arena Props (Arcane Crates, Crystal Cover Pillars, Explosive Ember Barrels)
+            const prop = item.ref;
+            const px = Math.round(prop.x);
+            const py = Math.round(prop.y);
+            const hpPct = Math.max(0, prop.hp / Math.max(1, prop.maxHp));
+            drawDirectionalShadow(CTX, px, py, 14, prop.radius, false);
+            CTX.save();
+            if (prop.kind === 'CRYSTAL_PILLAR') {
+              drawGlowSprite(CTX, 'cyan', px, py - 12, prop.radius * 1.9, 0.28);
+              CTX.fillStyle = prop.hitFlash > 0 ? '#e0f2fe' : '#0284c7';
+              CTX.strokeStyle = '#7dd3fc';
+              CTX.lineWidth = 2.5;
+              CTX.beginPath();
+              CTX.moveTo(px, py - 42);
+              CTX.lineTo(px + 22, py - 18);
+              CTX.lineTo(px + 18, py + 12);
+              CTX.lineTo(px - 18, py + 12);
+              CTX.lineTo(px - 22, py - 18);
+              CTX.closePath();
+              CTX.fill();
+              CTX.stroke();
+              if (hpPct < 0.75) {
+                CTX.strokeStyle = '#ffffff';
+                CTX.lineWidth = 1.8;
+                CTX.beginPath();
+                CTX.moveTo(px - 8, py - 24);
+                CTX.lineTo(px + 4, py - 8);
+                CTX.lineTo(px - 6, py + 4);
+                if (hpPct < 0.4) {
+                  CTX.moveTo(px + 10, py - 20);
+                  CTX.lineTo(px - 2, py - 4);
+                }
+                CTX.stroke();
+              }
+            } else if (prop.kind === 'BARREL') {
+              const hot = prop.chainFuse >= 0 || hpPct < 0.8;
+              drawGlowSprite(CTX, 'fire', px, py - 8, prop.radius * (hot ? 2.4 : 1.5), hot ? 0.52 : 0.26);
+              CTX.fillStyle = prop.hitFlash > 0 ? '#fef08a' : '#9a3412';
+              CTX.strokeStyle = hot ? '#fde047' : '#f97316';
+              CTX.lineWidth = 2.5;
+              CTX.fillRect(px - 15, py - 26, 30, 32);
+              CTX.strokeRect(px - 15, py - 26, 30, 32);
+              CTX.fillStyle = '#fb923c';
+              CTX.fillRect(px - 15, py - 14, 30, 6);
+              CTX.font = 'bold 12px system-ui, sans-serif';
+              CTX.textAlign = 'center';
+              CTX.fillStyle = '#fef08a';
+              CTX.fillText('🔥', px, py - 6);
+            } else {
+              CTX.fillStyle = prop.hitFlash > 0 ? '#fde68a' : '#78350f';
+              CTX.strokeStyle = '#d97706';
+              CTX.lineWidth = 2.4;
+              CTX.fillRect(px - 17, py - 24, 34, 30);
+              CTX.strokeRect(px - 17, py - 24, 34, 30);
+              CTX.strokeStyle = '#fbbf24';
+              CTX.lineWidth = 1.8;
+              CTX.beginPath();
+              CTX.moveTo(px - 15, py - 22);
+              CTX.lineTo(px + 15, py + 4);
+              CTX.moveTo(px + 15, py - 22);
+              CTX.lineTo(px - 15, py + 4);
+              CTX.stroke();
+            }
+            CTX.restore();
           }
         }
 
         // LAYER 4.5: Dedicated Top Pass for Overhead Combat Plates (never occluded by trees/walls/fighters)
         for (let i = 0; i < sortCount; i++) {
           if (worldSortQueue[i].kind === 4) {
-            worldSortQueue[i].ref.drawOverheadPlate(CTX);
+            const plateAlpha = worldSortQueue[i].ref._fogAlpha !== undefined ? worldSortQueue[i].ref._fogAlpha : 1;
+            if (plateAlpha < 0.99) {
+              CTX.save();
+              CTX.globalAlpha = plateAlpha;
+              worldSortQueue[i].ref.drawOverheadPlate(CTX);
+              CTX.restore();
+            } else {
+              worldSortQueue[i].ref.drawOverheadPlate(CTX);
+            }
           }
+        }
+
+        // LAYER 4.8: Diegetic 520u Circular Fog-of-War Horizon Ring (Zero-Advantage Portrait/Landscape Fairness)
+        if (fogActive) {
+          CTX.save();
+          CTX.strokeStyle = 'rgba(139, 92, 246, 0.28)';
+          CTX.lineWidth = 3;
+          CTX.setLineDash([14, 10]);
+          CTX.beginPath();
+          CTX.arc(fogPx, fogPy, VISION_RADIUS, 0, Math.PI * 2);
+          CTX.stroke();
+          CTX.setLineDash([]);
+          CTX.strokeStyle = 'rgba(15, 23, 42, 0.42)';
+          CTX.lineWidth = 44;
+          CTX.beginPath();
+          CTX.arc(fogPx, fogPy, VISION_RADIUS + 22, 0, Math.PI * 2);
+          CTX.stroke();
+          CTX.restore();
         }
 
         if (activePing && activePing.x >= viewLeft && activePing.x <= viewRight && activePing.y >= viewTop && activePing.y <= viewBottom) {
@@ -13689,12 +15114,15 @@
         Camera.restore(CTX);
         WeatherSystem.drawScreenOverlay(CTX);
         drawWaypointEdgeIndicator();
+        drawEdgeThreatChevrons();
 
         // Directional Red Hit-Arcs around player for off-screen / ranged damage
         if (Game.state === 'PLAYING' && Game.player && Game.player.isAlive) {
-          const cx = window.innerWidth / 2;
-          const cy = window.innerHeight / 2;
-          const arcR = Math.min(window.innerWidth, window.innerHeight) * 0.26;
+          const focal = Camera.getFocalPoint();
+          const vp = Camera.getPlayableViewport();
+          const cx = focal.x;
+          const cy = focal.y;
+          const arcR = Math.min(vp.w, vp.h) * 0.26;
           for (let i = 0; i < MAX_HIT_ARCS; i++) {
             const h = hitArcPool[i];
             if (!h.active) continue;
@@ -13720,9 +15148,11 @@
         if (isAiming && Game.state === "PLAYING" && Game.player && Game.player.isAlive) {
           CTX.save();
           const guideZoom = Camera.getZoom();
-          const cx = window.innerWidth / 2 + (Game.player.x - Camera.x) * guideZoom;
-          const cy = window.innerHeight / 2 + (Game.player.y - Camera.y) * guideZoom * CAMERA_PITCH - (Game.player.z || 0) * guideZoom;
-          const aimSpan = Math.min(260, Math.max(150, window.innerWidth * 0.28));
+          const focal = Camera.getFocalPoint();
+          const vp = Camera.getPlayableViewport();
+          const cx = focal.x + (Game.player.x - Camera.x) * guideZoom;
+          const cy = focal.y + (Game.player.y - Camera.y) * guideZoom * CAMERA_PITCH - (Game.player.z || 0) * guideZoom;
+          const aimSpan = Math.min(260, Math.max(140, Math.min(vp.w, vp.h) * 0.38));
           const targetX = cx + Math.cos(aimAngle) * aimSpan;
           const targetY = cy + Math.sin(aimAngle) * aimSpan * CAMERA_PITCH;
           const cancelMode = isCancelAimHovered;
@@ -14169,7 +15599,16 @@
           if (fpsElement) fpsElement.textContent = `${currentFps} FPS`;
         }
 
-        if (!isPaused) Game.update(deltaTime);
+        if (!isPaused) {
+          // Fixed-timestep sub-stepping (dt <= 0.05s, sub-steps <= 1/60s) eliminates projectile tunneling & wall clipping
+          const MAX_SUB_STEP = 1 / 60;
+          let rem = deltaTime;
+          while (rem > 0.0001) {
+            const subDt = Math.min(MAX_SUB_STEP, rem);
+            Game.update(subDt);
+            rem -= subDt;
+          }
+        }
         renderCanvas();
         requestAnimationFrame(gameLoop);
       }
@@ -14236,6 +15675,42 @@
       // ==========================================
       // UI CONTROLLER & SCREEN TRANSITIONS
       // ==========================================
+      let pendingConfirmCallback = null;
+
+      function openConfirmModal(opts = {}) {
+        const modal = document.getElementById('confirm-modal');
+        if (!modal) {
+          if (typeof opts.onConfirm === 'function') opts.onConfirm();
+          return;
+        }
+        const iconEl = document.getElementById('confirm-modal-icon');
+        const titleEl = document.getElementById('confirm-modal-title');
+        const msgEl = document.getElementById('confirm-modal-message');
+        const acceptBtn = document.getElementById('btn-confirm-accept');
+        const cancelBtn = document.getElementById('btn-confirm-cancel');
+        if (iconEl) iconEl.textContent = opts.icon || '⚠️';
+        if (titleEl) titleEl.textContent = opts.title || 'CONFIRM ACTION';
+        if (msgEl) msgEl.textContent = opts.message || 'Are you sure you want to proceed?';
+        if (acceptBtn) acceptBtn.textContent = opts.confirmLabel || 'Confirm';
+        if (cancelBtn) cancelBtn.textContent = opts.cancelLabel || 'Cancel';
+        pendingConfirmCallback = typeof opts.onConfirm === 'function' ? opts.onConfirm : null;
+        modal.classList.remove('hidden');
+      }
+
+      function confirmModalCancel() {
+        pendingConfirmCallback = null;
+        const modal = document.getElementById('confirm-modal');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      function confirmModalAccept() {
+        const cb = pendingConfirmCallback;
+        pendingConfirmCallback = null;
+        const modal = document.getElementById('confirm-modal');
+        if (modal) modal.classList.add('hidden');
+        if (typeof cb === 'function') cb();
+      }
+
       function closeTopOverlay() {
         const connLost = document.getElementById('connection-lost-modal');
         if (connLost && !connLost.classList.contains('hidden')) return true;
@@ -14243,8 +15718,13 @@
         if (adModal && !adModal.classList.contains('hidden')) return true;
         const adBlockModal = document.getElementById('adblock-modal');
         if (adBlockModal && !adBlockModal.classList.contains('hidden')) return true;
+        const confirmModal = document.getElementById('confirm-modal');
+        if (confirmModal && !confirmModal.classList.contains('hidden')) { confirmModalCancel(); return true; }
+        if (typeof HudEditor !== 'undefined' && HudEditor.isOpen) { HudEditor.close(false); return true; }
         const settings = document.getElementById('settings-screen');
         if (!settings.classList.contains('hidden')) { closeSettings(); return true; }
+        const lbScreen = document.getElementById('leaderboard-screen');
+        if (lbScreen && !lbScreen.classList.contains('hidden')) { closeLeaderboard(); return true; }
         const statsUpgrades = document.getElementById('stats-upgrades-screen');
         if (statsUpgrades && !statsUpgrades.classList.contains('hidden')) { closeStatsUpgrades(); return true; }
         const demo = document.getElementById('operator-modal');
@@ -14253,6 +15733,8 @@
         if (!shop.classList.contains('hidden')) { closeShop(); return true; }
         const tutorial = document.getElementById('tutorial-overlay');
         if (!tutorial.classList.contains('hidden')) { dismissTutorial(); return true; }
+        const itemDetails = document.getElementById('item-details');
+        if (itemDetails && !itemDetails.classList.contains('hidden')) { toggleItemDetails(false); return true; }
         const drop = document.getElementById('drop-screen');
         if (!drop.classList.contains('hidden')) { returnToLobby(); return true; }
         return false;
@@ -14672,10 +16154,22 @@
             } : null);
 
             const victoryEmblem = document.getElementById('go-victory-emblem');
+            const kcPortrait = document.getElementById('killcam-attacker-portrait');
             if (kcBox && kcCanvas && !isWin && kcData) {
               kcBox.style.display = 'flex';
               if (victoryEmblem) victoryEmblem.classList.add('hidden');
               startKillcamAnimation(kcData);
+              if (kcPortrait) {
+                const pSrc = kcData.killerCharKey && typeof AssetLoader !== 'undefined'
+                  ? AssetLoader.getPortraitSrc(kcData.killerCharKey)
+                  : '';
+                if (pSrc) {
+                  kcPortrait.src = pSrc;
+                  kcPortrait.classList.remove('hidden');
+                } else {
+                  kcPortrait.classList.add('hidden');
+                }
+              }
               if (kcText) {
                 const dmgLabel = kcData.damage > 0 ? ` · ${kcData.damage} DMG` : '';
                 kcText.textContent = `Eliminated by ${kcData.attackerName} (${kcData.projectileType}) from ${kcData.distance}m${dmgLabel}`;
@@ -14683,6 +16177,7 @@
             } else if (kcBox) {
               stopKillcamAnimation();
               kcBox.style.display = 'none';
+              if (kcPortrait) kcPortrait.classList.add('hidden');
               if (victoryEmblem) victoryEmblem.classList.toggle('hidden', !isWin);
             }
           });
@@ -15130,8 +16625,22 @@
           dot.classList.toggle('active', dot.dataset.heroDot === activeKey);
         });
 
-        drawLobbyHeroFrame(activeKey, performance.now() / 1000);
-        startHeroShowcaseAnimation();
+        const portraitImg = document.getElementById('heroPreviewPortrait');
+        const previewCanvas = document.getElementById('heroPreviewCanvas');
+        const portraitSrc = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(activeKey) : '';
+        if (portraitImg && portraitSrc) {
+          if (portraitImg.getAttribute('src') !== portraitSrc) {
+            portraitImg.src = portraitSrc;
+          }
+          portraitImg.alt = `${hero.name} dark-arcane portrait`;
+          portraitImg.classList.remove('hidden');
+          if (previewCanvas) previewCanvas.classList.add('hidden');
+        } else {
+          if (portraitImg) portraitImg.classList.add('hidden');
+          if (previewCanvas) previewCanvas.classList.remove('hidden');
+          drawLobbyHeroFrame(activeKey, performance.now() / 1000);
+          startHeroShowcaseAnimation();
+        }
       }
 
       let selectedDropX = null;
@@ -15142,27 +16651,34 @@
         UIController.showLobby();
       }
 
+      let isStartingBattle = false;
       async function startBattle() {
-        tryLockLandscape();
-        AudioEngine.init();
-        if (!(await OnlineGuard.ensureOnline())) return;
-        if (!AdBlockerGuard.ensureAllowed()) return;
-        if (!PlayerData.unlockedFighters.includes(PlayerData.selectedFighter)) {
-          PlayerData.selectedFighter = 'BERSERKER';
+        if (isStartingBattle) return;
+        isStartingBattle = true;
+        try {
+          tryLockLandscape();
+          AudioEngine.init();
+          if (!(await OnlineGuard.ensureOnline())) return;
+          if (!AdBlockerGuard.ensureAllowed()) return;
+          if (!PlayerData.unlockedFighters.includes(PlayerData.selectedFighter)) {
+            PlayerData.selectedFighter = 'BERSERKER';
+          }
+          lobbyPreviewHeroKey = PlayerData.selectedFighter;
+          transitionTo(() => {
+            document.getElementById('lobby-screen').classList.add('hidden');
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('pause-screen').classList.add('hidden');
+            document.getElementById('drop-screen').classList.remove('hidden');
+            selectedDropX = null;
+            selectedDropY = null;
+            document.getElementById('drop-pin').style.display = 'none';
+            document.getElementById('drop-coords').textContent = 'No deployment point selected';
+            document.getElementById('btn-confirm-drop').disabled = true;
+            drawDropMap();
+          });
+        } finally {
+          isStartingBattle = false;
         }
-        lobbyPreviewHeroKey = PlayerData.selectedFighter;
-        transitionTo(() => {
-          document.getElementById('lobby-screen').classList.add('hidden');
-          document.getElementById('gameover-screen').classList.add('hidden');
-          document.getElementById('pause-screen').classList.add('hidden');
-          document.getElementById('drop-screen').classList.remove('hidden');
-          selectedDropX = null;
-          selectedDropY = null;
-          document.getElementById('drop-pin').style.display = 'none';
-          document.getElementById('drop-coords').textContent = 'No deployment point selected';
-          document.getElementById('btn-confirm-drop').disabled = true;
-          drawDropMap();
-        });
       }
 
       function drawDropMap() {
@@ -15263,16 +16779,23 @@
         AudioEngine.sfxSword();
       });
 
+      let isConfirmingDrop = false;
       async function confirmDrop() {
+        if (isConfirmingDrop) return;
         if (!Number.isFinite(selectedDropX) || !Number.isFinite(selectedDropY)) return;
-        if (!(await OnlineGuard.ensureOnline())) return;
-        tryLockLandscape();
-        acquireScreenWakeLock();
-        transitionTo(() => {
-          document.getElementById('drop-screen').classList.add('hidden');
-          isPaused = false;
-          Game.init(selectedDropX, selectedDropY);
-        });
+        isConfirmingDrop = true;
+        try {
+          if (!(await OnlineGuard.ensureOnline())) return;
+          tryLockLandscape();
+          acquireScreenWakeLock();
+          transitionTo(() => {
+            document.getElementById('drop-screen').classList.add('hidden');
+            isPaused = false;
+            Game.init(selectedDropX, selectedDropY);
+          });
+        } finally {
+          isConfirmingDrop = false;
+        }
       }
 
       async function doubleMatchRewardsAd() {
@@ -15339,16 +16862,18 @@
         await startBattle();
       }
 
-      function returnToLobby(fromMatch = false) {
-        if (fromMatch && !window.confirm('Leave this match and return to the lobby? Match rewards are only granted on elimination or victory.')) return;
+      function executeReturnToLobby(fromMatch = false) {
         releaseScreenWakeLock();
         if (isMapExpanded) toggleMapExpand();
         clearMapPing(true);
+        toggleItemDetails(false);
         Input.reset();
+        isPaused = false;
         transitionTo(() => {
           if (fromMatch) Game.matchFinished = true;
           Game.state = 'LOBBY';
           Game.previousState = null;
+          isPaused = false;
           flushPlayerSave();
           document.getElementById('pause-screen').classList.add('hidden');
           document.getElementById('settings-screen').classList.add('hidden');
@@ -15356,6 +16881,21 @@
           Music.start('lobby');
           UIController.showLobby();
         });
+      }
+
+      function returnToLobby(fromMatch = false) {
+        if (fromMatch) {
+          openConfirmModal({
+            icon: '🚪',
+            title: 'LEAVE MATCH?',
+            message: 'Leave this match and return to the lobby? Match rewards are only granted on elimination or victory.',
+            confirmLabel: 'Leave Match',
+            cancelLabel: 'Keep Fighting',
+            onConfirm: () => executeReturnToLobby(true)
+          });
+          return;
+        }
+        executeReturnToLobby(false);
       }
 
       // SHOP LOGIC & DROP SKINS
@@ -15637,15 +17177,19 @@
 
           const isUnlocked = PlayerData.unlockedFighters.includes(key);
           const isEquipped = PlayerData.selectedFighter === key;
-          const portrait = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortrait(key) : null;
+          const portraitSrc = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(key) : '';
           let portraitEl = card.querySelector('.shop-portrait-img');
           if (!portraitEl) {
             portraitEl = document.createElement('img');
             portraitEl.className = 'shop-portrait-img';
+            portraitEl.referrerPolicy = 'no-referrer';
             portraitEl.alt = `${data.name} portrait`;
-            portraitEl.src = portrait ? portrait.src : getCachedSprite(key, true, 0).toDataURL('image/png');
-            portraitEl.style.cssText = `border-color: ${data.color}55;`;
+            portraitEl.style.cssText = `border-color: ${data.color}66;`;
             card.insertBefore(portraitEl, card.firstChild);
+          }
+          const targetSrc = portraitSrc || getCachedSprite(key, true, 0).toDataURL('image/png');
+          if (portraitEl.getAttribute('src') !== targetSrc) {
+            portraitEl.src = targetSrc;
           }
 
           if (isEquipped) {
@@ -15718,6 +17262,8 @@
         const cs = document.getElementById('slider-control-scale'); if (cs) cs.value = PlayerData.controlScale || 1;
         updateQualityButtonsUI();
         updateDeviceModeUI();
+        updateOrientationButtonsUI();
+        if (typeof CloudBridge !== 'undefined') CloudBridge.refreshUI();
         toggleImportSavePanel(false);
         switchSettingsTab(initialTab);
         screen.classList.remove('hidden');
@@ -15823,6 +17369,8 @@
             if (pauseEl && pauseEl.classList.contains('hidden')) {
               resumeGame();
             }
+          } else if (Game.state !== 'PAUSED' && !AdController.isShowing) {
+            isPaused = false;
           }
         },
 
@@ -16198,12 +17746,17 @@
           const k = SAVE_FIELDS[i];
           if (PlayerData[k] !== undefined) saveSnapshot[k] = PlayerData[k];
         }
-        let hudLayout = null;
-        try {
-          const rawHud = localStorage.getItem(HUD_LAYOUT_STORAGE_KEY);
-          if (rawHud) hudLayout = JSON.parse(rawHud);
-        } catch (_) {}
-        const json = JSON.stringify({ v: 3, app: 'arcane_royale', save: saveSnapshot, hudLayout });
+        const dualHud = typeof HudLayoutManager !== 'undefined' && typeof HudLayoutManager.getAllProfiles === 'function'
+          ? HudLayoutManager.getAllProfiles()
+          : { landscape: null, portrait: null };
+        const json = JSON.stringify({
+          v: 4,
+          app: 'arcane_royale',
+          save: saveSnapshot,
+          hudLayout: dualHud.landscape,
+          hudLayoutLandscape: dualHud.landscape,
+          hudLayoutPortrait: dualHud.portrait
+        });
         const bytes = new TextEncoder().encode(json);
         let binary = '';
         for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
@@ -16277,9 +17830,19 @@
           importedSave._sig = importSig;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(importedSave));
           localStorage.setItem(STORAGE_SIG_KEY, importSig);
-          if (res.payload.hudLayout && typeof res.payload.hudLayout === 'object') {
-            localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, JSON.stringify(res.payload.hudLayout));
-            if (typeof HudEditor !== 'undefined' && typeof HudEditor.loadLayout === 'function') HudEditor.loadLayout();
+          const landHud = res.payload.hudLayoutLandscape || res.payload.hudLayout;
+          const portHud = res.payload.hudLayoutPortrait;
+          if (landHud && typeof landHud === 'object') {
+            const s = JSON.stringify(landHud);
+            localStorage.setItem(HUD_LAYOUT_LANDSCAPE_KEY, s);
+            localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, s);
+          }
+          if (portHud && typeof portHud === 'object') {
+            localStorage.setItem(HUD_LAYOUT_PORTRAIT_KEY, JSON.stringify(portHud));
+          }
+          if (typeof HudLayoutManager !== 'undefined') {
+            HudLayoutManager.load();
+            HudLayoutManager.apply(HudLayoutManager.saved);
           }
           PlayerData.load();
           updateCurrencyUI();
@@ -16287,6 +17850,7 @@
           renderDailyMissions();
           updateQualityButtonsUI();
           updateDeviceModeUI();
+          updateOrientationButtonsUI();
           toggleImportSavePanel(false);
           showToast('✅ Save Code restored successfully!', '#34d399');
           return true;
@@ -16367,12 +17931,22 @@
       }
 
       function resetPlayerProgress() {
-        if (confirm("Reset all unlocked fighters, gold, gems and rank?")) {
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.removeItem(STORAGE_SIG_KEY);
-          for (const key of LEGACY_STORAGE_KEYS) localStorage.removeItem(key);
-          location.reload();
-        }
+        openConfirmModal({
+          icon: '⚠️',
+          title: 'RESET LOCAL SAVE?',
+          message: 'Reset all unlocked fighters, coins, crystals, gems, upgrades, and rank on this device? This cannot be undone.',
+          confirmLabel: 'Reset Save',
+          cancelLabel: 'Cancel',
+          onConfirm: () => {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(STORAGE_SIG_KEY);
+            localStorage.removeItem(HUD_LAYOUT_STORAGE_KEY);
+            localStorage.removeItem(HUD_LAYOUT_LANDSCAPE_KEY);
+            localStorage.removeItem(HUD_LAYOUT_PORTRAIT_KEY);
+            for (const key of LEGACY_STORAGE_KEYS) localStorage.removeItem(key);
+            location.reload();
+          }
+        });
       }
 
       function checkTutorial() {
@@ -16744,6 +18318,420 @@
       });
 
       // ==========================================
+      // SEALED FIREBASE CLOUDSYNC BRIDGE, LEADERBOARD & ARCANE BILLING IAPs
+      // ==========================================
+      const CloudBridge = (() => {
+        let reqSeq = 0;
+        const pending = new Map();
+        const state = {
+          configured: false,
+          signedIn: false,
+          isAnonymous: false,
+          uid: null,
+          displayName: null,
+          email: null,
+          statusLabel: 'Local Save Mode · Cloud Ready'
+        };
+
+        document.addEventListener('ar:cloud:response', (ev) => {
+          const detail = ev && ev.detail;
+          if (!detail || !detail.id) return;
+          const resolver = pending.get(detail.id);
+          if (resolver) {
+            pending.delete(detail.id);
+            resolver(detail.result || { ok: false });
+          }
+        });
+
+        document.addEventListener('ar:cloud:state', (ev) => {
+          const detail = ev && ev.detail;
+          if (!detail) return;
+          Object.assign(state, detail);
+          refreshUI();
+        });
+
+        function request(action, payload = {}) {
+          return new Promise((resolve) => {
+            const id = `ar_req_${++reqSeq}_${Date.now()}`;
+            const timer = setTimeout(() => {
+              if (pending.has(id)) {
+                pending.delete(id);
+                resolve({ ok: false, fallback: true, mode: 'local' });
+              }
+            }, 4500);
+            pending.set(id, (res) => {
+              clearTimeout(timer);
+              resolve(res);
+            });
+            document.dispatchEvent(new CustomEvent('ar:cloud:request', {
+              detail: { id, action, payload }
+            }));
+          });
+        }
+
+        function buildProfilePayload() {
+          const dualHud = typeof HudLayoutManager !== 'undefined' && typeof HudLayoutManager.getAllProfiles === 'function'
+            ? HudLayoutManager.getAllProfiles()
+            : { landscape: null, portrait: null };
+          return {
+            playerName: PlayerData.playerName || 'HERO',
+            level: PlayerData.level || 1,
+            xp: PlayerData.xp || 0,
+            gold: PlayerData.gold || 0,
+            astralCrystals: PlayerData.astralCrystals || 0,
+            gems: PlayerData.gems || 0,
+            selectedFighter: PlayerData.selectedFighter || 'BERSERKER',
+            unlockedFighters: Array.isArray(PlayerData.unlockedFighters) ? PlayerData.unlockedFighters : ['BERSERKER'],
+            wins: PlayerData.totalWins || 0,
+            eliminations: PlayerData.totalKills || 0,
+            matches: PlayerData.totalMatches || 0,
+            saveDigest: computeSaveChecksum(PlayerData),
+            hudLayoutLandscape: dualHud.landscape,
+            hudLayoutPortrait: dualHud.portrait
+          };
+        }
+
+        function applyRemoteProfile(remote) {
+          if (!remote || typeof remote !== 'object') return;
+          if (typeof remote.playerName === 'string' && remote.playerName.trim()) PlayerData.playerName = remote.playerName.trim().slice(0, 12);
+          if (typeof remote.level === 'number') PlayerData.level = Math.max(PlayerData.level || 1, Math.min(MAX_PLAYER_LEVEL, remote.level));
+          if (typeof remote.xp === 'number') PlayerData.xp = Math.max(0, remote.xp);
+          if (typeof remote.gold === 'number') PlayerData.gold = Math.max(PlayerData.gold || 0, remote.gold);
+          if (typeof remote.astralCrystals === 'number') PlayerData.astralCrystals = Math.max(PlayerData.astralCrystals || 0, remote.astralCrystals);
+          if (typeof remote.gems === 'number') PlayerData.gems = Math.max(PlayerData.gems || 0, remote.gems);
+          if (typeof remote.wins === 'number') PlayerData.totalWins = Math.max(PlayerData.totalWins || 0, remote.wins);
+          if (typeof remote.eliminations === 'number') PlayerData.totalKills = Math.max(PlayerData.totalKills || 0, remote.eliminations);
+          if (typeof remote.matches === 'number') PlayerData.totalMatches = Math.max(PlayerData.totalMatches || 0, remote.matches);
+          if (Array.isArray(remote.unlockedFighters)) {
+            PlayerData.unlockedFighters = Array.from(new Set([...PlayerData.unlockedFighters, ...remote.unlockedFighters]));
+          }
+          if (remote.hudLayoutLandscape && typeof remote.hudLayoutLandscape === 'object') {
+            const s = JSON.stringify(remote.hudLayoutLandscape);
+            localStorage.setItem(HUD_LAYOUT_LANDSCAPE_KEY, s);
+            localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, s);
+          }
+          if (remote.hudLayoutPortrait && typeof remote.hudLayoutPortrait === 'object') {
+            localStorage.setItem(HUD_LAYOUT_PORTRAIT_KEY, JSON.stringify(remote.hudLayoutPortrait));
+          }
+          PlayerData.save();
+          if (typeof HudLayoutManager !== 'undefined') {
+            HudLayoutManager.load();
+            HudLayoutManager.apply(HudLayoutManager.saved);
+          }
+          updateCurrencyUI();
+          updateLobbyShowcase();
+        }
+
+        function refreshUI() {
+          const pill = document.getElementById('cloud-sync-status-pill');
+          const desc = document.getElementById('cloud-sync-account-desc');
+          const btnGoogle = document.getElementById('btn-cloud-google');
+          const btnGuest = document.getElementById('btn-cloud-guest');
+          const btnOut = document.getElementById('btn-cloud-signout');
+          const lbBadge = document.getElementById('lb-source-badge');
+
+          if (pill) {
+            pill.textContent = state.statusLabel || 'Local Save Mode · Cloud Ready';
+            pill.classList.toggle('connected', Boolean(state.signedIn));
+          }
+          if (desc) {
+            desc.textContent = state.signedIn
+              ? (state.isAnonymous
+                ? 'Signed in as Guest. Link Google to preserve your profile & Global Top-50 rank across devices.'
+                : `Connected as ${state.displayName || state.email || 'Arcane Champion'}. Progress & Dual HUD layouts synced.`)
+              : 'Local Save Mode active. Sign in to sync progression, dual HUD profiles, and Global Top-50 Leaderboard rank.';
+          }
+          if (btnGoogle) {
+            btnGoogle.textContent = state.signedIn && state.isAnonymous ? '🔗 Link Google' : '🔐 Google';
+            btnGoogle.classList.toggle('hidden', Boolean(state.signedIn && !state.isAnonymous));
+          }
+          if (btnGuest) btnGuest.classList.toggle('hidden', Boolean(state.signedIn));
+          if (btnOut) btnOut.classList.toggle('hidden', !state.signedIn);
+          if (lbBadge) {
+            lbBadge.textContent = state.signedIn ? '☁️ Live Global Cloud Top-50' : 'Local Preview · Cloud Ready';
+          }
+        }
+
+        async function syncProfile(silent = false) {
+          const res = await request('syncProfile', buildProfilePayload());
+          if (res && res.ok) {
+            if (res.action === 'pulled' && res.remoteProfile) {
+              applyRemoteProfile(res.remoteProfile);
+              if (!silent) showToast('☁️ Cloud save synced & restored!', '#34d399');
+            } else if (!silent) {
+              showToast('☁️ Profile & Dual HUD synced to Arcane Cloud!', '#34d399');
+            }
+          } else if (!silent) {
+            showToast('💾 Local Save Mode active — sign in for Cloud Sync.', '#7dd3fc');
+          }
+          return res;
+        }
+
+        async function submitMatch(telemetry) {
+          return request('submitMatch', {
+            profile: buildProfilePayload(),
+            telemetry
+          });
+        }
+
+        async function fetchLeaderboard(sortBy = 'wins') {
+          return request('fetchLeaderboard', { sortBy });
+        }
+
+        // Request initial auth state once module finishes loading
+        setTimeout(() => { request('getState'); }, 150);
+
+        return {
+          state,
+          refreshUI,
+          request,
+          syncProfile,
+          submitMatch,
+          fetchLeaderboard
+        };
+      })();
+
+      async function cloudSignInGoogle() {
+        AudioEngine.init();
+        const res = await CloudBridge.request('signInGoogle');
+        if (res && res.ok) {
+          showToast('☁️ Signed in with Google! Syncing profile...', '#34d399');
+          await CloudBridge.syncProfile(false);
+        } else {
+          showToast(res && res.error ? `⚠️ ${res.error}` : '💾 Local Save Mode · Cloud Ready', '#fbbf24');
+        }
+      }
+
+      async function cloudSignInGuest() {
+        AudioEngine.init();
+        const res = await CloudBridge.request('signInGuest');
+        if (res && res.ok) {
+          showToast('👤 Guest Cloud Sync activated!', '#c084fc');
+          await CloudBridge.syncProfile(false);
+        } else {
+          showToast(res && res.error ? `⚠️ ${res.error}` : '💾 Local Save Mode · Cloud Ready', '#fbbf24');
+        }
+      }
+
+      async function cloudSignOut() {
+        AudioEngine.init();
+        await CloudBridge.request('signOut');
+        showToast('🚪 Signed out — Local Save Mode active.', '#94a3b8');
+      }
+
+      async function cloudSyncNow() {
+        AudioEngine.init();
+        await CloudBridge.syncProfile(false);
+      }
+
+      // Global Top-50 Leaderboard (Live Firestore + Competitive Local Preview Fallback)
+      const SEEDED_LEADERBOARD_RIVALS = Object.freeze([
+        { uid: 'npc_1', playerName: 'IGNIS_REX', champion: 'BERSERKER', level: 88, wins: 74, eliminations: 912, matches: 190 },
+        { uid: 'npc_2', playerName: 'TIDAL_NYX', champion: 'TIDECALLER', level: 82, wins: 61, eliminations: 785, matches: 164 },
+        { uid: 'npc_3', playerName: 'UMBRA_VEX', champion: 'SHADOW', level: 79, wins: 56, eliminations: 842, matches: 172 },
+        { uid: 'npc_4', playerName: 'SOLARIS', champion: 'BERSERKER', level: 71, wins: 44, eliminations: 618, matches: 140 },
+        { uid: 'npc_5', playerName: 'ASTRALIS', champion: 'TIDECALLER', level: 65, wins: 39, eliminations: 540, matches: 128 },
+        { uid: 'npc_6', playerName: 'KRAKEN_9', champion: 'TIDECALLER', level: 59, wins: 31, eliminations: 468, matches: 112 },
+        { uid: 'npc_7', playerName: 'NOCTURNE', champion: 'SHADOW', level: 54, wins: 27, eliminations: 512, matches: 109 },
+        { uid: 'npc_8', playerName: 'PYROCLAST', champion: 'BERSERKER', level: 48, wins: 22, eliminations: 394, matches: 95 },
+        { uid: 'npc_9', playerName: 'RIFTWALK', champion: 'SHADOW', level: 41, wins: 17, eliminations: 310, matches: 81 },
+        { uid: 'npc_10', playerName: 'VALKYRIA', champion: 'BERSERKER', level: 34, wins: 13, eliminations: 245, matches: 68 },
+        { uid: 'npc_11', playerName: 'ABYSS_M', champion: 'TIDECALLER', level: 27, wins: 9, eliminations: 178, matches: 52 },
+        { uid: 'npc_12', playerName: 'EMBER_K', champion: 'BERSERKER', level: 19, wins: 5, eliminations: 114, matches: 36 }
+      ]);
+
+      let activeLeaderboardTab = 'wins';
+
+      function openLeaderboard(tab = 'wins') {
+        AudioEngine.init();
+        const modal = document.getElementById('leaderboard-screen');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        switchLeaderboardTab(tab === 'eliminations' ? 'eliminations' : 'wins');
+      }
+
+      function closeLeaderboard() {
+        const modal = document.getElementById('leaderboard-screen');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      function escapeHtmlSafe(str) {
+        return String(str || '').replace(/[&<>"']/g, ch => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[ch]);
+      }
+
+      async function switchLeaderboardTab(tab) {
+        activeLeaderboardTab = tab === 'eliminations' ? 'eliminations' : 'wins';
+        const winsBtn = document.getElementById('tab-lb-wins');
+        const elimsBtn = document.getElementById('tab-lb-elims');
+        if (winsBtn) {
+          winsBtn.classList.toggle('active', activeLeaderboardTab === 'wins');
+          winsBtn.setAttribute('aria-selected', String(activeLeaderboardTab === 'wins'));
+        }
+        if (elimsBtn) {
+          elimsBtn.classList.toggle('active', activeLeaderboardTab === 'eliminations');
+          elimsBtn.setAttribute('aria-selected', String(activeLeaderboardTab === 'eliminations'));
+        }
+        const listEl = document.getElementById('leaderboard-list');
+        if (listEl) {
+          listEl.innerHTML = '<div style="padding: 18px; text-align: center; color: #94a3b8; font-size: 12px; font-weight: 700;">Loading Global Top-50 Rankings...</div>';
+        }
+        const res = await CloudBridge.fetchLeaderboard(activeLeaderboardTab);
+        const cloudEntries = (res && Array.isArray(res.entries) && res.entries.length > 0) ? res.entries : [];
+        const badgeEl = document.getElementById('lb-source-badge');
+        if (badgeEl) {
+          badgeEl.textContent = res && res.source === 'cloud' && cloudEntries.length > 0
+            ? '☁️ Live Global Top-50'
+            : 'Local Preview · Cloud Ready';
+        }
+
+        const selfUid = CloudBridge.state.uid || 'local_player';
+        const selfEntry = {
+          uid: selfUid,
+          playerName: PlayerData.playerName || 'HERO',
+          champion: PlayerData.selectedFighter || 'BERSERKER',
+          level: PlayerData.level || 1,
+          wins: PlayerData.totalWins || 0,
+          eliminations: PlayerData.totalKills || 0,
+          matches: PlayerData.totalMatches || 0,
+          isSelf: true
+        };
+
+        const merged = [];
+        const seen = new Set();
+        const sourceList = cloudEntries.length > 0 ? cloudEntries : SEEDED_LEADERBOARD_RIVALS;
+        for (let i = 0; i < sourceList.length; i++) {
+          const item = sourceList[i];
+          if (!item || seen.has(item.uid)) continue;
+          seen.add(item.uid);
+          merged.push({ ...item, isSelf: item.uid === selfUid });
+        }
+        if (!seen.has(selfUid)) merged.push(selfEntry);
+
+        const sortKey = activeLeaderboardTab === 'eliminations' ? 'eliminations' : 'wins';
+        merged.sort((a, b) => (b[sortKey] - a[sortKey]) || (b.wins - a.wins) || (b.level - a.level));
+        const top50 = merged.slice(0, 50);
+
+        if (!listEl) return;
+        listEl.innerHTML = top50.map((entry, idx) => {
+          const rank = idx + 1;
+          const rankCls = rank === 1 ? 'top-1' : (rank === 2 ? 'top-2' : (rank === 3 ? 'top-3' : ''));
+          const portraitSrc = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(entry.champion) : '';
+          const heroData = CHARACTER_DATA[entry.champion] || CHARACTER_DATA.BERSERKER;
+          const metricVal = sortKey === 'eliminations'
+            ? `${Number(entry.eliminations || 0).toLocaleString('en-US')} ⚔️`
+            : `${Number(entry.wins || 0).toLocaleString('en-US')} 🏆`;
+          const subText = `LVL ${entry.level || 1} · ${heroData.name} · ${entry.wins || 0}W / ${entry.eliminations || 0}K`;
+          return `
+            <div class="lb-row ${entry.isSelf ? 'is-self' : ''}" role="listitem">
+              <span class="lb-rank ${rankCls}">#${rank}</span>
+              <img class="lb-avatar" src="${portraitSrc}" alt="${escapeHtmlSafe(heroData.name)}" referrerpolicy="no-referrer" />
+              <div class="lb-info">
+                <div class="lb-name">${escapeHtmlSafe(entry.playerName)}${entry.isSelf ? ' (YOU)' : ''}</div>
+                <div class="lb-sub">${escapeHtmlSafe(subText)}</div>
+              </div>
+              <div class="lb-metric">${metricVal}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // ==========================================
+      // APK / GOOGLE PLAY BILLING GEM IAP BRIDGE (ArcaneBilling)
+      // ==========================================
+      const IAP_CATALOG = Object.freeze({
+        gems_handful_80: Object.freeze({ sku: 'gems_handful_80', title: 'Handful of Gems', price: '$0.99', gems: 80, crystals: 0, pass: false }),
+        gems_royal_500: Object.freeze({ sku: 'gems_royal_500', title: 'Royal Gem Chest', price: '$4.99', gems: 500, crystals: 250, pass: false }),
+        arcane_pass: Object.freeze({ sku: 'arcane_pass', title: 'Arcane Pass', price: '$7.99', gems: 750, crystals: 600, pass: true })
+      });
+
+      const ArcaneBilling = {
+        detectChannel() {
+          if (typeof window !== 'undefined' && window.AndroidBilling && typeof window.AndroidBilling.purchase === 'function') {
+            return 'android_apk';
+          }
+          if (typeof window !== 'undefined' && typeof window.getDigitalGoodsService === 'function') {
+            return 'twa_play';
+          }
+          return 'web_preview';
+        },
+
+        updateVaultButtons() {
+          const passBtn = document.getElementById('btn-iap-arcane_pass');
+          if (passBtn) {
+            if (PlayerData.arcanePassOwned) {
+              passBtn.disabled = true;
+              passBtn.textContent = '✓ ARCANE PASS ACTIVE (+20% XP)';
+            } else {
+              passBtn.disabled = false;
+              passBtn.textContent = '⚡ $7.99 · Activate';
+            }
+          }
+          const badge = document.getElementById('iap-channel-badge');
+          if (badge) {
+            const ch = this.detectChannel();
+            badge.textContent = ch === 'android_apk'
+              ? 'Google Play Billing Active'
+              : (ch === 'twa_play' ? 'Play Store Digital Goods' : 'ArcaneBilling · Preview Mode');
+          }
+        },
+
+        grantProduct(pack) {
+          if (pack.gems > 0) PlayerData.gems = Math.min(999999999, (PlayerData.gems || 0) + pack.gems);
+          if (pack.crystals > 0) PlayerData.astralCrystals = Math.min(999999999, (PlayerData.astralCrystals || 0) + pack.crystals);
+          if (pack.pass) PlayerData.arcanePassOwned = true;
+          PlayerData.save();
+          updateCurrencyUI();
+          this.updateVaultButtons();
+          AudioEngine.sfxPurchase();
+          const rewardText = pack.pass
+            ? `⚡ Arcane Pass Activated! +${pack.gems} 💎 · +${pack.crystals} 🔮 · +20% XP`
+            : `💎 ${pack.title} claimed! +${pack.gems} 💎${pack.crystals > 0 ? ` · +${pack.crystals} 🔮` : ''}`;
+          showToast(rewardText, '#fbbf24', 3200);
+          if (typeof CloudBridge !== 'undefined') CloudBridge.syncProfile(true);
+        },
+
+        async purchaseProduct(sku) {
+          const pack = IAP_CATALOG[sku];
+          if (!pack) return false;
+          if (pack.pass && PlayerData.arcanePassOwned) {
+            showToast('✓ Arcane Pass is already active on your account!', '#c084fc');
+            return false;
+          }
+          const channel = this.detectChannel();
+          if (channel === 'android_apk') {
+            try {
+              const ok = await window.AndroidBilling.purchase(pack.sku);
+              if (ok) { this.grantProduct(pack); return true; }
+            } catch (_) {
+              showToast('⚠️ Play Billing cancelled or unavailable.', '#f87171');
+            }
+            return false;
+          }
+          // Web Preview fulfillment via custom in-app confirmation modal (zero native dialogs)
+          openConfirmModal({
+            icon: pack.pass ? '⚡' : '💎',
+            title: `${pack.title.toUpperCase()} (${pack.price})`,
+            message: pack.pass
+              ? 'Confirm Web Preview purchase of Arcane Pass (+750 Gems, +600 Crystals, permanent +20% Match XP)? Google Play Billing activates automatically in APK builds.'
+              : `Confirm Web Preview purchase of ${pack.title} (+${pack.gems} Gems${pack.crystals > 0 ? ` + ${pack.crystals} Crystals` : ''})? Google Play Billing activates automatically in APK builds.`,
+            confirmLabel: `Confirm ${pack.price}`,
+            cancelLabel: 'Cancel',
+            onConfirm: () => { this.grantProduct(pack); }
+          });
+          return true;
+        }
+      };
+
+      function purchaseGemPack(sku) {
+        AudioEngine.init();
+        ArcaneBilling.purchaseProduct(sku);
+      }
+
+      ArcaneBilling.updateVaultButtons();
+
+      // ==========================================
       // PRIVATE DELEGATED UI EVENT DISPATCHER (ZERO WINDOW GLOBALS)
       // ==========================================
       const UI_CLICK_ACTIONS = Object.freeze({
@@ -16759,23 +18747,29 @@
         claimVaultRewardedAd: (arg) => claimVaultRewardedAd(arg),
         clearMapPing: () => clearMapPing(),
         closeImportSavePanel: () => toggleImportSavePanel(false),
-        closeItemDetails: () => closeItemDetails(),
+        closeItemDetails: () => toggleItemDetails(false),
+        closeLeaderboard: () => closeLeaderboard(),
         closeOperatorModal: () => closeOperatorModal(),
         closeSettings: () => closeSettings(),
         closeShop: () => closeShop(),
         closeStatsUpgrades: () => closeStatsUpgrades(),
+        cloudSignInGoogle: () => cloudSignInGoogle(),
+        cloudSignInGuest: () => cloudSignInGuest(),
+        cloudSignOut: () => cloudSignOut(),
+        cloudSyncNow: () => cloudSyncNow(),
         confirmDrop: () => confirmDrop(),
+        confirmModalAccept: () => confirmModalAccept(),
+        confirmModalCancel: () => confirmModalCancel(),
         cycleLobbyHero: (arg) => cycleLobbyHero(Number(arg)),
-        dismissLandscapePrompt: () => dismissLandscapePrompt(),
         dismissTutorial: () => dismissTutorial(),
         doubleMatchRewardsAd: () => doubleMatchRewardsAd(),
         equipArcaneRune: (arg) => equipArcaneRune(arg === 'null' ? null : arg),
         equipDropSkin: (arg) => equipDropSkin(arg),
         exportSaveCode: () => exportSaveCode(),
-        forceLandscapeView: () => forceLandscapeView(),
         leaveMatchToLobby: () => returnToLobby(true),
         openCombatGuide: () => openCombatGuide(),
         openHudEditor: () => openHudEditor(),
+        openLeaderboard: (arg) => openLeaderboard(arg || 'wins'),
         openSettings: (arg) => openSettings(arg || 'audio'),
         openShop: (arg) => openShop(arg || 'characters'),
         openStatsUpgrades: (arg) => openStatsUpgrades(arg || 'upgrades'),
@@ -16784,6 +18778,7 @@
         postMatchPlayAgain: () => postMatchPlayAgain(),
         postMatchReturnToLobby: () => postMatchReturnToLobby(),
         previewLobbyHero: (arg) => previewLobbyHero(arg),
+        purchaseGemPack: (arg) => purchaseGemPack(arg),
         recheckAdBlocker: () => recheckAdBlocker(),
         rerollDailyMissionAd: () => rerollDailyMissionAd(),
         resetHudEditorLayout: () => resetHudEditorLayout(),
@@ -16795,8 +18790,10 @@
         selectFighter: (arg) => selectFighter(arg),
         selectRandomDrop: () => selectRandomDrop(),
         setGraphicsQuality: (arg) => setGraphicsQuality(arg),
+        setOrientationPref: (arg) => setOrientationPref(arg),
         startBattle: () => startBattle(),
         submitName: () => submitName(),
+        switchLeaderboardTab: (arg) => switchLeaderboardTab(arg),
         switchSettingsTab: (arg) => switchSettingsTab(arg),
         switchShopTab: (arg) => switchShopTab(arg),
         switchUpgradesTab: (arg) => switchUpgradesTab(arg),

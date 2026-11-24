@@ -1,0 +1,191 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Default-Deny Catch-All Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ==========================================
+    // HARDENED GLOBAL PRIMITIVES
+    // ==========================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidChampion(champ) {
+      return champ is string && champ in ['BERSERKER', 'TIDECALLER', 'SHADOW'];
+    }
+
+    function isValidPlayerName(name) {
+      return name is string && name.size() >= 1 && name.size() <= 12 && name.matches('^[a-zA-Z0-9 _\\-]+$');
+    }
+
+    function isValidDigest(d) {
+      return d is string && d.size() >= 1 && d.size() <= 64;
+    }
+
+    function isValidUnlockedFighters(listVal) {
+      return listVal is list
+        && listVal.size() >= 1
+        && listVal.size() <= 5
+        && listVal[0] is string
+        && listVal.hasOnly(['BERSERKER', 'TIDECALLER', 'SHADOW']);
+    }
+
+    function isValidOptionalHudMap(data, key) {
+      return !(key in data) || (data[key] is map && data[key].keys().size() <= 10);
+    }
+
+    // ==========================================
+    // VALIDATION BLUEPRINT: USER PROFILE
+    // ==========================================
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+          'uid', 'playerName', 'level', 'xp', 'gold', 'astralCrystals', 'gems',
+          'selectedFighter', 'unlockedFighters', 'wins', 'eliminations', 'matches',
+          'saveDigest', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'playerName', 'level', 'xp', 'gold', 'astralCrystals', 'gems',
+          'selectedFighter', 'unlockedFighters', 'wins', 'eliminations', 'matches',
+          'hudLayoutLandscape', 'hudLayoutPortrait', 'saveDigest', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && isValidPlayerName(data.playerName)
+        && data.level is int && data.level >= 1 && data.level <= 100
+        && data.xp is int && data.xp >= 0 && data.xp <= 10000000
+        && data.gold is int && data.gold >= 0 && data.gold <= 999999999
+        && data.astralCrystals is int && data.astralCrystals >= 0 && data.astralCrystals <= 999999999
+        && data.gems is int && data.gems >= 0 && data.gems <= 999999999
+        && isValidChampion(data.selectedFighter)
+        && isValidUnlockedFighters(data.unlockedFighters)
+        && data.wins is int && data.wins >= 0 && data.wins <= 1000000
+        && data.eliminations is int && data.eliminations >= 0 && data.eliminations <= 5000000
+        && data.matches is int && data.matches >= 0 && data.matches <= 1000000
+        && isValidOptionalHudMap(data, 'hudLayoutLandscape')
+        && isValidOptionalHudMap(data, 'hudLayoutPortrait')
+        && isValidDigest(data.saveDigest)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isBoundedUserProfileUpdate() {
+      return incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().gold <= existing().gold + 50000
+        && incoming().astralCrystals <= existing().astralCrystals + 50000
+        && incoming().gems <= existing().gems + 10000
+        && incoming().wins >= existing().wins && incoming().wins <= existing().wins + 1
+        && incoming().eliminations >= existing().eliminations && incoming().eliminations <= existing().eliminations + 49
+        && incoming().matches >= existing().matches && incoming().matches <= existing().matches + 1
+        && incoming().level >= existing().level && incoming().level <= existing().level + 25;
+    }
+
+    // ==========================================
+    // VALIDATION BLUEPRINT: PUBLIC LEADERBOARD
+    // ==========================================
+    function isValidLeaderboardEntry(data) {
+      return data.keys().hasAll([
+          'uid', 'playerName', 'champion', 'level', 'wins', 'eliminations', 'matches',
+          'isPublic', 'lastMatchDurationSec', 'lastMatchKills', 'lastMatchMaxDps',
+          'telemetryDigest', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'playerName', 'champion', 'level', 'wins', 'eliminations', 'matches',
+          'isPublic', 'lastMatchDurationSec', 'lastMatchKills', 'lastMatchMaxDps',
+          'telemetryDigest', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && isValidPlayerName(data.playerName)
+        && isValidChampion(data.champion)
+        && data.level is int && data.level >= 1 && data.level <= 100
+        && data.wins is int && data.wins >= 0 && data.wins <= 1000000
+        && data.eliminations is int && data.eliminations >= 0 && data.eliminations <= 5000000
+        && data.matches is int && data.matches >= 0 && data.matches <= 1000000
+        && data.isPublic is bool
+        && data.lastMatchDurationSec is number && data.lastMatchDurationSec >= 5 && data.lastMatchDurationSec <= 1800
+        && data.lastMatchKills is int && data.lastMatchKills >= 0 && data.lastMatchKills <= 49
+        && data.lastMatchMaxDps is number && data.lastMatchMaxDps >= 0 && data.lastMatchMaxDps <= 2500
+        && isValidDigest(data.telemetryDigest)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isBoundedLeaderboardUpdate() {
+      return incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().wins >= existing().wins && incoming().wins <= existing().wins + 1
+        && incoming().eliminations >= existing().eliminations && incoming().eliminations <= existing().eliminations + 49
+        && incoming().matches >= existing().matches && incoming().matches <= existing().matches + 1
+        && incoming().level >= existing().level && incoming().level <= existing().level + 25;
+    }
+
+    // ==========================================
+    // COLLECTION: /users/{userId} (STRICT PRIVATE)
+    // ==========================================
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming())
+        && isBoundedUserProfileUpdate()
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'playerName', 'level', 'xp', 'gold', 'astralCrystals', 'gems',
+          'selectedFighter', 'unlockedFighters', 'wins', 'eliminations', 'matches',
+          'hudLayoutLandscape', 'hudLayoutPortrait', 'saveDigest', 'updatedAt'
+        ]);
+      allow delete: if isValidId(userId) && isOwner(userId);
+    }
+
+    // ==========================================
+    // COLLECTION: /leaderboard/{userId} (PUBLIC NON-PII)
+    // ==========================================
+    match /leaderboard/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && existing().isPublic == true;
+      allow list: if isSignedIn() && resource.data.isPublic == true;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidLeaderboardEntry(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidLeaderboardEntry(incoming())
+        && isBoundedLeaderboardUpdate()
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'playerName', 'champion', 'level', 'wins', 'eliminations', 'matches',
+          'isPublic', 'lastMatchDurationSec', 'lastMatchKills', 'lastMatchMaxDps',
+          'telemetryDigest', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+  }
+}
