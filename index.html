@@ -14139,9 +14139,13 @@
           this.playerDeathDelay = 0;
           this.bonusLootXp = 0;
           const roster = ["BERSERKER", "TIDECALLER", "SHADOW"];
-          const botNames = pickUniqueBotNames(BOT_COUNT);
+          const squadExtra = (typeof SocialUI !== 'undefined' && SocialUI.getSquadMemberCount)
+            ? Math.max(0, SocialUI.getSquadMemberCount() - 1)
+            : 0;
+          const hostileBotCount = Math.max(1, BOT_COUNT - squadExtra);
+          const botNames = pickUniqueBotNames(hostileBotCount);
           const baseLevel = Math.max(1, Math.min(MAX_PLAYER_LEVEL, PlayerData.level || 1));
-          for (let i = 0; i < BOT_COUNT; i++) {
+          for (let i = 0; i < hostileBotCount; i++) {
             let bx = 1000 + Math.random() * 18000;
             let by = 1000 + Math.random() * 18000;
             for (let attempt = 0; attempt < 18; attempt++) {
@@ -14165,6 +14169,7 @@
               name: botNames[i] || `Arcanist_${i + 1}`,
               level: botLevel
             });
+            bot.netId = i + 1;
             bot.z = 3000 + Math.random() * 500;
             bot.vz = 0;
             bot.isGrounded = false;
@@ -14716,8 +14721,22 @@
         },
 
         checkVictory() {
-          if (!this.matchFinished && this.aliveCount === 1 && this.player && this.player.isAlive) {
+          if (this.matchFinished) return;
+          const livingMates = (typeof SquadEngine !== 'undefined' && SquadEngine.getLivingSquadmateCount)
+            ? SquadEngine.getLivingSquadmateCount()
+            : 0;
+          const squadAlive = (this.player && this.player.isAlive ? 1 : 0) + livingMates;
+          let hostileAlive = 0;
+          for (let i = 0; i < this.entities.length; i++) {
+            const e = this.entities[i];
+            if (e && e.isAlive && !e.isPlayer && !e.isSquadMate) hostileAlive++;
+          }
+          if (hostileAlive === 0 && squadAlive > 0) {
             this.victoryPending = true;
+          } else if (this.state === 'PLAYING' && this.player && !this.player.isAlive && livingMates === 0 && !this.playerDeathPending) {
+            this.playerDeathPending = true;
+            this.playerDeathDelay = 0.6;
+            this.pendingPlacement = Math.max(2, hostileAlive + 1);
           }
         },
 
@@ -14728,11 +14747,17 @@
             this.state = 'GAMEOVER';
             document.body.dataset.state = 'gameover';
             this.finishMatch(false, this.pendingPlacement || Math.max(1, this.aliveCount + 1));
-          } else if (this.victoryPending && this.aliveCount === 1 && this.player && this.player.isAlive) {
-            this.state = 'GAMEOVER';
-            document.body.dataset.state = 'gameover';
-            AudioEngine.sfxVictory();
-            this.finishMatch(true, 1);
+          } else if (this.victoryPending) {
+            const livingMates = (typeof SquadEngine !== 'undefined' && SquadEngine.getLivingSquadmateCount)
+              ? SquadEngine.getLivingSquadmateCount()
+              : 0;
+            const squadAlive = (this.player && this.player.isAlive ? 1 : 0) + livingMates;
+            if (squadAlive > 0) {
+              this.state = 'GAMEOVER';
+              document.body.dataset.state = 'gameover';
+              AudioEngine.sfxVictory();
+              this.finishMatch(true, 1);
+            }
           }
         },
 
@@ -19513,6 +19538,16 @@
         UIController.showLobby();
         CloudBridge.syncProfile(true);
         checkTutorial();
+        CloudBridge.request('checkReconnectToken').then((tk) => {
+          if (tk && tk.matchId && typeof SquadEngine !== 'undefined' && !SquadEngine.matchId) {
+            showConfirmModal(
+              'RECONNECT TO SQUAD?',
+              'Your squad match is still active (12s grace window). Rejoin now?',
+              'Rejoin Match',
+              () => SquadEngine.joinLeaderMatch(tk.matchId)
+            );
+          }
+        });
       }
 
       async function authSubmitSignIn() {
@@ -20007,6 +20042,45 @@
         let spectateIdx = 0;
         let lastHudRefresh = 0;
         let lastNetSync = 0;
+        let lastWorldSync = 0;
+        const STATE_NAMES = ['idle', 'walk', 'attack'];
+        const ELEM_NAMES = [null, 'FIRE', 'WATER', 'DARK'];
+
+        function applyRemoteBotAndWorldSnapshot(snap) {
+          if (!snap || isLeader() || Game.state !== 'PLAYING') return;
+          if (snap.bots && Array.isArray(Game.entities)) {
+            const deadSet = new Set(Array.isArray(snap.bots.deadIds) ? snap.bots.deadIds : []);
+            const byId = new Map();
+            for (let i = 0; i < Game.entities.length; i++) {
+              const e = Game.entities[i];
+              if (e && !e.isPlayer && !e.isSquadMate && e.netId != null) {
+                byId.set(e.netId, e);
+                if (deadSet.has(e.netId) && e.isAlive) {
+                  e.hp = 0;
+                  e.isAlive = false;
+                }
+              }
+            }
+            const tuples = Array.isArray(snap.bots.tuples) ? snap.bots.tuples : [];
+            for (let i = 0; i < tuples.length; i++) {
+              const t = tuples[i];
+              const bot = byId.get(t[0]);
+              if (!bot || !bot.isAlive) continue;
+              bot.x += (t[1] - bot.x) * 0.45;
+              bot.y += (t[2] - bot.y) * 0.45;
+              bot.facingAngle = (t[3] || 0) / 10;
+              bot.hp = Math.min(bot.maxHp, Math.max(0, t[4]));
+              bot.animState = STATE_NAMES[t[5]] || 'idle';
+              bot.primedElement = ELEM_NAMES[t[7]] || null;
+            }
+          }
+          if (snap.world && Game.storm) {
+            if (typeof snap.world.stormPhase === 'number') Game.storm.phase = snap.world.stormPhase;
+            if (typeof snap.world.cx === 'number') Game.storm.currentCenterX = snap.world.cx;
+            if (typeof snap.world.cy === 'number') Game.storm.currentCenterY = snap.world.cy;
+            if (typeof snap.world.r === 'number') Game.storm.currentRadius = snap.world.r;
+          }
+        }
 
         document.addEventListener('ar:match:event', (ev) => {
           const d = ev && ev.detail;
@@ -20036,6 +20110,7 @@
                 }
               }
             }
+            applyRemoteBotAndWorldSnapshot(d.payload);
             renderDropPins();
           }
         });
@@ -20048,6 +20123,9 @@
         }
         function hasLivingSquadmates() {
           return squadEntities.some(e => e && e.isAlive && !e.isDowned);
+        }
+        function getLivingSquadmateCount() {
+          return squadEntities.filter(e => e && e.isAlive).length;
         }
         function isSpectating() {
           return Boolean(Game.player && !Game.player.isAlive && squadEntities.some(e => e && e.isAlive));
@@ -20307,6 +20385,19 @@
               const livingHumans = allSquad.filter(e => e.isAlive).map(e => ({ x: e.x, y: e.y, alive: true }));
               const hostileBots = Game.entities.filter(e => !e.isPlayer && !e.isSquadMate);
               CloudBridge.request('pushAoiBots', { bots: hostileBots, livingHumans });
+              if (now - lastWorldSync >= 500 && Game.storm) {
+                lastWorldSync = now;
+                CloudBridge.request('pushWorldState', {
+                  worldState: {
+                    stormPhase: Game.storm.phase || 1,
+                    stormTimer: Math.max(0, Math.round(Game.storm.timer || 0)),
+                    cx: Math.round(Game.storm.currentCenterX || 10000),
+                    cy: Math.round(Game.storm.currentCenterY || 10000),
+                    r: Math.round(Game.storm.currentRadius || 9000),
+                    aliveTotal: Game.aliveCount || 1
+                  }
+                });
+              }
             }
           }
 
@@ -20464,6 +20555,7 @@
           isActive,
           isLeader,
           hasLivingSquadmates,
+          getLivingSquadmateCount,
           isSpectating,
           getVisionAnchor,
           prepareSquadDrop,

@@ -273,3 +273,18 @@ test('Asset & APK contracts: 6 verbatim PNGs, Local-First + Remote-Fallback, Ber
   assert.equal(stripComments(authCode).includes('signInWithPopup'), false);
   assert.equal(stripComments(html).includes('signInWithPopup'), false);
 });
+
+test('evaluateSquadMatchOutcome handles Squad Victory (alive or spectating), Spectating, and Squad Wipe', async () => {
+  const { evaluateSquadMatchOutcome } = await import('../squadMultiplayer.js');
+  // 2 squadmates alive, 0 hostiles -> Squad Victory without friendly fire soft-lock
+  assert.equal(evaluateSquadMatchOutcome(true, 1, 0), 'victory');
+  // Local player bled out, surviving teammate kills last bot -> Squad Victory
+  assert.equal(evaluateSquadMatchOutcome(false, 1, 0), 'victory');
+  // Local player bled out while teammate fights remaining bots -> Spectating
+  assert.equal(evaluateSquadMatchOutcome(false, 2, 5), 'spectating');
+  // Local player dead & last squadmate falls -> Squad Wipe
+  assert.equal(evaluateSquadMatchOutcome(false, 0, 5), 'squad_wipe');
+  // Normal active combat
+  assert.equal(evaluateSquadMatchOutcome(true, 1, 48), 'playing');
+});
+

@@ -132,6 +132,16 @@ export function electNextHostUid(membersMap, playersMap, nowMs, stallMs = HOST_S
   return connectedUids[0];
 }
 
+/** Pure match outcome resolver for Solo & 2-4 Player Friend Squads */
+export function evaluateSquadMatchOutcome(playerAlive, livingSquadmates, livingHostiles) {
+  const squadAlive = (playerAlive ? 1 : 0) + Math.max(0, Number(livingSquadmates) || 0);
+  const hostiles = Math.max(0, Number(livingHostiles) || 0);
+  if (hostiles === 0 && squadAlive > 0) return 'victory';
+  if (!playerAlive && squadAlive === 0) return 'squad_wipe';
+  if (!playerAlive && squadAlive > 0) return 'spectating';
+  return 'playing';
+}
+
 /** Idempotent O(1) intent deduplicator with automatic 3s TTL pruning */
 export function createIntentDeduplicator(ttlMs = INTENT_TTL_MS) {
   const seen = new Map();
