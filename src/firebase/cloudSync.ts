@@ -108,7 +108,7 @@ document.addEventListener('ar:cloud:request', async (ev: Event) => {
         break;
       }
       case 'updateDisplayName':
-        result = (await authService.updateDisplayName(String(p.displayName || ''))) as Record<string, unknown>;
+        result = (await authService.updateDisplayName(String(p.displayName || p.newName || ''))) as Record<string, unknown>;
         if (result.ok) await socialService.syncMemberProfile();
         break;
       case 'atomicSpend': {

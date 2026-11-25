@@ -108,9 +108,16 @@ export function mergeProfileConflict(localProfile, remoteProfile) {
   const lt = localProfile.statTiers || {};
   const rt = remoteProfile.statTiers || {};
   const mergedStatTiers = {};
-  const allStatKeys = new Set(['PWR', 'FOC', 'AGI', 'VIT', ...Object.keys(lt), ...Object.keys(rt)]);
+  const allowedStatKeys = new Set(['PWR', 'FOC', 'AGI', 'VIT', 'maxHealth', 'movementSpeed', 'attackPower']);
+  const allStatKeys = new Set([...Object.keys(lt), ...Object.keys(rt)]);
+  if (allStatKeys.size === 0) {
+    allStatKeys.add('maxHealth');
+    allStatKeys.add('movementSpeed');
+    allStatKeys.add('attackPower');
+  }
   for (const k of allStatKeys) {
-    mergedStatTiers[k] = Math.max(Number(lt[k]) || 0, Number(rt[k]) || 0);
+    if (!allowedStatKeys.has(k)) continue;
+    mergedStatTiers[k] = Math.max(0, Math.min(25, Math.floor(Math.max(Number(lt[k]) || 0, Number(rt[k]) || 0))));
   }
 
   const localLevel = Number(localProfile.level) || 1;
@@ -223,7 +230,10 @@ function buildDefaultUserDoc(uid, displayName, authProvider, friendCode, seedLoc
     equippedRune: seedLocal.equippedRune || null,
     unlockedTrails: Array.isArray(seedLocal.unlockedTrails) ? seedLocal.unlockedTrails.slice(0, 12) : ['DEFAULT'],
     equippedTrail: seedLocal.equippedTrail || 'DEFAULT',
-    statTiers: seedLocal.statTiers && typeof seedLocal.statTiers === 'object' ? seedLocal.statTiers : { PWR: 0, FOC: 0, AGI: 0, VIT: 0 },
+    statTiers:
+      seedLocal.statTiers && typeof seedLocal.statTiers === 'object' && Object.keys(seedLocal.statTiers).length > 0
+        ? seedLocal.statTiers
+        : { maxHealth: 0, movementSpeed: 0, attackPower: 0 },
     careerStats: {
       wins: Math.max(0, Math.floor(Number(seedLocal.careerStats?.wins ?? seedLocal.wins) || 0)),
       elims: Math.max(0, Math.floor(Number(seedLocal.careerStats?.elims ?? seedLocal.eliminations) || 0)),
@@ -328,6 +338,8 @@ class AuthServiceImpl {
     this.lastAuthError = null;
     this.sandboxAuth = !isFirebaseConfigured();
     this.sandboxRtdb = !isRtdbConfigured();
+    this._ensurePromises = new Map();
+    this._pendingAuthSeed = null;
     this.listeners = new Set();
     this.channel = createSimChannel();
     if (this.channel) {
@@ -347,23 +359,15 @@ class AuthServiceImpl {
   }
 
   getState() {
-    const isSandbox = this.sandboxAuth || this.sandboxRtdb;
+    const isSandbox = this.sandboxAuth;
     const provider = this.profile?.authProvider || (this.user?.isAnonymous ? 'anonymous' : 'password');
     let statusLabel = this.sandboxAuth ? 'Local Sandbox' : 'Live Cloud Ready';
     if (!this.sandboxAuth && this.user) {
-      if (this.sandboxRtdb) {
-        statusLabel = this.user.isAnonymous
-          ? 'Guest Account · Sandbox Squads'
-          : provider === 'google'
-            ? 'Google Account · Sandbox Squads'
-            : 'Email Account · Sandbox Squads';
-      } else {
-        statusLabel = this.user.isAnonymous
-          ? 'Live Cloud · Guest'
-          : provider === 'google'
-            ? 'Live Cloud · Google'
-            : 'Live Cloud · Email';
-      }
+      statusLabel = this.user.isAnonymous
+        ? 'Live Cloud · Guest'
+        : provider === 'google'
+          ? 'Live Cloud · Google'
+          : 'Live Cloud · Email';
     } else if (this.user && this.sandboxAuth) {
       statusLabel = this.user.isAnonymous ? 'Local Sandbox (Guest)' : 'Local Sandbox';
     }
@@ -558,6 +562,26 @@ class AuthServiceImpl {
   }
 
   async _ensureCloudProfile(fbUser, preferredName = null, seedLocal = {}) {
+    const uid = fbUser.uid;
+    if (this._ensurePromises.has(uid)) {
+      return this._ensurePromises.get(uid);
+    }
+    const pending = this._pendingAuthSeed;
+    this._pendingAuthSeed = null;
+    const effPreferredName = preferredName || pending?.preferredName || null;
+    const effSeedLocal =
+      seedLocal && Object.keys(seedLocal).length > 0 ? seedLocal : pending?.seedLocal || {};
+
+    const task = this._ensureCloudProfileCore(fbUser, effPreferredName, effSeedLocal).finally(() => {
+      if (this._ensurePromises.get(uid) === task) {
+        this._ensurePromises.delete(uid);
+      }
+    });
+    this._ensurePromises.set(uid, task);
+    return task;
+  }
+
+  async _ensureCloudProfileCore(fbUser, preferredName = null, seedLocal = {}) {
     const { db } = getFirebaseServices();
     const uid = fbUser.uid;
     const provider = fbUser.isAnonymous
@@ -729,6 +753,7 @@ class AuthServiceImpl {
     const { auth } = getFirebaseServices();
     if (auth && !this.sandboxAuth) {
       try {
+        this._pendingAuthSeed = { preferredName: nameCheck.cleaned, seedLocal };
         const cred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
         await updateProfile(cred.user, { displayName: nameCheck.cleaned }).catch(() => null);
         this.user = {
@@ -742,6 +767,7 @@ class AuthServiceImpl {
         this._emit();
         return { ok: true, state: this.getState() };
       } catch (err) {
+        this._pendingAuthSeed = null;
         if (!shouldFallbackToSandbox(err)) {
           return { ok: false, error: formatFriendlyAuthError(err) };
         }
@@ -776,6 +802,7 @@ class AuthServiceImpl {
     const { auth } = getFirebaseServices();
     if (auth && !this.sandboxAuth) {
       try {
+        this._pendingAuthSeed = { preferredName: finalName, seedLocal };
         const cred = await signInAnonymously(auth);
         await updateProfile(cred.user, { displayName: finalName }).catch(() => null);
         this.user = {
@@ -789,6 +816,7 @@ class AuthServiceImpl {
         this._emit();
         return { ok: true, state: this.getState() };
       } catch (err) {
+        this._pendingAuthSeed = null;
         if (!shouldFallbackToSandbox(err)) {
           return { ok: false, error: formatFriendlyAuthError(err) };
         }
@@ -988,6 +1016,9 @@ class AuthServiceImpl {
   async syncProfile(localData) {
     if (!this.user) return { ok: false, error: 'Not signed in.', mode: 'local' };
     const uid = this.user.uid;
+    if (this._ensurePromises.has(uid)) {
+      await this._ensurePromises.get(uid).catch(() => null);
+    }
     const friendCode = this.profile?.friendCode || this._claimSandboxFriendCode(uid, localData.displayName || localData.playerName || 'ArcaneHero');
     const localNorm = buildDefaultUserDoc(
       uid,
@@ -1042,11 +1073,19 @@ class AuthServiceImpl {
         this._emit();
         return { ok: true, action: 'updated', profile: finalMerged, lastSyncedAt: this.lastSyncedAt };
       } catch (err) {
+        this._persistCloudCache(merged);
         try {
           handleFirestoreError(err, OperationType.WRITE, `users/${uid}`);
         } catch {
-          // Persist locally so gameplay is never interrupted
+          // Persist locally so gameplay is never interrupted, without flipping sandboxAuth
         }
+        this._emit();
+        return {
+          ok: false,
+          action: 'cached_offline',
+          profile: merged,
+          error: formatFriendlyAuthError(err),
+        };
       }
     }
 

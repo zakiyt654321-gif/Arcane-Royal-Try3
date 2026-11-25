@@ -23,6 +23,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/arcane/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/assets/arcane/icon-192.png" />
     <script type="module" src="/src/firebase/cloudSync.ts"></script>
+    <script type="module" src="/src/game/island25d.ts"></script>
     <style>
       * {
         box-sizing: border-box;
@@ -6419,7 +6420,7 @@
                   <span class="settings-tile-label">🔥 Firebase Live Diagnostics</span>
                   <button type="button" id="btn-fb-diag-run" class="btn-lobby-sec" data-ar-click="runFirebaseDiagnosticsUI" style="min-height: 28px; padding: 4px 10px; font-size: 11px; border-color: rgba(56, 189, 248, 0.5); color: #bae6fd;">↻ Test Live</button>
                 </div>
-                <span id="fb-diag-meta" class="settings-tile-desc" style="font-size: 11px; color: #94a3b8;">Project: arcane-royale · Tap Test Live to verify Auth, Firestore, and Realtime DB.</span>
+                <span id="fb-diag-meta" class="settings-tile-desc" style="font-size: 11px; color: #94a3b8;">Live Cloud Firebase · Tap Test Live to verify Auth, Firestore, and Realtime DB.</span>
                 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;">
                   <div id="diag-pill-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; border-radius: 9px; font-size: 10.5px; font-weight: 800; line-height: 1.2; text-align: center; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(148, 163, 184, 0.35); color: #cbd5e1;"><span>● Auth</span><span style="font-size: 9.5px; opacity: 0.9;">Testing…</span></div>
                   <div id="diag-pill-firestore" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; border-radius: 9px; font-size: 10.5px; font-weight: 800; line-height: 1.2; text-align: center; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(148, 163, 184, 0.35); color: #cbd5e1;"><span>● Firestore</span><span style="font-size: 9.5px; opacity: 0.9;">Testing…</span></div>
@@ -6502,9 +6503,9 @@
           <div class="acct-identity-card">
             <img id="acct-portrait-img" class="acct-portrait-img" alt="Champion portrait" crossorigin="anonymous" referrerpolicy="no-referrer" />
             <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                <strong id="acct-display-name" style="font-size: 15px; font-weight: 900; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Champion</strong>
-                <span id="acct-provider-badge" class="lobby-code-chip" style="font-size: 9.5px;">Guest Account</span>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0;">
+                <strong id="acct-display-name" style="font-size: 15px; font-weight: 900; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; max-width: 52%;">Champion</strong>
+                <span id="acct-provider-badge" class="lobby-code-chip" style="font-size: 9.5px; min-width: 0; max-width: 48%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Guest Account</span>
               </div>
               <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; color: #fde68a;">
                 <span id="acct-level-label">LVL 1</span>
@@ -7449,6 +7450,21 @@
               }
             }
           }
+          if (typeof islandStaticProps !== 'undefined') {
+            for (let i = 0; i < islandStaticProps.length; i++) {
+              const prop = islandStaticProps[i];
+              const pad = prop.collisionRadius + eRad;
+              if (Math.abs(prop.x - entity.x) > pad + probeDist || Math.abs(prop.y - entity.y) > pad + probeDist) continue;
+              for (let s = 1; s <= 2; s++) {
+                const frac = s * 0.5;
+                const px = entity.x + cos * probeDist * frac;
+                const py = entity.y + sin * probeDist * frac;
+                if (Math.hypot(px - prop.x, py - prop.y) < pad) {
+                  clear = Math.min(clear, frac * 0.5);
+                }
+              }
+            }
+          }
           return clear;
         };
         if (checkRay(desiredAngle) >= 0.99) return { x: steerX / len, y: steerY / len };
@@ -7725,7 +7741,12 @@
         checkTutorial();
       }
 
-      const MAP_REGIONS = [];
+      const MAP_REGIONS = [
+        { id: 'CITADEL', name: 'Arcane Citadel', x: 0.5, y: 0.5, color: '#c8b48c', accent: '#fbbf24' },
+        { id: 'GROVE', name: 'Whispering Grove', x: 0.23, y: 0.28, color: '#2d6a4f', accent: '#4ade80' },
+        { id: 'OBSIDIAN', name: 'Obsidian Forge', x: 0.77, y: 0.26, color: '#3b1f2b', accent: '#f97316' },
+        { id: 'TIDAL', name: 'Tidal Ruins', x: 0.56, y: 0.79, color: '#1b4965', accent: '#22d3ee' }
+      ];
       const MINIMAP_VIEW = { x: 0, y: 0, size: 0, scale: 0 };
       let activePing = null;
 
@@ -9139,6 +9160,10 @@
         rawAudio: {},
         buffers: {},
         groundPattern: null,
+        biomeTileCanvases: {},
+        slicedProps: {},
+        proceduralTilesBuilt: false,
+        proceduralPropsBuilt: false,
         failed: new Set(),
         loaded: 0,
         total: 0,
@@ -9150,12 +9175,79 @@
           { key: 'sprite_TIDECALLER', type: 'img', path: CHARACTER_ASSET_CONFIG.TIDECALLER.spriteUrl, fallbackPath: CHARACTER_ASSET_CONFIG.TIDECALLER.spriteFallback },
           { key: 'portrait_SHADOW', type: 'img', path: CHARACTER_ASSET_CONFIG.SHADOW.portraitUrl, fallbackPath: CHARACTER_ASSET_CONFIG.SHADOW.portraitFallback },
           { key: 'sprite_SHADOW', type: 'img', path: CHARACTER_ASSET_CONFIG.SHADOW.spriteUrl, fallbackPath: CHARACTER_ASSET_CONFIG.SHADOW.spriteFallback },
+          { key: 'tile_citadel', type: 'img', path: './assets/Image/tile_citadel.png' },
+          { key: 'tile_grove', type: 'img', path: './assets/Image/tile_grove.png' },
+          { key: 'tile_obsidian', type: 'img', path: './assets/Image/tile_obsidian.png' },
+          { key: 'tile_tidal', type: 'img', path: './assets/Image/tile_tidal.png' },
+          { key: 'props_structures', type: 'img', path: './assets/Image/props_structures.png' },
+          { key: 'props_nature_loot', type: 'img', path: './assets/Image/props_nature_loot.png' },
           { key: 'ground_runic', type: 'img', path: './assets/arcane/ground-runic.webp', fallbackPath: '/assets/arcane/ground-runic.webp' },
           { key: 'app_icon', type: 'img', path: './assets/arcane/icon-192.png', fallbackPath: '/assets/arcane/icon-192.png' },
           { key: 'bgm_lobby', type: 'audio', path: '/assets/arcane/audio/lobby-theme.mp3' },
           { key: 'bgm_combat', type: 'audio', path: '/assets/arcane/audio/arena-combat.mp3' },
           { key: 'bgm_climax', type: 'audio', path: '/assets/arcane/audio/storm-climax.mp3' }
         ],
+
+        processIsland25DAssets() {
+          const mod = window.__AR_ISLAND_25D__;
+          if (!mod) return;
+          if (!this.proceduralTilesBuilt) {
+            const procTiles = mod.createProceduralBiomeTiles();
+            for (const [k, canvas] of Object.entries(procTiles)) {
+              if (!this.biomeTileCanvases[k]) this.biomeTileCanvases[k] = canvas;
+            }
+            this.proceduralTilesBuilt = true;
+          }
+          if (!this.proceduralPropsBuilt) {
+            const procProps = mod.createProceduralPropSprites();
+            for (const [k, sprite] of Object.entries(procProps)) {
+              if (!this.slicedProps[k]) this.slicedProps[k] = sprite;
+            }
+            this.proceduralPropsBuilt = true;
+          }
+          // Override with real PNG floor tiles if loaded
+          const tileKeys = ['tile_citadel', 'tile_grove', 'tile_obsidian', 'tile_tidal'];
+          let invalidated = false;
+          for (let i = 0; i < tileKeys.length; i++) {
+            const tk = tileKeys[i];
+            const img = this.images[tk];
+            if (img && img.complete && img.naturalWidth > 0 && this.biomeTileCanvases[tk] !== img) {
+              this.biomeTileCanvases[tk] = img;
+              invalidated = true;
+            }
+          }
+          // Slice loaded 2x2 prop sheets (20px outer margin trim + magenta/shadow strip + 1px despill + foot anchor)
+          const sheetKeys = ['props_structures', 'props_nature_loot'];
+          for (let i = 0; i < sheetKeys.length; i++) {
+            const sk = sheetKeys[i];
+            const img = this.images[sk];
+            if (img && img.complete && img.naturalWidth > 0 && !img._arSliced25D) {
+              const sliced = mod.slicePropSheet2x2(img, sk, mod.PROP_SHEET_OUTER_MARGIN);
+              for (const [propKey, sprite] of Object.entries(sliced)) {
+                if (sprite) this.slicedProps[propKey] = sprite;
+              }
+              img._arSliced25D = true;
+              invalidated = true;
+            }
+          }
+          if (invalidated && typeof TerrainCache !== 'undefined' && TerrainCache.invalidate) {
+            TerrainCache.invalidate();
+          }
+        },
+
+        getBiomeTile(biomeId) {
+          this.processIsland25DAssets();
+          const key = biomeId === 'CITADEL' ? 'tile_citadel'
+            : biomeId === 'GROVE' ? 'tile_grove'
+            : biomeId === 'OBSIDIAN' ? 'tile_obsidian'
+            : 'tile_tidal';
+          return this.biomeTileCanvases[key] || null;
+        },
+
+        getPropSprite(propKey) {
+          this.processIsland25DAssets();
+          return this.slicedProps[propKey] || null;
+        },
 
         load(onProgress) {
           this.total = this.manifest.length;
@@ -9177,8 +9269,13 @@
                 if (success) {
                   if (item.type === 'img') {
                     this.images[item.key] = data;
-                    if (item.key === 'ground_runic') {
+                    if (
+                      item.key === 'ground_runic' ||
+                      item.key.startsWith('tile_') ||
+                      item.key.startsWith('props_')
+                    ) {
                       this.groundPattern = null;
+                      this.processIsland25DAssets();
                       if (typeof TerrainCache !== 'undefined' && TerrainCache.invalidate) {
                         TerrainCache.invalidate();
                       }
@@ -9968,24 +10065,73 @@
       const LANDMARK_LAYOUT = [];
 
       // ==========================================
-      // PSEUDO-3D (2.5D) PROJECTION & SHADOW SYSTEM
+      // 2.5D ISLAND PROJECTION, 45° TILT (0.72) & CONTACT SHADOW SYSTEM
       // ==========================================
-      const CAMERA_PITCH = 0.88;
+      const CAMERA_PITCH = 0.72;
       const INV_CAMERA_PITCH = 1 / CAMERA_PITCH;
       const GRAVITY = -980;
+      const ISLAND_WORLD_SEED = 20260725;
+      let ISLAND_WORLD_DATA = null;
+      let islandStaticProps = [];
+
+      function classifyIslandBiomeLocal(x, y) {
+        if (window.__AR_ISLAND_25D__) {
+          return window.__AR_ISLAND_25D__.classifyIslandBiome(x, y, ARENA_WIDTH, ARENA_HEIGHT);
+        }
+        const cx = ARENA_WIDTH * 0.5;
+        const cy = ARENA_HEIGHT * 0.5;
+        const dx = x - cx;
+        const dy = y - cy;
+        const r = ARENA_WIDTH * 0.21;
+        if (dx * dx + dy * dy <= r * r) return 'CITADEL';
+        if (x < cx && y < cy + 1100) return 'GROVE';
+        if (x >= cx && y < cy + 300) return 'OBSIDIAN';
+        return 'TIDAL';
+      }
+
+      function initIsland25DWorld() {
+        const mod = window.__AR_ISLAND_25D__;
+        if (!mod) return false;
+        if (!ISLAND_WORLD_DATA) {
+          ISLAND_WORLD_DATA = mod.generateIsland25DWorld(ARENA_WIDTH, ARENA_HEIGHT, ISLAND_WORLD_SEED);
+          islandStaticProps = ISLAND_WORLD_DATA.staticProps || [];
+        }
+        if (typeof AssetLoader !== 'undefined' && AssetLoader.processIsland25DAssets) {
+          AssetLoader.processIsland25DAssets();
+        }
+        if (typeof TerrainCache !== 'undefined' && TerrainCache.invalidate) {
+          TerrainCache.invalidate();
+        }
+        if (typeof drawDropMap === 'function') {
+          try { drawDropMap(); } catch (_) {}
+        }
+        return true;
+      }
+
+      window.addEventListener('ar:island25d-ready', () => {
+        initIsland25DWorld();
+      });
 
       function drawDirectionalShadow(ctx, x, y, z = 0, radius = 20, isPlayer = false) {
         ctx.save();
         const zHeight = Math.max(0, z || 0);
-        const shadowScale = Math.max(0.28, 1.0 - zHeight / 130);
-        const shadowAlpha = Math.max(0.06, (isPlayer ? 0.62 : 0.45) * (1.0 - zHeight / 160));
+        const shadowScale = Math.max(0.32, 1.0 - zHeight / 320);
+        const baseAlpha = isPlayer ? 0.36 : 0.34;
+        const shadowAlpha = Math.max(0.10, baseAlpha * Math.max(0.35, 1.0 - zHeight / 420));
 
-        const shadowX = x + 8 + (zHeight * 0.08);
-        const shadowY = y + 12 + (zHeight * 0.12);
-
-        ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+        // Grounded contact shadow locked directly at (x, y) on the 45-degree tilted ground plane
+        ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha.toFixed(3)})`;
         ctx.beginPath();
-        ctx.ellipse(shadowX, shadowY, radius * 1.15 * shadowScale, radius * 0.65 * shadowScale, -Math.PI / 12, 0, Math.PI * 2);
+        ctx.ellipse(x, y + 3, radius * 1.18 * shadowScale, radius * 0.68 * shadowScale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawGroundedPropShadow(ctx, x, y, rx, ry) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.34)';
+        ctx.beginPath();
+        ctx.ellipse(x, y + 4, rx, ry, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       }
@@ -10194,6 +10340,28 @@
               if (Math.hypot(ent.knockbackVx || 0, ent.knockbackVy || 0) >= 4.0) {
                 damageDestructibleProp(prop, 35, ent.lastAttacker || ent, null);
               }
+            }
+          }
+        }
+
+        // Collide against 2.5D Island Static Props (Pillars, Walls, Obelisks, Trees, Boulders) in true world coordinates
+        if (typeof islandStaticProps !== 'undefined' && islandStaticProps.length > 0) {
+          for (let i = 0; i < islandStaticProps.length; i++) {
+            const prop = islandStaticProps[i];
+            if (z >= (prop.zHeight || 64)) continue;
+            const pdx = rx - prop.x;
+            const pdy = ry - prop.y;
+            const minD = r + prop.collisionRadius;
+            if (Math.abs(pdx) > minD || Math.abs(pdy) > minD) continue;
+            const pdist = Math.hypot(pdx, pdy);
+            if (pdist < minD) {
+              const nx = pdist > 0.001 ? (pdx / pdist) : 1;
+              const ny = pdist > 0.001 ? (pdy / pdist) : 0;
+              rx = prop.x + nx * (minD + 0.5);
+              ry = prop.y + ny * (minD + 0.5);
+              wallImpact = true;
+              impactNx = nx;
+              impactNy = ny;
             }
           }
         }
@@ -10589,9 +10757,30 @@
       }
 
       function spawnArenaDestructibles() {
+        initIsland25DWorld();
+        const seeded = ISLAND_WORLD_DATA && Array.isArray(ISLAND_WORLD_DATA.destructibles)
+          ? ISLAND_WORLD_DATA.destructibles
+          : [];
         const kinds = ['CRATE', 'CRYSTAL_PILLAR', 'BARREL'];
         for (let i = 0; i < MAX_DESTRUCTIBLES; i++) {
           const prop = destructiblePropPool[i];
+          if (i < seeded.length) {
+            const s = seeded[i];
+            prop.active = true;
+            prop.kind = s.kind;
+            prop.spriteKey = s.spriteKey;
+            prop.biome = s.biome;
+            prop.x = s.x;
+            prop.y = s.y;
+            prop.radius = s.radius;
+            prop.maxHp = s.maxHp;
+            prop.hp = s.maxHp;
+            prop.drawScale = s.drawScale || 1.0;
+            prop.hitFlash = 0;
+            prop.chainFuse = -1;
+            prop.chainAttacker = null;
+            continue;
+          }
           const kind = kinds[i % 3];
           let px = 1400 + Math.random() * 17200;
           let py = 1400 + Math.random() * 17200;
@@ -10602,11 +10791,14 @@
           }
           prop.active = true;
           prop.kind = kind;
+          prop.spriteKey = kind === 'BARREL' ? 'barrel' : (kind === 'CRYSTAL_PILLAR' ? 'boulder' : 'chest');
+          prop.biome = classifyIslandBiomeLocal(px, py);
           prop.x = px;
           prop.y = py;
-          prop.radius = kind === 'CRYSTAL_PILLAR' ? 28 : (kind === 'BARREL' ? 19 : 21);
+          prop.radius = kind === 'CRYSTAL_PILLAR' ? 28 : (kind === 'BARREL' ? 20 : 22);
           prop.maxHp = kind === 'CRYSTAL_PILLAR' ? 110 : (kind === 'BARREL' ? 35 : 45);
           prop.hp = prop.maxHp;
+          prop.drawScale = 1.0;
           prop.hitFlash = 0;
           prop.chainFuse = -1;
           prop.chainAttacker = null;
@@ -11470,6 +11662,18 @@
           if (!player || !player.isAlive) return;
           const zoom = Camera.getZoom();
           const focal = Camera.getFocalPoint();
+          if (window.__AR_ISLAND_25D__ && window.__AR_ISLAND_25D__.computeAimAngleFromPointer25D) {
+            const res = window.__AR_ISLAND_25D__.computeAimAngleFromPointer25D(
+              clientX, clientY,
+              player.x, player.y, player.z || 0,
+              Camera.x, Camera.y, zoom,
+              focal.x, focal.y, CAMERA_PITCH
+            );
+            if (!res.valid) return;
+            aimAngle = res.angle;
+            player.facingAngle = aimAngle;
+            return;
+          }
           const screenX = focal.x + (player.x - Camera.x) * zoom;
           const screenY = focal.y + (player.y - Camera.y) * zoom * CAMERA_PITCH - (player.z || 0) * zoom;
           const worldDX = (clientX - screenX) / Math.max(0.001, zoom);
@@ -11577,8 +11781,11 @@
       // CAMERA (EQUAL-AREA PORTRAIT/LANDSCAPE FAIRNESS & DIRECTIONAL SHAKE)
       // ==========================================
       const Camera = {
-        x: 1500,
-        y: 1500,
+        x: 10000,
+        y: 10000,
+        lookAheadX: 0,
+        lookAheadY: 0,
+        actionZoom: 1.0,
         shakeAmount: 0,
         dirShakeX: 0,
         dirShakeY: 0,
@@ -11630,12 +11837,46 @@
             // Equal visible world area across Portrait (64dvh arena) and Landscape (100dvh)
             base = Math.max(0.55, Math.min(1.85, Math.sqrt((vp.playableW * vp.playableH) / BASE_PLAYABLE_AREA)));
           }
-          return base * (1 + (this.zoomPunch || 0));
+          return base * (this.actionZoom || 1.0) * (1 + (this.zoomPunch || 0));
+        },
+
+        updateFocus(player, isDropping, deltaTime) {
+          const mod = window.__AR_ISLAND_25D__;
+          if (player && mod && mod.computeCameraFocusTarget) {
+            const focus = mod.computeCameraFocusTarget({
+              playerX: player.x,
+              playerY: player.y,
+              playerZ: player.z || 0,
+              isAiming: Boolean(isAiming),
+              aimAngle: aimAngle || player.facingAngle || 0,
+              velX: player.vx || 0,
+              velY: player.vy || 0,
+              maxSpeed: (player.speed || 4.0) * 60,
+              isDashing: Boolean(player.isDashing),
+              isJumpPadAirborne: Boolean((player.jumpPadTimer || 0) > 0 || (!isDropping && !player.isGrounded && (player.z || 0) > 28)),
+              isDropping: Boolean(isDropping),
+              currentLookX: this.lookAheadX || 0,
+              currentLookY: this.lookAheadY || 0,
+              currentActionZoom: this.actionZoom || 1.0,
+              deltaTime,
+              reducedMotion: Boolean(PlayerData.reducedMotion)
+            });
+            this.lookAheadX = focus.lookAheadX;
+            this.lookAheadY = focus.lookAheadY;
+            this.actionZoom = focus.actionZoom;
+            this.update(focus.targetX, focus.targetY, deltaTime);
+            return;
+          }
+          if (player) {
+            const ty = isDropping ? (player.y - (player.z || 0) * INV_CAMERA_PITCH) : player.y;
+            this.update(player.x, ty, deltaTime);
+          }
         },
 
         update(targetX, targetY, deltaTime) {
-          this.x += (targetX - this.x) * 5 * deltaTime;
-          this.y += (targetY - this.y) * 5 * deltaTime;
+          const follow = 1 - Math.exp(-6.2 * Math.max(0, Math.min(0.1, deltaTime)));
+          this.x += (targetX - this.x) * follow;
+          this.y += (targetY - this.y) * follow;
           if (this.shakeAmount > 0.05) {
             this.shakeAmount *= Math.pow(0.9, deltaTime * 60);
           } else {
@@ -15056,6 +15297,12 @@
 
       function isSafeDeployment(x, y, radius = 24) {
         if (overlapsWater(x, y, radius)) return false;
+        if (typeof islandStaticProps !== 'undefined') {
+          for (let i = 0; i < islandStaticProps.length; i++) {
+            const p = islandStaticProps[i];
+            if (Math.hypot(x - p.x, y - p.y) < radius + p.collisionRadius + 10) return false;
+          }
+        }
         return !obstaclePool.some(obstacle =>
           x + radius > obstacle.x && x - radius < obstacle.x + obstacle.w &&
           y + radius > obstacle.y && y - radius < obstacle.y + obstacle.h
@@ -15107,7 +15354,11 @@
           this.bountyLeader = null;
           this.bountyBonusGold = 0;
           this.bountyBonusXp = 0;
+          initIsland25DWorld();
           this.initArcaneJumpPads();
+          Camera.lookAheadX = 0;
+          Camera.lookAheadY = 0;
+          Camera.actionZoom = 1.0;
           stopKillcamAnimation();
           this.weather.init();
           Music.start('battle');
@@ -15351,7 +15602,7 @@
             }
 
             if (this.player && this.player.isAlive) {
-              Camera.update(this.player.x, this.player.y - this.player.z * INV_CAMERA_PITCH, deltaTime);
+              Camera.updateFocus(this.player, true, deltaTime);
             }
 
             // Spawn Drop Trails in the SKY (Z-Axis Visuals)
@@ -15514,6 +15765,23 @@
                   p.vx = 0; p.vy = 0;
                 } else p.active = false;
                 hitWall = true; spawnParticles(p.x, p.y, 4, p.color, 2); break;
+              }
+            }
+            // Projectiles collide with 2.5D Island Static Props (pillars, walls, obelisks, trees, boulders)
+            if (!hitWall && typeof islandStaticProps !== 'undefined') {
+              for (let k = 0; k < islandStaticProps.length; k++) {
+                const prop = islandStaticProps[k];
+                if ((p.z || 16) >= (prop.zHeight || 64)) continue;
+                const hitR = prop.collisionRadius + p.radius * 0.65;
+                if (Math.abs(p.x - prop.x) > hitR + 24 || Math.abs(p.y - prop.y) > hitR + 24) continue;
+                if (distToSegment(prop.x, prop.y, previousProjectileX, previousProjectileY, p.x, p.y) < hitR) {
+                  if (p.type === 'BOMB') {
+                    p.vx = 0; p.vy = 0;
+                  } else p.active = false;
+                  hitWall = true;
+                  spawnParticles(p.x, p.y, 5, p.color, 2.5);
+                  break;
+                }
               }
             }
             // Projectiles collide with Destructible Arena Props (Crystal Cover Pillars block shots until shattered)
@@ -15713,7 +15981,7 @@
 
 
           if (this.player && (this.player.isAlive || this.player.isDying)) {
-            Camera.update(this.player.x, this.player.y, deltaTime);
+            Camera.updateFocus(this.player, false, deltaTime);
           } else {
             Camera.update(this.storm.currentCenterX, this.storm.currentCenterY, deltaTime);
           }
@@ -15817,26 +16085,34 @@
         },
 
         initArcaneJumpPads() {
+          initIsland25DWorld();
+          const seededPads = ISLAND_WORLD_DATA && Array.isArray(ISLAND_WORLD_DATA.jumpPads)
+            ? ISLAND_WORLD_DATA.jumpPads
+            : null;
+          if (seededPads && seededPads.length > 0) {
+            this.jumpPads = seededPads.map((a, i) => ({
+              id: a.id,
+              biome: a.biome,
+              x: a.x,
+              y: a.y,
+              radius: a.radius || 42,
+              label: a.label,
+              pulseOffset: a.pulseOffset !== undefined ? a.pulseOffset : i * 1.1
+            }));
+            return;
+          }
           const ridgeAnchors = [
-            { id: 'JP_NW', x: 5600, y: 5400, label: 'Frost Ridge' },
-            { id: 'JP_NE', x: 14600, y: 5600, label: 'Volcano Spire' },
-            { id: 'JP_CN', x: 10000, y: 7400, label: 'Citadel North' },
-            { id: 'JP_CS', x: 10000, y: 12600, label: 'Citadel South' },
-            { id: 'JP_SW', x: 5400, y: 14500, label: 'Sylvan Bluff' },
-            { id: 'JP_SE', x: 14400, y: 14400, label: 'Dune Crest' }
+            { id: 'JP_NW', x: 5600, y: 5400, label: 'Grove Pad' },
+            { id: 'JP_NE', x: 14600, y: 5600, label: 'Forge Spire' },
+            { id: 'JP_CN', x: 10000, y: 8350, label: 'Citadel North' },
+            { id: 'JP_CS', x: 10000, y: 11650, label: 'Citadel South' },
+            { id: 'JP_SW', x: 6200, y: 15200, label: 'Tidal West' },
+            { id: 'JP_SE', x: 14600, y: 15000, label: 'Tidal East' }
           ];
           this.jumpPads = [];
           for (let i = 0; i < ridgeAnchors.length; i++) {
             const a = ridgeAnchors[i];
-            let px = a.x;
-            let py = a.y;
-            for (let attempt = 0; attempt < 12 && !isSafeDeployment(px, py, 44); attempt++) {
-              const ang = attempt * 0.85;
-              const rad = 110 + attempt * 55;
-              px = Math.max(800, Math.min(ARENA_WIDTH - 800, a.x + Math.cos(ang) * rad));
-              py = Math.max(800, Math.min(ARENA_HEIGHT - 800, a.y + Math.sin(ang) * rad));
-            }
-            this.jumpPads.push({ id: a.id, x: px, y: py, radius: 36, label: a.label, pulseOffset: i * 1.1 });
+            this.jumpPads.push({ id: a.id, x: a.x, y: a.y, radius: 42, label: a.label, pulseOffset: i * 1.1 });
           }
         },
 
@@ -16196,18 +16472,24 @@
       }
 
       // ==========================================
-      // OFFSCREEN STATIC TERRAIN CHUNK CACHE (60 FPS MOBILE)
+      // OFFSCREEN 4-BIOME 2.5D TERRAIN CHUNK CACHE (60 FPS MOBILE)
       // ==========================================
       const TerrainCache = {
         chunkSize: 1024,
         pixelScale: 0.5,
-        maxChunks: 24,
+        maxChunks: 28,
         chunks: new Map(),
         fingerprint: '',
 
         computeFingerprint() {
-          const texReady = (typeof AssetLoader !== 'undefined' && AssetLoader.groundTex && AssetLoader.groundTex.complete && AssetLoader.groundTex.naturalWidth > 0) ? 1 : 0;
-          return `${BIOME_ZONES.length}|${BEACH_LAYOUT.length}|${PATH_LAYOUT.length}|${WATER_LAYOUT.length}|${BRIDGE_LAYOUT.length}|${LANDMARK_LAYOUT.length}|${decalPool.length}|${texReady}`;
+          const tileSig = (typeof AssetLoader !== 'undefined' && AssetLoader.biomeTileCanvases)
+            ? ['tile_citadel', 'tile_grove', 'tile_obsidian', 'tile_tidal'].map(k => {
+                const c = AssetLoader.biomeTileCanvases[k];
+                return c ? (c.naturalWidth ? '2' : '1') : '0';
+              }).join('')
+            : '0000';
+          const hasWorld = ISLAND_WORLD_DATA ? 1 : 0;
+          return `25d|${tileSig}|${hasWorld}|${decalPool.length}`;
         },
 
         invalidate() {
@@ -16216,13 +16498,13 @@
         },
 
         getChunk(cx, cy) {
+          initIsland25DWorld();
           const fp = this.computeFingerprint();
           if (fp !== this.fingerprint) this.invalidate();
 
           const key = `${cx}_${cy}`;
           if (this.chunks.has(key)) {
             const cached = this.chunks.get(key);
-            // Refresh LRU order
             this.chunks.delete(key);
             this.chunks.set(key, cached);
             return cached;
@@ -16242,145 +16524,233 @@
           tctx.scale(this.pixelScale, this.pixelScale);
           tctx.translate(-wx, -wy);
 
-          const isBlankMap = BIOME_ZONES.length === 0 && BEACH_LAYOUT.length === 0;
-          tctx.fillStyle = isBlankMap ? '#1E293B' : '#0B2D48';
-          tctx.fillRect(wx, wy, size, size);
+          // Build per-chunk CanvasPatterns for the 4 structured biome floor tiles
+          const patterns = {};
+          const fallbackColors = {
+            CITADEL: '#8f836e',
+            GROVE: '#244d38',
+            OBSIDIAN: '#1d1620',
+            TIDAL: '#17374f'
+          };
+          const biomes = ['CITADEL', 'GROVE', 'OBSIDIAN', 'TIDAL'];
+          for (let i = 0; i < biomes.length; i++) {
+            const b = biomes[i];
+            const tileSrc = typeof AssetLoader !== 'undefined' && AssetLoader.getBiomeTile ? AssetLoader.getBiomeTile(b) : null;
+            if (tileSrc) {
+              try {
+                patterns[b] = tctx.createPattern(tileSrc, 'repeat');
+              } catch (_) {
+                patterns[b] = null;
+              }
+            }
+          }
 
-          if (isBlankMap) {
-            // Tile low-contrast dark-arcane runic basalt texture via cached CanvasPattern
-            const blankGroundPat = typeof AssetLoader !== 'undefined' ? AssetLoader.getGroundPattern(tctx) : null;
-            if (blankGroundPat) {
-              tctx.save();
-              tctx.globalAlpha = 0.36;
-              tctx.fillStyle = blankGroundPat;
-              tctx.fillRect(wx, wy, size, size);
-              tctx.restore();
-            }
+          // Check if the entire chunk sits inside a single biome (fast path)
+          const cTL = classifyIslandBiomeLocal(wx + 4, wy + 4);
+          const cTR = classifyIslandBiomeLocal(wx2 - 4, wy + 4);
+          const cBL = classifyIslandBiomeLocal(wx + 4, wy2 - 4);
+          const cBR = classifyIslandBiomeLocal(wx2 - 4, wy2 - 4);
+          const cMid = classifyIslandBiomeLocal(wx + size * 0.5, wy + size * 0.5);
 
-            const gridMinor = 500;
-            const startX = Math.max(0, Math.floor(wx / gridMinor) * gridMinor);
-            const endX = Math.min(ARENA_WIDTH, Math.ceil(wx2 / gridMinor) * gridMinor);
-            const startY = Math.max(0, Math.floor(wy / gridMinor) * gridMinor);
-            const endY = Math.min(ARENA_HEIGHT, Math.ceil(wy2 / gridMinor) * gridMinor);
-
-            tctx.strokeStyle = 'rgba(148, 163, 184, 0.10)';
-            tctx.lineWidth = 2;
-            tctx.beginPath();
-            for (let gx = startX; gx <= endX; gx += gridMinor) {
-              if (gx % 2000 === 0) continue;
-              tctx.moveTo(gx, startY);
-              tctx.lineTo(gx, endY);
-            }
-            for (let gy = startY; gy <= endY; gy += gridMinor) {
-              if (gy % 2000 === 0) continue;
-              tctx.moveTo(startX, gy);
-              tctx.lineTo(endX, gy);
-            }
-            tctx.stroke();
-
-            tctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
-            tctx.lineWidth = 3;
-            tctx.beginPath();
-            const majorStartX = Math.max(0, Math.floor(wx / 2000) * 2000);
-            const majorStartY = Math.max(0, Math.floor(wy / 2000) * 2000);
-            for (let gx = majorStartX; gx <= endX; gx += 2000) {
-              tctx.moveTo(gx, startY);
-              tctx.lineTo(gx, endY);
-            }
-            for (let gy = majorStartY; gy <= endY; gy += 2000) {
-              tctx.moveTo(startX, gy);
-              tctx.lineTo(endX, gy);
-            }
-            tctx.stroke();
+          if (cTL === cTR && cTL === cBL && cTL === cBR && cTL === cMid) {
+            tctx.fillStyle = patterns[cTL] || fallbackColors[cTL];
+            tctx.fillRect(wx, wy, size, size);
           } else {
-            for (let i = 0; i < BEACH_LAYOUT.length; i++) {
-              const b = BEACH_LAYOUT[i];
-              if (b.x + b.w > wx && b.x < wx2 && b.y + b.h > wy && b.y < wy2) {
-                tctx.fillStyle = b.fill;
-                tctx.fillRect(b.x, b.y, b.w, b.h);
-                tctx.strokeStyle = b.edge;
-                tctx.lineWidth = 4;
-                tctx.strokeRect(b.x, b.y, b.w, b.h);
-              }
+            // Smooth analytical biome zones (ZERO blocky stair-stepped edges!)
+            const cxWorld = ARENA_WIDTH * 0.5;
+            const cyWorld = ARENA_HEIGHT * 0.5;
+            const citR = ARENA_WIDTH * 0.21;
+
+            // 1. Base fill: Tidal Ruins (South / SE)
+            tctx.fillStyle = patterns.TIDAL || fallbackColors.TIDAL;
+            tctx.fillRect(wx, wy, size, size);
+
+            // 2. Whispering Grove (West / NW) with smooth organic wavy southern/eastern seam
+            tctx.save();
+            tctx.beginPath();
+            tctx.moveTo(0, 0);
+            tctx.lineTo(cxWorld + Math.sin(0) * 650, 0);
+            for (let sy = 0; sy <= cyWorld + 1800; sy += 240) {
+              tctx.lineTo(cxWorld + Math.sin(sy * 0.00045) * 650, sy);
             }
-            for (let i = 0; i < BIOME_ZONES.length; i++) {
-              const z = BIOME_ZONES[i];
-              if (z.x + z.w > wx && z.x < wx2 && z.y + z.h > wy && z.y < wy2) {
-                tctx.fillStyle = z.colorTop;
-                tctx.fillRect(z.x, z.y, z.w, z.h);
-              }
+            for (let sx = cxWorld + 650; sx >= 0; sx -= 240) {
+              tctx.lineTo(sx, cyWorld + 1100 + Math.cos(sx * 0.00045) * 650);
             }
-            // Tile low-contrast dark-arcane runic basalt texture via cached CanvasPattern
-            const groundPat = typeof AssetLoader !== 'undefined' ? AssetLoader.getGroundPattern(tctx) : null;
-            if (groundPat) {
-              tctx.save();
-              tctx.globalAlpha = 0.24;
-              tctx.fillStyle = groundPat;
-              tctx.fillRect(wx, wy, size, size);
-              tctx.restore();
+            tctx.closePath();
+            tctx.fillStyle = patterns.GROVE || fallbackColors.GROVE;
+            tctx.fill();
+            tctx.strokeStyle = 'rgba(20, 46, 34, 0.42)';
+            tctx.lineWidth = 36;
+            tctx.stroke();
+            tctx.restore();
+
+            // 3. Obsidian Forge (East / NE) with smooth volcanic rim
+            tctx.save();
+            tctx.beginPath();
+            tctx.moveTo(ARENA_WIDTH, 0);
+            for (let sy = 0; sy <= cyWorld + 1100; sy += 240) {
+              tctx.lineTo(cxWorld + Math.sin(sy * 0.00045) * 650, sy);
             }
-            for (let i = 0; i < PATH_LAYOUT.length; i++) {
-              const pt = PATH_LAYOUT[i];
-              if (pt.x + pt.w > wx && pt.x < wx2 && pt.y + pt.h > wy && pt.y < wy2) {
-                tctx.fillStyle = pt.fill;
-                tctx.fillRect(pt.x, pt.y, pt.w, pt.h);
-                tctx.strokeStyle = pt.edge;
-                tctx.lineWidth = 3;
-                tctx.strokeRect(pt.x, pt.y, pt.w, pt.h);
-              }
+            for (let sx = cxWorld - 650; sx <= ARENA_WIDTH; sx += 240) {
+              tctx.lineTo(sx, cyWorld + 300 + Math.cos(sx * 0.00045) * 650);
             }
-            for (let i = 0; i < WATER_LAYOUT.length; i++) {
-              const w = WATER_LAYOUT[i];
-              if (w.x + w.w > wx && w.x < wx2 && w.y + w.h > wy && w.y < wy2) {
-                tctx.fillStyle = w.color;
-                tctx.fillRect(w.x, w.y, w.w, w.h);
-                tctx.strokeStyle = w.edge;
-                tctx.lineWidth = 4;
-                tctx.strokeRect(w.x + 2, w.y + 2, w.w - 4, w.h - 4);
-              }
+            tctx.lineTo(ARENA_WIDTH, 0);
+            tctx.closePath();
+            tctx.fillStyle = patterns.OBSIDIAN || fallbackColors.OBSIDIAN;
+            tctx.fill();
+            tctx.strokeStyle = 'rgba(154, 52, 18, 0.34)';
+            tctx.lineWidth = 32;
+            tctx.stroke();
+            tctx.restore();
+
+            // 4. Arcane Citadel (Center) smooth organic courtyard silhouette + beveled stone curb
+            tctx.save();
+            tctx.beginPath();
+            const steps = 64;
+            for (let i = 0; i <= steps; i++) {
+              const a = (i / steps) * Math.PI * 2;
+              const r = citR * (1 + 0.045 * Math.cos(a * 4));
+              const px = cxWorld + Math.cos(a) * r;
+              const py = cyWorld + Math.sin(a) * r;
+              if (i === 0) tctx.moveTo(px, py);
+              else tctx.lineTo(px, py);
             }
-            for (let i = 0; i < BRIDGE_LAYOUT.length; i++) {
-              const br = BRIDGE_LAYOUT[i];
-              if (br.x + br.w > wx && br.x < wx2 && br.y + br.h > wy && br.y < wy2) {
-                tctx.fillStyle = br.edge;
-                tctx.fillRect(br.x, br.y, br.w, br.h);
-                tctx.fillStyle = br.deck;
-                tctx.fillRect(br.x + 10, br.y + 10, br.w - 20, br.h - 20);
-                tctx.strokeStyle = br.highlight;
-                tctx.lineWidth = 3;
+            tctx.closePath();
+            tctx.fillStyle = patterns.CITADEL || fallbackColors.CITADEL;
+            tctx.fill();
+            tctx.strokeStyle = 'rgba(42, 34, 24, 0.55)';
+            tctx.lineWidth = 34;
+            tctx.stroke();
+            tctx.strokeStyle = 'rgba(245, 197, 86, 0.52)';
+            tctx.lineWidth = 8;
+            tctx.stroke();
+            tctx.restore();
+          }
+
+          // Hand-crafted biome ground landmarks: Citadel courtyard rings, Grove winding pathways,
+          // Obsidian magma veins, and Tidal Ruins glowing cyan cobblestone channels
+          const centerX = ARENA_WIDTH * 0.5;
+          const centerY = ARENA_HEIGHT * 0.5;
+          const distCenter = Math.hypot((wx + size * 0.5) - centerX, (wy + size * 0.5) - centerY);
+          if (distCenter < 5200) {
+            tctx.save();
+            // Concentric marble courtyard borders & gold arcane trim
+            const rings = [420, 980, 1650, 2350, 3450, 4180];
+            for (let i = 0; i < rings.length; i++) {
+              const r = rings[i];
+              tctx.strokeStyle = i === 0 || i === 5 ? 'rgba(251, 191, 36, 0.36)' : 'rgba(245, 232, 204, 0.24)';
+              tctx.lineWidth = i === 5 ? 18 : (i === 0 ? 10 : 8);
+              tctx.beginPath();
+              tctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+              tctx.stroke();
+            }
+            // Cardinal Citadel avenues
+            tctx.strokeStyle = 'rgba(245, 224, 178, 0.18)';
+            tctx.lineWidth = 180;
+            tctx.beginPath();
+            tctx.moveTo(centerX - 4200, centerY);
+            tctx.lineTo(centerX + 4200, centerY);
+            tctx.moveTo(centerX, centerY - 4200);
+            tctx.lineTo(centerX, centerY + 4200);
+            tctx.stroke();
+            tctx.restore();
+          }
+
+          if (ISLAND_WORLD_DATA && Array.isArray(ISLAND_WORLD_DATA.paths)) {
+            tctx.save();
+            tctx.lineCap = 'round';
+            tctx.lineJoin = 'round';
+            for (let i = 0; i < ISLAND_WORLD_DATA.paths.length; i++) {
+              const seg = ISLAND_WORLD_DATA.paths[i];
+              const minX = Math.min(seg.x1, seg.x2) - seg.width;
+              const maxX = Math.max(seg.x1, seg.x2) + seg.width;
+              const minY = Math.min(seg.y1, seg.y2) - seg.width;
+              const maxY = Math.max(seg.y1, seg.y2) + seg.width;
+              if (maxX < wx || minX > wx2 || maxY < wy || minY > wy2) continue;
+
+              if (seg.kind === 'stone_path') {
+                // Whispering Grove winding mossy stone pathways
+                tctx.strokeStyle = 'rgba(28, 36, 30, 0.45)';
+                tctx.lineWidth = seg.width + 18;
                 tctx.beginPath();
-                if (br.w < br.h) {
-                  for (let k = 1; k <= 4; k++) {
-                    const py = br.y + (br.h * k) / 5;
-                    tctx.moveTo(br.x + 12, py);
-                    tctx.lineTo(br.x + br.w - 12, py);
-                  }
-                } else {
-                  for (let k = 1; k <= 4; k++) {
-                    const px = br.x + (br.w * k) / 5;
-                    tctx.moveTo(px, br.y + 12);
-                    tctx.lineTo(px, br.y + br.h - 12);
-                  }
-                }
+                tctx.moveTo(seg.x1, seg.y1);
+                tctx.lineTo(seg.x2, seg.y2);
+                tctx.stroke();
+
+                tctx.strokeStyle = 'rgba(138, 134, 120, 0.62)';
+                tctx.lineWidth = seg.width;
+                tctx.stroke();
+
+                tctx.strokeStyle = 'rgba(202, 196, 178, 0.25)';
+                tctx.lineWidth = seg.width * 0.45;
+                tctx.setLineDash([48, 36]);
+                tctx.stroke();
+                tctx.setLineDash([]);
+              } else if (seg.kind === 'tidal_channel') {
+                // Tidal Ruins glowing cyan cobblestone channels
+                tctx.strokeStyle = 'rgba(15, 34, 52, 0.72)';
+                tctx.lineWidth = seg.width + 26;
+                tctx.beginPath();
+                tctx.moveTo(seg.x1, seg.y1);
+                tctx.lineTo(seg.x2, seg.y2);
+                tctx.stroke();
+
+                tctx.strokeStyle = 'rgba(14, 116, 144, 0.72)';
+                tctx.lineWidth = seg.width * 0.78;
+                tctx.stroke();
+
+                tctx.strokeStyle = 'rgba(56, 189, 248, 0.58)';
+                tctx.lineWidth = seg.width * 0.34;
+                tctx.stroke();
+
+                tctx.strokeStyle = 'rgba(186, 230, 253, 0.45)';
+                tctx.lineWidth = 10;
+                tctx.setLineDash([40, 28]);
+                tctx.stroke();
+                tctx.setLineDash([]);
+              } else if (seg.kind === 'magma_vein') {
+                // Obsidian Forge glowing molten fissures
+                tctx.strokeStyle = 'rgba(124, 45, 18, 0.58)';
+                tctx.lineWidth = seg.width * 0.45;
+                tctx.beginPath();
+                tctx.moveTo(seg.x1, seg.y1);
+                tctx.lineTo(seg.x2, seg.y2);
+                tctx.stroke();
+
+                tctx.strokeStyle = 'rgba(249, 115, 22, 0.78)';
+                tctx.lineWidth = seg.width * 0.16;
+                tctx.stroke();
+
+                tctx.strokeStyle = 'rgba(254, 240, 138, 0.65)';
+                tctx.lineWidth = 6;
                 tctx.stroke();
               }
             }
-            for (let i = 0; i < decalPool.length; i++) {
-              const dec = decalPool[i];
-              if (!dec.active) continue;
-              if (dec.x + dec.w > wx && dec.x < wx2 && dec.y + dec.h > wy && dec.y < wy2) {
-                tctx.save();
-                tctx.globalAlpha = dec.alpha;
-                tctx.fillStyle = dec.color;
-                tctx.fillRect(dec.x, dec.y, dec.w, dec.h);
-                tctx.restore();
-              }
-            }
-            for (let i = 0; i < LANDMARK_LAYOUT.length; i++) {
-              const lm = LANDMARK_LAYOUT[i];
-              if (lm.x + lm.w > wx && lm.x < wx2 && lm.y + lm.h > wy && lm.y < wy2) {
-                drawProceduralLandmark(tctx, lm);
-              }
+            tctx.restore();
+          }
+
+          // Subtle island rim stone lip darkening near perimeter cliff edge
+          const edgeBand = 160;
+          if (wx < edgeBand || wx2 > ARENA_WIDTH - edgeBand || wy < edgeBand || wy2 > ARENA_HEIGHT - edgeBand) {
+            tctx.save();
+            tctx.strokeStyle = 'rgba(15, 23, 42, 0.55)';
+            tctx.lineWidth = 48;
+            tctx.strokeRect(24, 24, ARENA_WIDTH - 48, ARENA_HEIGHT - 48);
+            tctx.strokeStyle = 'rgba(203, 213, 225, 0.28)';
+            tctx.lineWidth = 8;
+            tctx.strokeRect(8, 8, ARENA_WIDTH - 16, ARENA_HEIGHT - 16);
+            tctx.restore();
+          }
+
+          for (let i = 0; i < decalPool.length; i++) {
+            const dec = decalPool[i];
+            if (!dec.active) continue;
+            if (dec.x + dec.w > wx && dec.x < wx2 && dec.y + dec.h > wy && dec.y < wy2) {
+              tctx.save();
+              tctx.globalAlpha = dec.alpha * 0.55;
+              tctx.fillStyle = dec.color;
+              tctx.fillRect(dec.x, dec.y, dec.w, dec.h);
+              tctx.restore();
             }
           }
 
@@ -16409,13 +16779,150 @@
       };
 
       // ==========================================
-      // RENDERING PIPELINE (LOCKED 60 FPS MOBILE ENGINE)
+      // LAYER 1: FLOATING SKY-ISLAND PARALLAX CLOUDS & CLIFF PERIMETER
+      // ==========================================
+      function drawParallaxSkyClouds(ctx, w, h) {
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+        skyGrad.addColorStop(0, '#071124');
+        skyGrad.addColorStop(0.55, '#102544');
+        skyGrad.addColorStop(1, '#1a3a61');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Slow-scrolling parallax sky clouds (camera * 0.72)
+        const drift = PlayerData.reducedMotion ? 0 : (Game.time * 14);
+        const paraX = Camera.x * 0.72 + drift;
+        const paraY = Camera.y * 0.72 * CAMERA_PITCH;
+        const tileW = 540;
+        const tileH = 360;
+        const offX = -(((paraX % tileW) + tileW) % tileW);
+        const offY = -(((paraY % tileH) + tileH) % tileH);
+
+        ctx.save();
+        for (let gy = offY - tileH; gy < h + tileH; gy += tileH) {
+          for (let gx = offX - tileW; gx < w + tileW; gx += tileW) {
+            ctx.fillStyle = 'rgba(186, 220, 255, 0.11)';
+            ctx.beginPath();
+            ctx.ellipse(gx + 140, gy + 110, 128, 42, 0, 0, Math.PI * 2);
+            ctx.ellipse(gx + 210, gy + 96, 92, 36, 0, 0, Math.PI * 2);
+            ctx.ellipse(gx + 88, gy + 118, 76, 30, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(224, 242, 254, 0.08)';
+            ctx.beginPath();
+            ctx.ellipse(gx + 400, gy + 265, 148, 46, 0, 0, Math.PI * 2);
+            ctx.ellipse(gx + 340, gy + 252, 86, 34, 0, 0, Math.PI * 2);
+            ctx.ellipse(gx + 465, gy + 272, 74, 28, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      function drawSkyIslandCliffPerimeter(ctx, viewLeft, viewTop, viewRight, viewBottom) {
+        const margin = 420;
+        if (viewLeft > margin && viewRight < ARENA_WIDTH - margin && viewTop > margin && viewBottom < ARENA_HEIGHT - margin) {
+          return;
+        }
+        ctx.save();
+        const cliffDepth = 360;
+
+        // Deep drop shadow cast into sky mist below the floating island
+        ctx.fillStyle = 'rgba(3, 9, 20, 0.48)';
+        ctx.fillRect(-38, -24, ARENA_WIDTH + 76, ARENA_HEIGHT + cliffDepth + 44);
+
+        // Layered dark stone cliff ledges along the Southern / Lower facing rim
+        if (viewBottom > ARENA_HEIGHT - margin) {
+          const xStart = Math.max(0, Math.floor(viewLeft / 160) * 160);
+          const xEnd = Math.min(ARENA_WIDTH, Math.ceil(viewRight / 160) * 160);
+          // Upper basalt stratum
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(xStart, ARENA_HEIGHT, xEnd - xStart, 110);
+          // Mid shadow stone stratum
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(xStart, ARENA_HEIGHT + 110, xEnd - xStart, 125);
+          // Deep tapered abyssal rock teeth
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.moveTo(xStart, ARENA_HEIGHT + 235);
+          for (let x = xStart; x <= xEnd; x += 160) {
+            const jagged = 55 + ((Math.abs(Math.sin(x * 0.017)) * 85) | 0);
+            ctx.lineTo(x + 80, ARENA_HEIGHT + 235 + jagged);
+            ctx.lineTo(x + 160, ARENA_HEIGHT + 225);
+          }
+          ctx.lineTo(xEnd, ARENA_HEIGHT + 110);
+          ctx.lineTo(xStart, ARENA_HEIGHT + 110);
+          ctx.closePath();
+          ctx.fill();
+
+          // Vertical cliff facet cracks & top stone lip highlight
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.34)';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(xStart, ARENA_HEIGHT + 4);
+          ctx.lineTo(xEnd, ARENA_HEIGHT + 4);
+          ctx.stroke();
+
+          ctx.strokeStyle = 'rgba(2, 6, 23, 0.55)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          for (let x = xStart; x <= xEnd; x += 160) {
+            ctx.moveTo(x + 40, ARENA_HEIGHT + 6);
+            ctx.lineTo(x + 28, ARENA_HEIGHT + 230);
+            ctx.moveTo(x + 112, ARENA_HEIGHT + 12);
+            ctx.lineTo(x + 124, ARENA_HEIGHT + 195);
+          }
+          ctx.stroke();
+        }
+
+        // West & East rocky cliff bevel walls
+        if (viewLeft < margin) {
+          const yStart = Math.max(0, Math.floor(viewTop / 160) * 160);
+          const yEnd = Math.min(ARENA_HEIGHT, Math.ceil(viewBottom / 160) * 160);
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(-52, yStart, 52, yEnd - yStart + 210);
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(-20, yStart, 20, yEnd - yStart + 95);
+        }
+        if (viewRight > ARENA_WIDTH - margin) {
+          const yStart = Math.max(0, Math.floor(viewTop / 160) * 160);
+          const yEnd = Math.min(ARENA_HEIGHT, Math.ceil(viewBottom / 160) * 160);
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(ARENA_WIDTH, yStart, 52, yEnd - yStart + 210);
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(ARENA_WIDTH, yStart, 20, yEnd - yStart + 95);
+        }
+        if (viewTop < margin) {
+          const xStart = Math.max(0, Math.floor(viewLeft / 160) * 160);
+          const xEnd = Math.min(ARENA_WIDTH, Math.ceil(viewRight / 160) * 160);
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(xStart, -26, xEnd - xStart, 26);
+        }
+        ctx.restore();
+      }
+
+      function drawUprightPropSprite(ctx, sprite, x, y, scale = 1.0, flipX = false, flash = false) {
+        if (!sprite || !sprite.canvas) return false;
+        ctx.save();
+        ctx.translate(Math.round(x), Math.round(y));
+        // Un-squash 0.72 ground tilt so every 2.5D prop stands upright at full 1.0 vertical height anchored at its feet!
+        ctx.scale(flipX ? -scale : scale, INV_CAMERA_PITCH * scale);
+        if (flash) {
+          ctx.filter = 'brightness(1.75)';
+        }
+        ctx.drawImage(sprite.canvas, -sprite.anchorX, -sprite.anchorY, sprite.width, sprite.height);
+        ctx.restore();
+        return true;
+      }
+
+      // ==========================================
+      // 3-LAYER 45° ACTION CAMERA RENDERING PIPELINE (60 FPS MOBILE ENGINE)
       // ==========================================
       function renderCanvas() {
-        const isBlankMap = BIOME_ZONES.length === 0 && BEACH_LAYOUT.length === 0;
-        CTX.fillStyle = isBlankMap ? '#0F172A' : '#061B2E';
-        CTX.fillRect(0, 0, window.innerWidth, window.innerHeight);
+        // LAYER 1: Atmospheric Sky & Slow-Scrolling Parallax Sky Clouds (camera * 0.72)
+        drawParallaxSkyClouds(CTX, window.innerWidth, window.innerHeight);
 
+        // LAYER 2: 45-Degree Tilted Ground Plane (scaleY = 0.72)
         Camera.apply(CTX);
 
         const zoom = Camera.getZoom();
@@ -16426,23 +16933,21 @@
         const viewTop = Camera.y - halfH;
         const viewBottom = Camera.y + halfH;
 
-        // LAYER 0: Blit Offscreen Cached Static Terrain Chunks
+        // Floating Sky-Island Stone Cliff Perimeter beneath the island rim
+        drawSkyIslandCliffPerimeter(CTX, viewLeft, viewTop, viewRight, viewBottom);
+
+        // Blit Offscreen Cached 4-Biome Static Terrain Chunks
         TerrainCache.drawVisible(CTX, viewLeft, viewTop, viewRight, viewBottom);
 
-        // Glowing Forcefield Boundary (layered strokes, zero shadowBlur)
-        if (viewLeft < 32 || viewRight > ARENA_WIDTH - 32 || viewTop < 32 || viewBottom > ARENA_HEIGHT - 32) {
+        // Glowing Arcane Island Perimeter Ward (layered strokes, zero shadowBlur)
+        if (viewLeft < 48 || viewRight > ARENA_WIDTH - 48 || viewTop < 48 || viewBottom > ARENA_HEIGHT - 48) {
           CTX.save();
-          CTX.strokeStyle = 'rgba(220, 38, 38, 0.28)';
-          CTX.lineWidth = 18;
+          CTX.strokeStyle = 'rgba(56, 189, 248, 0.24)';
+          CTX.lineWidth = 16;
           CTX.strokeRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
-          CTX.strokeStyle = '#ef4444';
-          CTX.lineWidth = 6;
+          CTX.strokeStyle = '#38bdf8';
+          CTX.lineWidth = 4;
           CTX.strokeRect(0, 0, ARENA_WIDTH, ARENA_HEIGHT);
-
-          const timePulse = Math.sin(Game.time * 6) * 0.3 + 0.7;
-          CTX.strokeStyle = `rgba(248, 113, 113, ${timePulse})`;
-          CTX.lineWidth = 3;
-          CTX.strokeRect(8, 8, ARENA_WIDTH - 16, ARENA_HEIGHT - 16);
           CTX.restore();
         }
 
@@ -16717,43 +17222,53 @@
           CTX.restore();
         }
 
-        // LAYER 3.75: Interactive Arcane Jump Pads (zero shadowBlur, GlowAtlas + crisp rune rings)
+        // LAYER 3.75: Interactive Arcane Jump Pads (tilted ground pad sprite + pulsing launch chevrons)
         if (Game.jumpPads && Game.jumpPads.length > 0) {
+          const padSprite = typeof AssetLoader !== 'undefined' && AssetLoader.getPropSprite
+            ? AssetLoader.getPropSprite('jump_pad')
+            : null;
           for (let pi = 0; pi < Game.jumpPads.length; pi++) {
             const pad = Game.jumpPads[pi];
-            if (pad.x + 64 < viewLeft || pad.x - 64 > viewRight || pad.y + 64 < viewTop || pad.y - 64 > viewBottom) continue;
+            if (pad.x + 84 < viewLeft || pad.x - 84 > viewRight || pad.y + 84 < viewTop || pad.y - 84 > viewBottom) continue;
             const pulse = 0.5 + 0.5 * Math.sin(Game.time * 4.5 + (pad.pulseOffset || 0));
             const px = Math.round(pad.x);
             const py = Math.round(pad.y);
-            drawGlowSprite(CTX, 'cyan', px, py, pad.radius * 1.9, 0.36 + pulse * 0.22);
+            drawGroundedPropShadow(CTX, px, py + 4, pad.radius * 1.15, pad.radius * 0.78);
+            drawGlowSprite(CTX, 'cyan', px, py, pad.radius * 2.1, 0.36 + pulse * 0.22);
             CTX.save();
-            // Outer stone rune rim
-            CTX.fillStyle = 'rgba(15, 23, 42, 0.85)';
-            CTX.strokeStyle = '#38bdf8';
-            CTX.lineWidth = 3;
-            CTX.beginPath();
-            CTX.ellipse(px, py, pad.radius, pad.radius * 0.68, 0, 0, Math.PI * 2);
-            CTX.fill();
-            CTX.stroke();
+            if (padSprite && padSprite.canvas) {
+              const drawSize = pad.radius * 2.35;
+              CTX.drawImage(padSprite.canvas, px - drawSize * 0.5, py - drawSize * 0.5, drawSize, drawSize);
+            } else {
+              CTX.fillStyle = 'rgba(15, 23, 42, 0.85)';
+              CTX.strokeStyle = '#38bdf8';
+              CTX.lineWidth = 3;
+              CTX.beginPath();
+              CTX.arc(px, py, pad.radius, 0, Math.PI * 2);
+              CTX.fill();
+              CTX.stroke();
+            }
             // Inner pulsing launch ring
             CTX.strokeStyle = '#fde047';
-            CTX.lineWidth = 2;
+            CTX.lineWidth = 2.2;
             CTX.globalAlpha = 0.65 + pulse * 0.35;
             CTX.beginPath();
-            CTX.ellipse(px, py, pad.radius * (0.56 + pulse * 0.14), pad.radius * 0.68 * (0.56 + pulse * 0.14), 0, 0, Math.PI * 2);
+            CTX.arc(px, py, pad.radius * (0.58 + pulse * 0.14), 0, Math.PI * 2);
             CTX.stroke();
-            // Upward launch chevrons
+            // Upward launch chevrons (un-tilted upright above pad)
+            CTX.translate(px, py);
+            CTX.scale(1.0, INV_CAMERA_PITCH);
             CTX.strokeStyle = '#e0f2fe';
-            CTX.lineWidth = 2.4;
+            CTX.lineWidth = 2.6;
             CTX.lineCap = 'round';
             CTX.lineJoin = 'round';
-            const lift = -pulse * 6;
+            const lift = -pulse * 8;
             for (let c = 0; c < 2; c++) {
-              const cy = py + 5 - c * 8 + lift;
+              const cy = 2 - c * 10 + lift;
               CTX.beginPath();
-              CTX.moveTo(px - 10, cy + 4);
-              CTX.lineTo(px, cy - 4);
-              CTX.lineTo(px + 10, cy + 4);
+              CTX.moveTo(-11, cy + 5);
+              CTX.lineTo(0, cy - 4);
+              CTX.lineTo(11, cy + 5);
               CTX.stroke();
             }
             CTX.restore();
@@ -16767,7 +17282,9 @@
           drawGlowSprite(CTX, 'gold', focusX, focusY, 240, 0.2);
         }
 
-        // LAYER 4: Unified 2.5D Y-Sorted Render Pass (Obstacles, Ground Loot, Supply Crates, Fighters)
+        // LAYER 3 (UPRIGHT 1.0 HEIGHT Y-SORTED WORLD PASS):
+        // All 2.5D props, destructible chests/barrels, supply crates, loot, and fighters
+        // sorted strictly by bottom footY so characters walk cleanly in front of and behind props!
         let sortCount = 0;
         for (let i = 0; i < obstaclePool.length && sortCount < MAX_YSORT_ITEMS; i++) {
           const obs = obstaclePool[i];
@@ -16776,6 +17293,17 @@
             slot.kind = 1;
             slot.sortY = obs.y + obs.h;
             slot.ref = obs;
+          }
+        }
+        if (typeof islandStaticProps !== 'undefined') {
+          for (let i = 0; i < islandStaticProps.length && sortCount < MAX_YSORT_ITEMS; i++) {
+            const sp = islandStaticProps[i];
+            if (sp.x + 180 > viewLeft && sp.x - 180 < viewRight && sp.y + 120 > viewTop && sp.y - 260 < viewBottom) {
+              const slot = worldSortQueue[sortCount++];
+              slot.kind = 6;
+              slot.sortY = sp.footY;
+              slot.ref = sp;
+            }
           }
         }
         for (let i = 0; i < MAX_LOOT && sortCount < MAX_YSORT_ITEMS; i++) {
@@ -16794,17 +17322,17 @@
           if (c.x + 60 > viewLeft && c.x - 60 < viewRight && c.y + 60 > viewTop && c.y - 560 < viewBottom) {
             const slot = worldSortQueue[sortCount++];
             slot.kind = 3;
-            slot.sortY = c.y + 18;
+            slot.sortY = c.y;
             slot.ref = c;
           }
         }
         for (let i = 0; i < MAX_DESTRUCTIBLES && sortCount < MAX_YSORT_ITEMS; i++) {
           const prop = destructiblePropPool[i];
           if (!prop.active) continue;
-          if (prop.x + 40 > viewLeft && prop.x - 40 < viewRight && prop.y + 40 > viewTop && prop.y - 60 < viewBottom) {
+          if (prop.x + 90 > viewLeft && prop.x - 90 < viewRight && prop.y + 90 > viewTop && prop.y - 160 < viewBottom) {
             const slot = worldSortQueue[sortCount++];
             slot.kind = 5;
-            slot.sortY = prop.y + prop.radius * 0.5;
+            slot.sortY = prop.y;
             slot.ref = prop;
           }
         }
@@ -16827,7 +17355,7 @@
           slot.ref = ent;
         }
 
-        // In-place insertion sort on pre-allocated queue (zero allocations)
+        // In-place insertion sort on pre-allocated queue (zero allocations, ascending footY)
         for (let i = 1; i < sortCount; i++) {
           const curKind = worldSortQueue[i].kind;
           const curY = worldSortQueue[i].sortY;
@@ -16848,6 +17376,23 @@
           const item = worldSortQueue[i];
           if (item.kind === 1) {
             drawExtrudedObstacle(CTX, item.ref);
+          } else if (item.kind === 6) {
+            // 2.5D Hand-Crafted Island Static Prop (pillar, wall, obelisk, tree, boulder)
+            const sp = item.ref;
+            drawGroundedPropShadow(CTX, sp.x, sp.y, sp.shadowRx, sp.shadowRy);
+            if (sp.spriteKey === 'obelisk') {
+              drawGlowSprite(CTX, 'cyan', sp.x, sp.y - 26, 62 * sp.drawScale, 0.28);
+            }
+            const sprite = typeof AssetLoader !== 'undefined' && AssetLoader.getPropSprite
+              ? AssetLoader.getPropSprite(sp.spriteKey)
+              : null;
+            if (sprite) {
+              // Normalize target rendered height to match world collision footprint nicely
+              const targetHeightMap = { pillar: 126, wall: 102, obelisk: 146, tree: 162, boulder: 96 };
+              const targetH = (targetHeightMap[sp.spriteKey] || 112) * sp.drawScale;
+              const s = targetH / Math.max(1, sprite.height);
+              drawUprightPropSprite(CTX, sprite, sp.x, sp.y, s, sp.flipX, false);
+            }
           } else if (item.kind === 2) {
             const l = item.ref;
             const lootImg = typeof AssetLoader !== 'undefined' ? AssetLoader.getLoot(l.type) : null;
@@ -16864,18 +17409,19 @@
             drawDirectionalShadow(CTX, lx, ly, 10 + bob + (l.z || 0), l.radius * 0.85, false);
 
             CTX.save();
+            CTX.translate(lx, drawY);
+            CTX.scale(1.0, INV_CAMERA_PITCH);
             if (rarityMeta.rank >= 3) {
-              drawGlowSprite(CTX, rarityMeta.rank === 4 ? 'gold' : 'dark', lx, drawY, l.radius * 2.1, 0.48);
+              drawGlowSprite(CTX, rarityMeta.rank === 4 ? 'gold' : 'dark', 0, 0, l.radius * 2.1, 0.48);
             }
             CTX.beginPath();
-            CTX.arc(lx, drawY, l.radius * 1.45, 0, Math.PI * 2);
+            CTX.arc(0, 0, l.radius * 1.45, 0, Math.PI * 2);
             CTX.fillStyle = lootColor;
             CTX.globalAlpha = 0.35;
             CTX.fill();
 
             if (lootImg) {
               CTX.globalAlpha = 1;
-              CTX.translate(lx, drawY);
               CTX.scale(scale, scale);
               CTX.drawImage(lootImg, -16, -16, 32, 32);
               if (rarityMeta.rank >= 2) {
@@ -16887,7 +17433,7 @@
               }
             } else {
               CTX.beginPath();
-              CTX.arc(lx, drawY, l.radius * scale, 0, Math.PI * 2);
+              CTX.arc(0, 0, l.radius * scale, 0, Math.PI * 2);
               CTX.globalAlpha = 1;
               CTX.fillStyle = lootColor;
               CTX.fill();
@@ -16900,23 +17446,23 @@
               const icons = { GOLD: '🪙', GEMS: '💎', XP: '⚡', MEDKIT: '✚', MANA: '◆', SHIELD: '⬡', HASTE: '➤', BOMB: '✹' };
               const icon = icons[l.type] || '•';
               CTX.fillStyle = l.type === 'XP' ? '#0f172a' : '#ffffff';
-              CTX.fillText(icon, lx, drawY);
+              CTX.fillText(icon, 0, 0);
             }
             CTX.restore();
           } else if (item.kind === 3) {
-            // Arcane Supply Crate (descending sky beacon + glowing gold chest)
+            // Arcane Supply Crate (descending sky beacon + upright chest sprite)
             const c = item.ref;
             const cx = Math.round(c.x);
             const cy = Math.round(c.y);
             const czY = Math.round(cy - (c.z || 0) * INV_CAMERA_PITCH);
-            const pulseR = 26 + Math.sin(c.pulse) * 5;
-            drawDirectionalShadow(CTX, cx, cy, c.z || 0, 26, false);
+            const pulseR = 28 + Math.sin(c.pulse) * 5;
+            drawDirectionalShadow(CTX, cx, cy, c.z || 0, 28, false);
             CTX.save();
-            drawGlowSprite(CTX, 'gold', cx, cy, pulseR + 18, 0.42);
+            drawGlowSprite(CTX, 'gold', cx, cy, pulseR + 20, 0.44);
             CTX.strokeStyle = '#fbbf24';
             CTX.lineWidth = 2.5;
             CTX.beginPath();
-            CTX.ellipse(cx, cy, pulseR, pulseR * 0.56, 0, 0, Math.PI * 2);
+            CTX.arc(cx, cy, pulseR, 0, Math.PI * 2);
             CTX.stroke();
             if (c.z > 0) {
               CTX.strokeStyle = 'rgba(251, 191, 36, 0.55)';
@@ -16928,23 +17474,28 @@
               CTX.stroke();
               CTX.setLineDash([]);
             }
-            // Crate body
-            CTX.fillStyle = '#78350f';
-            CTX.strokeStyle = '#fbbf24';
-            CTX.lineWidth = 3;
-            CTX.fillRect(cx - 20, czY - 22, 40, 32);
-            CTX.strokeRect(cx - 20, czY - 22, 40, 32);
-            CTX.fillStyle = '#f59e0b';
-            CTX.fillRect(cx - 20, czY - 9, 40, 6);
-            CTX.fillStyle = '#fef08a';
-            CTX.fillRect(cx - 5, czY - 12, 10, 12);
-            CTX.font = '900 10px system-ui, sans-serif';
+            const chestSprite = typeof AssetLoader !== 'undefined' && AssetLoader.getPropSprite
+              ? AssetLoader.getPropSprite('chest')
+              : null;
+            if (chestSprite) {
+              const s = 66 / Math.max(1, chestSprite.height);
+              drawUprightPropSprite(CTX, chestSprite, cx, czY + 8, s, false, false);
+            } else {
+              CTX.fillStyle = '#78350f';
+              CTX.strokeStyle = '#fbbf24';
+              CTX.lineWidth = 3;
+              CTX.fillRect(cx - 20, czY - 22, 40, 32);
+              CTX.strokeRect(cx - 20, czY - 22, 40, 32);
+            }
+            CTX.translate(cx, czY - 58);
+            CTX.scale(1.0, INV_CAMERA_PITCH);
+            CTX.font = '900 11px system-ui, sans-serif';
             CTX.textAlign = 'center';
             CTX.strokeStyle = 'rgba(2, 6, 23, 0.92)';
             CTX.lineWidth = 3;
-            CTX.strokeText('ARCANE CRATE', cx, czY - 28);
+            CTX.strokeText('ARCANE SUPPLY', 0, 0);
             CTX.fillStyle = '#fde047';
-            CTX.fillText('ARCANE CRATE', cx, czY - 28);
+            CTX.fillText('ARCANE SUPPLY', 0, 0);
             CTX.restore();
           } else if (item.kind === 4) {
             const entAlpha = item.ref._fogAlpha !== undefined ? item.ref._fogAlpha : 1;
@@ -16957,70 +17508,38 @@
               item.ref.drawBody(CTX);
             }
           } else if (item.kind === 5) {
-            // Destructible Arena Props (Arcane Crates, Crystal Cover Pillars, Explosive Ember Barrels)
+            // Destructible 2.5D Arena Props (Wooden Supply Chests, Explosive Red Barrels, Crystal Boulders/Obelisks)
             const prop = item.ref;
             const px = Math.round(prop.x);
             const py = Math.round(prop.y);
             const hpPct = Math.max(0, prop.hp / Math.max(1, prop.maxHp));
-            drawDirectionalShadow(CTX, px, py, 14, prop.radius, false);
-            CTX.save();
-            if (prop.kind === 'CRYSTAL_PILLAR') {
-              drawGlowSprite(CTX, 'cyan', px, py - 12, prop.radius * 1.9, 0.28);
-              CTX.fillStyle = prop.hitFlash > 0 ? '#e0f2fe' : '#0284c7';
-              CTX.strokeStyle = '#7dd3fc';
-              CTX.lineWidth = 2.5;
-              CTX.beginPath();
-              CTX.moveTo(px, py - 42);
-              CTX.lineTo(px + 22, py - 18);
-              CTX.lineTo(px + 18, py + 12);
-              CTX.lineTo(px - 18, py + 12);
-              CTX.lineTo(px - 22, py - 18);
-              CTX.closePath();
-              CTX.fill();
-              CTX.stroke();
-              if (hpPct < 0.75) {
-                CTX.strokeStyle = '#ffffff';
-                CTX.lineWidth = 1.8;
-                CTX.beginPath();
-                CTX.moveTo(px - 8, py - 24);
-                CTX.lineTo(px + 4, py - 8);
-                CTX.lineTo(px - 6, py + 4);
-                if (hpPct < 0.4) {
-                  CTX.moveTo(px + 10, py - 20);
-                  CTX.lineTo(px - 2, py - 4);
-                }
-                CTX.stroke();
-              }
-            } else if (prop.kind === 'BARREL') {
+            const sKey = prop.spriteKey || (prop.kind === 'BARREL' ? 'barrel' : (prop.kind === 'CRYSTAL_PILLAR' ? 'boulder' : 'chest'));
+            drawGroundedPropShadow(CTX, px, py, prop.radius * 1.25, prop.radius * 0.72);
+            if (prop.kind === 'BARREL') {
               const hot = prop.chainFuse >= 0 || hpPct < 0.8;
-              drawGlowSprite(CTX, 'fire', px, py - 8, prop.radius * (hot ? 2.4 : 1.5), hot ? 0.52 : 0.26);
-              CTX.fillStyle = prop.hitFlash > 0 ? '#fef08a' : '#9a3412';
-              CTX.strokeStyle = hot ? '#fde047' : '#f97316';
-              CTX.lineWidth = 2.5;
-              CTX.fillRect(px - 15, py - 26, 30, 32);
-              CTX.strokeRect(px - 15, py - 26, 30, 32);
-              CTX.fillStyle = '#fb923c';
-              CTX.fillRect(px - 15, py - 14, 30, 6);
-              CTX.font = 'bold 12px system-ui, sans-serif';
-              CTX.textAlign = 'center';
-              CTX.fillStyle = '#fef08a';
-              CTX.fillText('🔥', px, py - 6);
-            } else {
-              CTX.fillStyle = prop.hitFlash > 0 ? '#fde68a' : '#78350f';
-              CTX.strokeStyle = '#d97706';
-              CTX.lineWidth = 2.4;
-              CTX.fillRect(px - 17, py - 24, 34, 30);
-              CTX.strokeRect(px - 17, py - 24, 34, 30);
-              CTX.strokeStyle = '#fbbf24';
-              CTX.lineWidth = 1.8;
-              CTX.beginPath();
-              CTX.moveTo(px - 15, py - 22);
-              CTX.lineTo(px + 15, py + 4);
-              CTX.moveTo(px + 15, py - 22);
-              CTX.lineTo(px - 15, py + 4);
-              CTX.stroke();
+              drawGlowSprite(CTX, 'fire', px, py - 10, prop.radius * (hot ? 2.5 : 1.4), hot ? 0.52 : 0.22);
+            } else if (prop.kind === 'CRYSTAL_PILLAR') {
+              drawGlowSprite(CTX, 'cyan', px, py - 12, prop.radius * 1.9, 0.28);
             }
-            CTX.restore();
+            const sprite = typeof AssetLoader !== 'undefined' && AssetLoader.getPropSprite
+              ? AssetLoader.getPropSprite(sKey)
+              : null;
+            if (sprite) {
+              const targetH = (prop.kind === 'CRYSTAL_PILLAR' ? 84 : (prop.kind === 'BARREL' ? 62 : 56)) * (prop.drawScale || 1.0);
+              const s = targetH / Math.max(1, sprite.height);
+              drawUprightPropSprite(CTX, sprite, px, py, s, false, prop.hitFlash > 0);
+            }
+            // Subtle damage bar when partially damaged
+            if (hpPct < 0.99 && hpPct > 0) {
+              CTX.save();
+              CTX.translate(px, py - 56);
+              CTX.scale(1.0, INV_CAMERA_PITCH);
+              CTX.fillStyle = 'rgba(2, 6, 23, 0.85)';
+              CTX.fillRect(-18, -3, 36, 6);
+              CTX.fillStyle = prop.kind === 'BARREL' ? '#f97316' : (prop.kind === 'CRYSTAL_PILLAR' ? '#38bdf8' : '#fbbf24');
+              CTX.fillRect(-17, -2, Math.round(34 * hpPct), 4);
+              CTX.restore();
+            }
           }
         }
 
@@ -17217,27 +17736,35 @@
             CTX.imageSmoothingQuality = 'high';
             CTX.drawImage(mapImage, mapX, mapY, mapSize, mapSize);
           } else {
-            CTX.fillStyle = BIOME_ZONES.length === 0 ? '#1E293B' : '#0B2D48';
+            // Render the 4 structured 2.5D island biomes cleanly on the minimap
+            CTX.fillStyle = '#1b4965'; // Tidal Ruins South/SE
             CTX.fillRect(mapX, mapY, mapSize, mapSize);
-            for (let i = 0; i < BIOME_ZONES.length; i++) {
-              const z = BIOME_ZONES[i];
-              CTX.fillStyle = z.colorTop;
-              CTX.fillRect(mapX + z.x * scale, mapY + z.y * scale, z.w * scale, z.h * scale);
-            }
-            CTX.fillStyle = '#3b82f6';
-            for (let i = 0; i < WATER_LAYOUT.length; i++) {
-              const w = WATER_LAYOUT[i];
-              CTX.fillRect(mapX + w.x * scale, mapY + w.y * scale, w.w * scale, w.h * scale);
-            }
-            CTX.fillStyle = '#78350f';
-            for (let i = 0; i < BRIDGE_LAYOUT.length; i++) {
-              const br = BRIDGE_LAYOUT[i];
-              CTX.fillRect(mapX + br.x * scale, mapY + br.y * scale, br.w * scale, br.h * scale);
-            }
-            CTX.fillStyle = '#1e293b';
-            for (let i = 0; i < obstaclePool.length; i++) {
-              const obs = obstaclePool[i];
-              CTX.fillRect(mapX + obs.x * scale, mapY + obs.y * scale, obs.w * scale, obs.h * scale);
+            CTX.fillStyle = '#244d38'; // Whispering Grove W/NW
+            CTX.fillRect(mapX, mapY, mapSize * 0.52, mapSize * 0.56);
+            CTX.fillStyle = '#2e1a24'; // Obsidian Forge E/NE
+            CTX.fillRect(mapX + mapSize * 0.5, mapY, mapSize * 0.5, mapSize * 0.52);
+            // Arcane Citadel center medallion
+            CTX.fillStyle = '#9c8d72';
+            CTX.beginPath();
+            CTX.arc(mapX + mapSize * 0.5, mapY + mapSize * 0.5, mapSize * 0.21, 0, Math.PI * 2);
+            CTX.fill();
+            CTX.strokeStyle = 'rgba(251, 191, 36, 0.55)';
+            CTX.lineWidth = isMapExpanded ? 2 : 1.2;
+            CTX.stroke();
+            // Pathways & Tidal glowing channels
+            if (ISLAND_WORLD_DATA && Array.isArray(ISLAND_WORLD_DATA.paths)) {
+              CTX.lineCap = 'round';
+              for (let i = 0; i < ISLAND_WORLD_DATA.paths.length; i++) {
+                const seg = ISLAND_WORLD_DATA.paths[i];
+                CTX.strokeStyle = seg.kind === 'tidal_channel'
+                  ? 'rgba(56, 189, 248, 0.7)'
+                  : (seg.kind === 'magma_vein' ? 'rgba(249, 115, 22, 0.7)' : 'rgba(203, 196, 178, 0.5)');
+                CTX.lineWidth = Math.max(1.2, seg.width * scale);
+                CTX.beginPath();
+                CTX.moveTo(mapX + seg.x1 * scale, mapY + seg.y1 * scale);
+                CTX.lineTo(mapX + seg.x2 * scale, mapY + seg.y2 * scale);
+                CTX.stroke();
+              }
             }
           }
 
@@ -18711,6 +19238,7 @@
       }
 
       function drawDropMap() {
+        initIsland25DWorld();
         const canvas = document.getElementById('dropMapCanvas');
         const context = canvas.getContext('2d');
         const scale = canvas.width / ARENA_WIDTH;
@@ -18722,32 +19250,53 @@
           context.imageSmoothingQuality = 'high';
           context.drawImage(mapImage, 0, 0, size, size);
         } else {
-          context.fillStyle = BIOME_ZONES.length === 0 ? '#1E293B' : '#0B2D48';
+          // 4-Biome Floating Sky-Island tactical deployment map
+          context.fillStyle = '#17374f'; // Tidal Ruins South / Southeast
           context.fillRect(0, 0, size, size);
-          for (const beach of BEACH_LAYOUT) {
-            context.fillStyle = beach.fill;
-            context.fillRect(beach.x * scale, beach.y * scale, beach.w * scale, beach.h * scale);
+          context.fillStyle = '#244d38'; // Whispering Grove West / Northwest
+          context.fillRect(0, 0, size * 0.52, size * 0.56);
+          context.fillStyle = '#2e1a24'; // Obsidian Forge East / Northeast
+          context.fillRect(size * 0.5, 0, size * 0.5, size * 0.52);
+
+          // Arcane Citadel Center Courtyard
+          context.fillStyle = '#9c8d72';
+          context.beginPath();
+          context.arc(size * 0.5, size * 0.5, size * 0.21, 0, Math.PI * 2);
+          context.fill();
+          context.strokeStyle = 'rgba(251, 191, 36, 0.72)';
+          context.lineWidth = 2.5;
+          context.stroke();
+
+          if (ISLAND_WORLD_DATA && Array.isArray(ISLAND_WORLD_DATA.paths)) {
+            context.lineCap = 'round';
+            for (const seg of ISLAND_WORLD_DATA.paths) {
+              context.strokeStyle = seg.kind === 'tidal_channel'
+                ? 'rgba(56, 189, 248, 0.78)'
+                : (seg.kind === 'magma_vein' ? 'rgba(249, 115, 22, 0.75)' : 'rgba(203, 196, 178, 0.58)');
+              context.lineWidth = Math.max(2, seg.width * scale);
+              context.beginPath();
+              context.moveTo(seg.x1 * scale, seg.y1 * scale);
+              context.lineTo(seg.x2 * scale, seg.y2 * scale);
+              context.stroke();
+            }
           }
-          for (const zone of BIOME_ZONES) {
-            context.fillStyle = zone.colorTop;
-            context.fillRect(zone.x * scale, zone.y * scale, zone.w * scale, zone.h * scale);
+
+          // Biome labels
+          context.save();
+          context.font = '800 11px system-ui, sans-serif';
+          context.textAlign = 'center';
+          context.textBaseline = 'middle';
+          context.lineJoin = 'round';
+          for (const reg of MAP_REGIONS) {
+            const rx = reg.x * size;
+            const ry = reg.y * size;
+            context.strokeStyle = 'rgba(2, 6, 23, 0.92)';
+            context.lineWidth = 3.5;
+            context.strokeText(reg.name.toUpperCase(), rx, ry);
+            context.fillStyle = reg.accent || '#f8fafc';
+            context.fillText(reg.name.toUpperCase(), rx, ry);
           }
-          for (const path of PATH_LAYOUT) {
-            context.fillStyle = path.fill;
-            context.fillRect(path.x * scale, path.y * scale, path.w * scale, path.h * scale);
-          }
-          for (const water of WATER_LAYOUT) {
-            context.fillStyle = water.color;
-            context.fillRect(water.x * scale, water.y * scale, water.w * scale, water.h * scale);
-          }
-          for (const bridge of BRIDGE_LAYOUT) {
-            context.fillStyle = bridge.deck;
-            context.fillRect(bridge.x * scale, bridge.y * scale, bridge.w * scale, bridge.h * scale);
-          }
-          for (const obstacle of obstaclePool) {
-            context.fillStyle = obstacle.colorTop || '#334155';
-            context.fillRect(obstacle.x * scale, obstacle.y * scale, obstacle.w * scale, obstacle.h * scale);
-          }
+          context.restore();
         }
         context.strokeStyle = 'rgba(255,255,255,0.12)';
         context.lineWidth = 1;
@@ -20675,10 +21224,18 @@
           if (acctXpText) acctXpText.textContent = lv >= MAX_PLAYER_LEVEL ? 'MAX' : `${curXp}/${reqXp} XP`;
           const lastSyncedEl = document.getElementById('acct-last-synced');
           if (lastSyncedEl) {
-            const ts = state.lastSyncedAt || (state.profile && state.profile.updatedAt);
-            lastSyncedEl.textContent = ts
-              ? `Last Synced: ${new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
-              : (state.sandboxMode ? 'Local Sandbox Mode · Ready for Cloud' : 'Last Synced: Pending');
+            const profTs = state.profile
+              ? (state.profile.updatedAtMs ||
+                  (typeof state.profile.updatedAt?.toMillis === 'function'
+                    ? state.profile.updatedAt.toMillis()
+                    : (state.profile.updatedAt?.seconds ? state.profile.updatedAt.seconds * 1000 : state.profile.updatedAt)))
+              : 0;
+            const rawTs = state.lastSyncedAt || profTs;
+            const parsedDate = rawTs ? new Date(rawTs) : null;
+            const validSyncDate = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : null;
+            lastSyncedEl.textContent = validSyncDate
+              ? `Last Synced: ${validSyncDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+              : (state.sandboxMode ? 'Local Sandbox Mode · Ready for Cloud' : 'Last Synced: Cloud Ready');
           }
           const careerGrid = document.getElementById('acct-career-grid');
           if (careerGrid) {
@@ -20964,7 +21521,7 @@
             return;
           }
           if (metaEl) {
-            metaEl.textContent = `Project: ${d.projectId || 'arcane-royale'} · Host: ${d.domain || window.location.hostname}`;
+            metaEl.textContent = `Project: ${d.projectId || 'live-cloud'} · Host: ${d.domain || window.location.hostname}`;
           }
           styleDiagPill(document.getElementById('diag-pill-auth'), 'Auth', d.auth);
           styleDiagPill(document.getElementById('diag-pill-firestore'), 'Firestore', d.firestore);
@@ -21107,7 +21664,7 @@
         const input = document.getElementById('acct-edit-name-input');
         const fb = document.getElementById('acct-name-feedback');
         const raw = (input?.value || '').trim();
-        const res = await CloudBridge.request('updateDisplayName', { newName: raw });
+        const res = await CloudBridge.request('updateDisplayName', { displayName: raw, newName: raw });
         if (res && res.ok) {
           PlayerData.playerName = res.displayName || raw;
           PlayerData.save();

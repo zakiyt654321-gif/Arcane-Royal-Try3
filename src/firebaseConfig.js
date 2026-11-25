@@ -2,24 +2,28 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getDatabase, ref as rtdbRef, onValue, off } from 'firebase/database';
+import appletConfig from '../firebase-applet-config.json';
 
 const viteEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
 
 /**
- * Live zero-config fallback for Arcane Royale (`arcane-royale` Firebase project).
- * Any build-time VITE_FIREBASE_* env variable overrides the matching default.
- * Because Firebase web config values are scoped public client identifiers,
- * GitHub Pages and Cloudflare Pages connect directly to live Firebase with zero manual secrets.
+ * Live zero-config Firebase wiring backed by the provisioned project in firebase-applet-config.json.
+ * Any build-time VITE_FIREBASE_* env variable cleanly overrides the matching default
+ * (and automatically targets '(default)' Firestore DB when overriding projectId).
  */
+const hasCustomProjectOverride = Boolean(
+  viteEnv.VITE_FIREBASE_PROJECT_ID && viteEnv.VITE_FIREBASE_PROJECT_ID !== appletConfig.projectId
+);
+
 export const DEFAULT_LIVE_FIREBASE_CONFIG = Object.freeze({
-  apiKey: 'AIzaSyCjGX3tv2LaE2FDKkB13-0w_SK8s3w496I',
-  authDomain: 'arcane-royale.firebaseapp.com',
-  databaseURL: 'https://arcane-royale-default-rtdb.firebaseio.com',
-  projectId: 'arcane-royale',
-  storageBucket: 'arcane-royale.firebasestorage.app',
-  messagingSenderId: '1061349504106',
-  appId: '1:1061349504106:web:28979c202340019ba60613',
-  firestoreDatabaseId: '(default)',
+  apiKey: appletConfig.apiKey || '',
+  authDomain: appletConfig.authDomain || '',
+  databaseURL: appletConfig.databaseURL || '',
+  projectId: appletConfig.projectId || '',
+  storageBucket: appletConfig.storageBucket || '',
+  messagingSenderId: appletConfig.messagingSenderId || '',
+  appId: appletConfig.appId || '',
+  firestoreDatabaseId: appletConfig.firestoreDatabaseId || '(default)',
 });
 
 export const FIREBASE_CONFIG = {
@@ -30,7 +34,9 @@ export const FIREBASE_CONFIG = {
   storageBucket: viteEnv.VITE_FIREBASE_STORAGE_BUCKET || DEFAULT_LIVE_FIREBASE_CONFIG.storageBucket,
   messagingSenderId: viteEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || DEFAULT_LIVE_FIREBASE_CONFIG.messagingSenderId,
   appId: viteEnv.VITE_FIREBASE_APP_ID || DEFAULT_LIVE_FIREBASE_CONFIG.appId,
-  firestoreDatabaseId: viteEnv.VITE_FIREBASE_DATABASE_ID || DEFAULT_LIVE_FIREBASE_CONFIG.firestoreDatabaseId,
+  firestoreDatabaseId:
+    viteEnv.VITE_FIREBASE_DATABASE_ID ||
+    (hasCustomProjectOverride ? '(default)' : DEFAULT_LIVE_FIREBASE_CONFIG.firestoreDatabaseId),
 };
 
 export const SIM_CHANNEL_NAME = 'arcane_royale_sim';
@@ -84,7 +90,7 @@ export function isRtdbConfigured(cfg = FIREBASE_CONFIG) {
 }
 
 export function isSandboxMode(cfg = FIREBASE_CONFIG) {
-  return !isFirebaseConfigured(cfg) || !isRtdbConfigured(cfg);
+  return !isFirebaseConfigured(cfg);
 }
 
 export function isSimBroadcastEnabled(cfg = FIREBASE_CONFIG) {
@@ -277,7 +283,11 @@ export async function runFirebaseDiagnostics() {
 
   const checkRtdb = async () => {
     if (!rtdb) {
-      return { ok: false, label: 'Not Set', detail: 'Realtime Database URL missing.' };
+      return {
+        ok: true,
+        label: 'Sim Ready',
+        detail: 'Auth & Cloud Firestore are live. Squad rooms run in instant local/sim mode (set optional VITE_FIREBASE_DATABASE_URL for cross-device RTDB).',
+      };
     }
     return new Promise((resolve) => {
       let settled = false;
