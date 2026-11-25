@@ -362,3 +362,19 @@ test('Protected deployment files and 1-tap Firebase Live Diagnostics UI remain i
   assert.ok(cloudSync.includes("case 'getFirebaseRulesText'"), 'cloudSync must expose getFirebaseRulesText');
 });
 
+test('CloudSync Auth diagnostics: logs client connection, state transitions, error codes, and ready handshake without duplicate listeners', () => {
+  const cloudSync = fs.readFileSync(path.join(ROOT, 'src', 'firebase', 'cloudSync.ts'), 'utf8');
+  const authService = fs.readFileSync(path.join(ROOT, 'src', 'authService.js'), 'utf8');
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+  assert.ok(cloudSync.includes('[CloudSync] Firebase client connection check:'), 'cloudSync must log Firebase client connection check');
+  assert.ok(cloudSync.includes('[CloudSync] Auth state changed:'), 'cloudSync must log auth state transitions');
+  assert.ok(cloudSync.includes('[CloudSync] Auth action'), 'cloudSync must log failed auth actions with error codes');
+  assert.ok(cloudSync.includes("emitBus('ar:cloud:ready'"), 'cloudSync must broadcast ar:cloud:ready');
+  assert.ok(html.includes("document.addEventListener('ar:cloud:ready'"), 'CloudBridge must replay queued requests on ar:cloud:ready');
+  assert.ok(authService.includes('function logAuthError('), 'authService must log Firebase auth error codes');
+  assert.equal(cloudSync.includes('onAuthStateChanged'), false, 'cloudSync must not register duplicate auth listeners');
+  assert.equal(cloudSync.includes('onSnapshot'), false, 'cloudSync must not register duplicate Firestore listeners');
+});
+
+

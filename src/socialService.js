@@ -292,9 +292,9 @@ class SocialServiceImpl {
   async refreshFriends() {
     const auth = authService.getState();
     if (!auth.uid) return this.getSnapshot();
-    const { db, rtdb } = getFirebaseServices();
+    const { db, rtdb, auth: fbAuth } = getFirebaseServices();
 
-    if (db && !auth.sandboxAuth) {
+    if (db && !auth.sandboxAuth && fbAuth?.currentUser?.uid === auth.uid) {
       try {
         const [fSnap, rSnap] = await Promise.all([
           getDocs(collection(db, 'users', auth.uid, 'friends')),

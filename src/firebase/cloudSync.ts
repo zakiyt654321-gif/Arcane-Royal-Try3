@@ -1,7 +1,13 @@
 import { authService } from '../authService.js';
 import { socialService } from '../socialService.js';
 import { squadMultiplayer } from '../squadMultiplayer.js';
-import { DEV_DEMO_ENABLED, runFirebaseDiagnostics } from '../firebaseConfig.js';
+import {
+  DEV_DEMO_ENABLED,
+  FIREBASE_CONFIG,
+  getFirebaseServices,
+  isFirebaseConfigured,
+  runFirebaseDiagnostics,
+} from '../firebaseConfig.js';
 import firestoreRulesRaw from '../../firestore.rules?raw';
 import databaseRulesRaw from '../../database.rules.json?raw';
 import '../apkBridge.js';
@@ -12,14 +18,68 @@ type CloudRequestDetail = {
   payload?: Record<string, unknown>;
 };
 
+const AUTH_ACTIONS = new Set([
+  'init',
+  'signInEmail',
+  'createAccount',
+  'playAsGuest',
+  'signInGuest',
+  'signInGoogle',
+  'sendPasswordReset',
+  'upgradeGuest',
+  'signOut',
+]);
+
 function emitBus(type: string, detail: Record<string, unknown>) {
   document.dispatchEvent(new CustomEvent(type, { detail }));
 }
 
+function logFirebaseClientConnection() {
+  const services = getFirebaseServices();
+  const hostname =
+    typeof window !== 'undefined' && window.location ? window.location.hostname : 'unknown';
+  const inIframe = typeof window !== 'undefined' ? window.top !== window.self : false;
+  console.info('[CloudSync] Firebase client connection check:', {
+    configured: isFirebaseConfigured(),
+    projectId: FIREBASE_CONFIG.projectId,
+    authDomain: FIREBASE_CONFIG.authDomain,
+    firestoreDatabaseId: FIREBASE_CONFIG.firestoreDatabaseId,
+    authReady: Boolean(services.auth),
+    liveFirestore: services.liveFirestore,
+    liveRtdb: services.liveRtdb,
+    hostname,
+    inIframe,
+  });
+}
+
 // Forward live state changes from Auth, Social/Squads, and Multiplayer Match over sealed document events
 let lastSignedInUid: string | null = null;
+let lastLoggedAuthSummary = '';
 
 authService.subscribe((state: Record<string, unknown>) => {
+  const summaryKey = JSON.stringify({
+    ready: Boolean(state.ready),
+    signedIn: Boolean(state.signedIn),
+    uid: state.uid || null,
+    authProvider: state.authProvider || null,
+    isAnonymous: Boolean(state.isAnonymous),
+    sandboxMode: Boolean(state.sandboxMode),
+    lastAuthErrorCode: state.lastAuthErrorCode || null,
+  });
+  if (summaryKey !== lastLoggedAuthSummary) {
+    lastLoggedAuthSummary = summaryKey;
+    console.info('[CloudSync] Auth state changed:', {
+      ready: Boolean(state.ready),
+      signedIn: Boolean(state.signedIn),
+      uid: state.uid || null,
+      authProvider: state.authProvider || null,
+      isAnonymous: Boolean(state.isAnonymous),
+      sandboxMode: Boolean(state.sandboxMode),
+      statusLabel: state.statusLabel || null,
+      ...(state.lastAuthErrorCode ? { errorCode: state.lastAuthErrorCode, error: state.lastAuthError } : {}),
+    });
+  }
+
   emitBus('ar:cloud:state', state);
   const uid = (state.uid as string) || null;
   if (uid && uid !== lastSignedInUid) {
@@ -289,11 +349,47 @@ document.addEventListener('ar:cloud:request', async (ev: Event) => {
         break;
     }
   } catch (err) {
-    result = { ok: false, error: err instanceof Error ? err.message : 'CloudSync error' };
+    const errObj = err as { code?: string; message?: string } | null;
+    const code = typeof errObj?.code === 'string' ? errObj.code : 'cloudsync-exception';
+    const message = err instanceof Error ? err.message : 'CloudSync error';
+    console.error(`[CloudSync] Action "${detail.action}" threw an exception:`, { code, message });
+    result = { ok: false, code, error: message };
+  }
+
+  if (AUTH_ACTIONS.has(detail.action) && result && result.ok === false) {
+    console.warn(`[CloudSync] Auth action "${detail.action}" failed:`, {
+      code: result.code || 'unknown',
+      error: result.error || 'Authentication failed',
+    });
   }
 
   emitBus('ar:cloud:response', { id: detail.id, result });
 });
 
-// Initialize Auth session persistence immediately on startup
-authService.init();
+// Mark bridge ready so any early UI requests dispatched before ES module load can replay immediately
+if (typeof document !== 'undefined' && document.documentElement) {
+  document.documentElement.dataset.arCloudReady = '1';
+}
+emitBus('ar:cloud:ready', { state: authService.getState() });
+
+// Log Firebase client wiring and initialize Auth session persistence immediately on startup
+logFirebaseClientConnection();
+authService
+  .init()
+  .then((initState: Record<string, unknown>) => {
+    console.info('[CloudSync] Auth initialization settled:', {
+      ready: Boolean(initState?.ready),
+      signedIn: Boolean(initState?.signedIn),
+      uid: initState?.uid || null,
+      sandboxMode: Boolean(initState?.sandboxMode),
+      statusLabel: initState?.statusLabel || null,
+      ...(initState?.lastAuthErrorCode ? { errorCode: initState.lastAuthErrorCode } : {}),
+    });
+  })
+  .catch((err: unknown) => {
+    const errObj = err as { code?: string; message?: string } | null;
+    console.error('[CloudSync] Startup authService.init() rejected:', {
+      code: errObj?.code || 'init-rejected',
+      message: err instanceof Error ? err.message : String(err),
+    });
+  });

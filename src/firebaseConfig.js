@@ -115,15 +115,20 @@ function buildAppInitConfig(cfg) {
 }
 
 function createFirestoreInstance(app, databaseId) {
-  // Force long-polling in browser/WebView/iframe environments so proxied networks
-  // connect immediately instead of stalling for 10s on aborted WebChannel streams.
+  // Auto-detect long-polling so normal browsers use fast WebChannel streaming
+  // (~150ms) while restricted WebViews/proxies still fall back seamlessly.
   const firestoreSettings =
-    typeof window !== 'undefined' ? { experimentalForceLongPolling: true } : {};
+    typeof window !== 'undefined' ? { experimentalAutoDetectLongPolling: true } : {};
   try {
     return databaseId
       ? initializeFirestore(app, firestoreSettings, databaseId)
       : initializeFirestore(app, firestoreSettings);
-  } catch {
+  } catch (initErr) {
+    console.warn('[FirebaseConfig] initializeFirestore fallback to getFirestore:', {
+      code: initErr?.code || 'firestore-init-fallback',
+      message: initErr?.message || String(initErr),
+      databaseId: databaseId || '(default)',
+    });
     return databaseId ? getFirestore(app, databaseId) : getFirestore(app);
   }
 }
@@ -131,6 +136,10 @@ function createFirestoreInstance(app, databaseId) {
 export function getFirebaseServices() {
   if (cachedServices) return cachedServices;
   if (!isFirebaseConfigured(FIREBASE_CONFIG)) {
+    console.warn('[FirebaseConfig] Firebase config missing or placeholder; running in Local Sandbox Mode.', {
+      projectId: FIREBASE_CONFIG.projectId || null,
+      authDomain: FIREBASE_CONFIG.authDomain || null,
+    });
     cachedServices = { app: null, auth: null, db: null, rtdb: null, liveFirestore: false, liveRtdb: false };
     return cachedServices;
   }
@@ -146,7 +155,11 @@ export function getFirebaseServices() {
     if (isRtdbConfigured(FIREBASE_CONFIG)) {
       try {
         rtdb = getDatabase(app, FIREBASE_CONFIG.databaseURL);
-      } catch {
+      } catch (rtdbErr) {
+        console.warn('[FirebaseConfig] Realtime Database initialization skipped:', {
+          code: rtdbErr?.code || 'rtdb-init-error',
+          message: rtdbErr?.message || String(rtdbErr),
+        });
         rtdb = null;
       }
     }
@@ -159,7 +172,14 @@ export function getFirebaseServices() {
       liveRtdb: Boolean(rtdb),
     };
     return cachedServices;
-  } catch {
+  } catch (err) {
+    console.error('[FirebaseConfig] Firebase client initialization failed:', {
+      code: err?.code || 'firebase-init-error',
+      message: err?.message || String(err),
+      projectId: FIREBASE_CONFIG.projectId,
+      authDomain: FIREBASE_CONFIG.authDomain,
+      firestoreDatabaseId: FIREBASE_CONFIG.firestoreDatabaseId,
+    });
     cachedServices = { app: null, auth: null, db: null, rtdb: null, liveFirestore: false, liveRtdb: false };
     return cachedServices;
   }
@@ -181,15 +201,30 @@ export async function testFirestoreConnection() {
   connectionCheckPromise = (async () => {
     try {
       await withTimeout(getDocFromServer(doc(db, 'test', 'connection')), 5000, 'firestore-timeout');
+      console.info('[FirebaseConfig] Cloud Firestore connection verified.', {
+        projectId: FIREBASE_CONFIG.projectId,
+        firestoreDatabaseId: FIREBASE_CONFIG.firestoreDatabaseId,
+      });
       return true;
     } catch (error) {
       const code = String(error?.code || '');
       if (code === 'permission-denied' || code === 'not-found') {
+        console.info('[FirebaseConfig] Cloud Firestore backend reachable (security rules active).', {
+          code,
+          projectId: FIREBASE_CONFIG.projectId,
+          firestoreDatabaseId: FIREBASE_CONFIG.firestoreDatabaseId,
+        });
         return true;
       }
       if (error instanceof Error && error.message.includes('the client is offline')) {
         console.error('Please check your Firebase configuration.');
       }
+      console.error('[FirebaseConfig] Cloud Firestore connection check failed:', {
+        code: code || 'connection-error',
+        message: error instanceof Error ? error.message : String(error),
+        projectId: FIREBASE_CONFIG.projectId,
+        firestoreDatabaseId: FIREBASE_CONFIG.firestoreDatabaseId,
+      });
       return false;
     } finally {
       connectionCheckPromise = null;

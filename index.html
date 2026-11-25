@@ -4452,6 +4452,7 @@
          ========================================================== */
       html, body { overscroll-behavior: none; }
       #login-screen {
+        z-index: 260 !important;
         padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) !important;
         overflow-y: auto !important;
       }
@@ -4981,6 +4982,9 @@
         grid-template-rows: 42px minmax(0, 1fr) 46px !important;
         gap: 6px !important;
         padding: max(4px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) max(6px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px)) !important;
+      }
+      #lobby-screen.hidden {
+        display: none !important;
       }
       .lobby-topbar {
         height: 42px !important;
@@ -5812,7 +5816,7 @@
 
           <!-- Sign In Tab -->
           <div id="auth-pane-signin" class="auth-form-grid">
-            <input type="email" id="auth-signin-email" class="auth-input" autocomplete="email" placeholder="Email address" aria-label="Email address" />
+            <input type="email" id="auth-signin-email" class="auth-input" autocomplete="email" placeholder="Email address" aria-label="Email address" data-ar-enter="authSubmitSignIn" />
             <div class="auth-input-wrap">
               <input type="password" id="auth-signin-password" class="auth-input" autocomplete="current-password" placeholder="Password (6+ characters)" aria-label="Password" data-ar-enter="authSubmitSignIn" />
               <button type="button" class="auth-pw-toggle" data-ar-click="togglePasswordVis" data-ar-arg="auth-signin-password" aria-label="Show or hide password">👁</button>
@@ -5864,7 +5868,7 @@
       </div>
 
       <!-- LOBBY SCREEN (DE-CRAMPED 100DVH DUAL-ORIENTATION APP SHELL) -->
-      <div id="lobby-screen" class="overlay-screen">
+      <div id="lobby-screen" class="overlay-screen hidden">
         <!-- Slim Top Header (<= 48px): Currencies, Status Dot, Quick Mute, Settings -->
         <header class="lobby-topbar">
           <div class="lobby-currency-strip" aria-label="Player currencies">
@@ -21016,6 +21020,8 @@
       const CloudBridge = (() => {
         let reqSeq = 0;
         const pending = new Map();
+        const earlyQueue = [];
+        let bridgeReady = Boolean(document.documentElement && document.documentElement.dataset.arCloudReady === '1');
         const state = {
           ready: false,
           configured: false,
@@ -21031,6 +21037,21 @@
           profile: null,
           statusLabel: 'Cloud Setup Pending · Local Sandbox Mode'
         };
+
+        document.addEventListener('ar:cloud:ready', (ev) => {
+          bridgeReady = true;
+          const detail = ev && ev.detail;
+          if (detail && detail.state) {
+            Object.assign(state, detail.state);
+            refreshUI();
+          }
+          while (earlyQueue.length > 0) {
+            const queued = earlyQueue.shift();
+            if (queued && pending.has(queued.id)) {
+              document.dispatchEvent(new CustomEvent('ar:cloud:request', { detail: queued }));
+            }
+          }
+        });
 
         document.addEventListener('ar:cloud:response', (ev) => {
           const detail = ev && ev.detail;
@@ -21048,6 +21069,11 @@
           Object.assign(state, detail);
           if (detail.signedIn && detail.profile) {
             applyAuthProfileToLocal(detail.profile, detail);
+            // If user completed sign-in via redirect, session restore, or late auth event while still on login screen, enter lobby cleanly
+            const loginEl = document.getElementById('login-screen');
+            if (loginEl && !loginEl.classList.contains('hidden') && Game.state === 'LOBBY' && typeof completeAuthEntry === 'function') {
+              completeAuthEntry({ ok: true, state: detail });
+            }
           } else if (!detail.signedIn && detail.lastAuthError && typeof showAuthFeedback === 'function') {
             showAuthFeedback(detail.lastAuthError, true);
           }
@@ -21057,7 +21083,7 @@
         function request(action, payload = {}) {
           return new Promise((resolve) => {
             const id = `ar_req_${++reqSeq}_${Date.now()}`;
-            // Interactive Google popup needs generous timeout on mobile browsers; auth/diagnostics need 12s
+            // Interactive Google popup needs generous timeout on mobile browsers; auth/diagnostics need 16s
             const timeoutMs =
               action === 'signInGoogle'
                 ? 60000
@@ -21067,21 +21093,26 @@
                    action === 'upgradeGuest' ||
                    action === 'sendPasswordReset' ||
                    action === 'runFirebaseDiagnostics')
-                  ? 12000
-                  : 6500;
+                  ? 16000
+                  : 8000;
             const timer = setTimeout(() => {
               if (pending.has(id)) {
                 pending.delete(id);
-                resolve({ ok: false, fallback: true, mode: 'local', error: 'Request timed out — check your internet connection and try again.' });
+                console.warn('[CloudBridge] Request timed out:', { action, timeoutMs, bridgeReady });
+                resolve({ ok: false, code: 'bridge/timeout', fallback: true, mode: 'local', error: 'Request timed out — check your internet connection and try again.' });
               }
             }, timeoutMs);
             pending.set(id, (res) => {
               clearTimeout(timer);
               resolve(res);
             });
-            document.dispatchEvent(new CustomEvent('ar:cloud:request', {
-              detail: { id, action, payload }
-            }));
+            const detail = { id, action, payload };
+            if (!bridgeReady && !(document.documentElement && document.documentElement.dataset.arCloudReady === '1')) {
+              earlyQueue.push(detail);
+            } else {
+              bridgeReady = true;
+              document.dispatchEvent(new CustomEvent('ar:cloud:request', { detail }));
+            }
           });
         }
 
@@ -21377,11 +21408,25 @@
 
       function setAuthButtonsBusy(busy, activeId) {
         const ids = ['btn-auth-signin', 'btn-auth-signup', 'btn-auth-guest', 'btn-auth-google'];
+        const busyLabels = {
+          'btn-auth-signin': 'SIGNING IN…',
+          'btn-auth-signup': 'CREATING ACCOUNT…',
+          'btn-auth-guest': '👤 Entering as Guest…',
+          'btn-auth-google': '🔐 Opening Google…'
+        };
         for (let i = 0; i < ids.length; i++) {
           const el = document.getElementById(ids[i]);
           if (el) {
+            if (busy) {
+              if (!el.dataset.origLabel) el.dataset.origLabel = el.textContent;
+              if (ids[i] === activeId && busyLabels[activeId]) {
+                el.textContent = busyLabels[activeId];
+              }
+            } else if (el.dataset.origLabel) {
+              el.textContent = el.dataset.origLabel;
+            }
             el.disabled = Boolean(busy);
-            el.style.opacity = busy ? (ids[i] === activeId ? '0.85' : '0.55') : '';
+            el.style.opacity = busy ? (ids[i] === activeId ? '0.88' : '0.55') : '';
           }
         }
       }

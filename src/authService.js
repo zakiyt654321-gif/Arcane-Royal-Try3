@@ -2,6 +2,8 @@ import {
   setPersistence,
   indexedDBLocalPersistence,
   browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -25,6 +27,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import {
+  FIREBASE_CONFIG,
   getFirebaseServices,
   isFirebaseConfigured,
   isRtdbConfigured,
@@ -267,7 +270,7 @@ export function formatFriendlyAuthError(err) {
     return 'That email is already linked to an Arcane account. Switch to Sign In or tap Forgot Password.';
   }
   if (code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials') {
-    return 'Incorrect email or password. Double-check your details or tap Forgot Password.';
+    return "Incorrect email or password — or switch to Create Account if you haven't registered yet.";
   }
   if (code === 'auth/user-not-found') {
     return 'No Arcane account found with that email. Switch to Create Account to register.';
@@ -282,7 +285,10 @@ export function formatFriendlyAuthError(err) {
     return 'Google Sign-In popup was closed before completing. Tap Google Sign-In again to retry.';
   }
   if (code === 'auth/popup-blocked') {
-    return 'Your mobile browser blocked the sign-in popup — switching to redirect sign-in...';
+    const inIframe = typeof window !== 'undefined' && window.top !== window.self;
+    return inIframe
+      ? 'Your browser blocked the Google Sign-In popup. Allow popups, open the app in a new tab, or use Email / Play as Guest.'
+      : 'Your browser blocked the Google Sign-In popup. Allow popups or tap Google Sign-In again.';
   }
   if (code === 'auth/network-request-failed') {
     return 'Network error — check your mobile data or Wi-Fi connection and try again.';
@@ -329,6 +335,24 @@ function withAuthTimeout(promise, ms, fallbackValue = null) {
   ]);
 }
 
+function logAuthError(context, err) {
+  const code = String(err?.code || 'unknown');
+  const message = err instanceof Error ? err.message : String(err || 'Unknown auth error');
+  const hostname =
+    typeof window !== 'undefined' && window.location ? window.location.hostname : 'unknown';
+  const inIframe =
+    typeof window !== 'undefined' ? window.top !== window.self : false;
+  console.error(`[FirebaseAuth] ${context} failed:`, {
+    code,
+    message,
+    hostname,
+    authDomain: FIREBASE_CONFIG.authDomain,
+    projectId: FIREBASE_CONFIG.projectId,
+    inIframe,
+  });
+  return code;
+}
+
 class AuthServiceImpl {
   constructor() {
     this.user = null;
@@ -336,10 +360,13 @@ class AuthServiceImpl {
     this.ready = false;
     this.lastSyncedAt = 0;
     this.lastAuthError = null;
+    this.lastAuthErrorCode = null;
     this.sandboxAuth = !isFirebaseConfigured();
     this.sandboxRtdb = !isRtdbConfigured();
     this._ensurePromises = new Map();
+    this._bgPersistPromises = new Map();
     this._pendingAuthSeed = null;
+    this._initPromise = null;
     this.listeners = new Set();
     this.channel = createSimChannel();
     if (this.channel) {
@@ -387,6 +414,7 @@ class AuthServiceImpl {
       profile: this.profile,
       lastSyncedAt: this.lastSyncedAt,
       lastAuthError: this.lastAuthError,
+      lastAuthErrorCode: this.lastAuthErrorCode,
       statusLabel,
     };
   }
@@ -409,43 +437,85 @@ class AuthServiceImpl {
   }
 
   async init() {
+    if (this._initPromise) return this._initPromise;
+    this._initPromise = this._initOnce();
+    return this._initPromise;
+  }
+
+  async _initOnce() {
     const { auth } = getFirebaseServices();
     if (!auth || this.sandboxAuth) {
+      console.warn('[FirebaseAuth] Auth SDK unavailable or sandbox active; restoring local sandbox session.', {
+        hasAuth: Boolean(auth),
+        sandboxAuth: this.sandboxAuth,
+        configured: isFirebaseConfigured(),
+      });
       this._restoreSandboxSession();
       this.ready = true;
       this._emit();
       return this.getState();
     }
 
+    // Configure auth persistence with bounded timeout so strict WebViews/iframes never stall
     try {
-      await setPersistence(auth, indexedDBLocalPersistence).catch(() =>
-        setPersistence(auth, browserLocalPersistence)
-      );
-      testFirestoreConnection();
-      // Complete mobile Chrome Google signInWithRedirect return seamlessly
-      const redirectResult = await withAuthTimeout(
-        getRedirectResult(auth).catch((err) => {
-          this.lastAuthError = formatFriendlyAuthError(err);
-          return null;
-        }),
-        4500,
+      await withAuthTimeout(
+        setPersistence(auth, indexedDBLocalPersistence)
+          .catch((e1) => {
+            console.warn('[FirebaseAuth] indexedDBLocalPersistence unavailable, falling back to browserLocalPersistence:', e1?.code || e1?.message);
+            return setPersistence(auth, browserLocalPersistence);
+          })
+          .catch((e2) => {
+            console.warn('[FirebaseAuth] browserLocalPersistence unavailable, falling back to browserSessionPersistence:', e2?.code || e2?.message);
+            return setPersistence(auth, browserSessionPersistence);
+          })
+          .catch((e3) => {
+            console.warn('[FirebaseAuth] browserSessionPersistence unavailable, falling back to inMemoryPersistence:', e3?.code || e3?.message);
+            return setPersistence(auth, inMemoryPersistence);
+          }),
+        1500,
         null
       );
-      if (redirectResult && redirectResult.user) {
-        const fbUser = redirectResult.user;
-        this.sandboxAuth = false;
-        this.user = {
-          uid: fbUser.uid,
-          email: fbUser.email || null,
-          displayName: fbUser.displayName || null,
-          isAnonymous: Boolean(fbUser.isAnonymous),
-          providerId: 'google',
-        };
-        await this._ensureCloudProfile(fbUser, fbUser.displayName || null);
-      }
-    } catch {
-      // Ignore persistence warnings in strict incognito modes
+    } catch (persistErr) {
+      logAuthError('setPersistence', persistErr);
     }
+
+    // Verify Firestore connectivity asynchronously (non-blocking)
+    testFirestoreConnection();
+
+    // Complete mobile Chrome Google signInWithRedirect return concurrently without blocking onAuthStateChanged
+    withAuthTimeout(
+      getRedirectResult(auth)
+        .then(async (redirectResult) => {
+          if (redirectResult && redirectResult.user) {
+            const fbUser = redirectResult.user;
+            console.info('[FirebaseAuth] Redirect sign-in completed:', {
+              uid: fbUser.uid,
+              providerId: 'google',
+            });
+            this.sandboxAuth = false;
+            this.lastAuthError = null;
+            this.lastAuthErrorCode = null;
+            this.user = {
+              uid: fbUser.uid,
+              email: fbUser.email || null,
+              displayName: fbUser.displayName || null,
+              isAnonymous: Boolean(fbUser.isAnonymous),
+              providerId: 'google',
+            };
+            await this._ensureCloudProfile(fbUser, fbUser.displayName || null);
+            this._emit();
+          }
+          return redirectResult;
+        })
+        .catch((err) => {
+          this.lastAuthErrorCode = logAuthError('getRedirectResult', err);
+          this.lastAuthError = formatFriendlyAuthError(err);
+          this._emit();
+          return null;
+        }),
+      3000,
+      null
+    );
 
     return new Promise((resolve) => {
       let settled = false;
@@ -457,40 +527,62 @@ class AuthServiceImpl {
         resolve(this.getState());
       };
 
-      onAuthStateChanged(auth, async (fbUser) => {
-        if (fbUser) {
-          this.sandboxAuth = false;
-          this.user = {
-            uid: fbUser.uid,
-            email: fbUser.email || null,
-            displayName: fbUser.displayName || null,
-            isAnonymous: Boolean(fbUser.isAnonymous),
-            providerId: fbUser.isAnonymous
-              ? 'anonymous'
-              : fbUser.providerData?.some((p) => p.providerId === 'google.com')
-                ? 'google'
-                : 'password',
-          };
-          await this._ensureCloudProfile(fbUser);
-        } else {
-          if (!isFirebaseConfigured()) {
-            const simSess = readJsonStorage(SIM_SESSION_KEY, null);
-            if (simSess && simSess.uid) {
-              this._restoreSandboxSession();
+      onAuthStateChanged(
+        auth,
+        async (fbUser) => {
+          console.info('[FirebaseAuth] onAuthStateChanged:', {
+            signedIn: Boolean(fbUser),
+            uid: fbUser?.uid || null,
+            isAnonymous: Boolean(fbUser?.isAnonymous),
+            providers: fbUser?.providerData?.map((p) => p.providerId) || [],
+          });
+          if (fbUser) {
+            this.sandboxAuth = false;
+            this.lastAuthError = null;
+            this.lastAuthErrorCode = null;
+            this.user = {
+              uid: fbUser.uid,
+              email: fbUser.email || null,
+              displayName: fbUser.displayName || null,
+              isAnonymous: Boolean(fbUser.isAnonymous),
+              providerId: fbUser.isAnonymous
+                ? 'anonymous'
+                : fbUser.providerData?.some((p) => p.providerId === 'google.com')
+                  ? 'google'
+                  : 'password',
+            };
+            await this._ensureCloudProfile(fbUser);
+          } else {
+            if (!isFirebaseConfigured()) {
+              const simSess = readJsonStorage(SIM_SESSION_KEY, null);
+              if (simSess && simSess.uid) {
+                this._restoreSandboxSession();
+              } else {
+                this.user = null;
+                this.profile = null;
+              }
             } else {
               this.user = null;
               this.profile = null;
             }
-          } else {
-            this.user = null;
-            this.profile = null;
           }
+          done();
+          this._emit();
+        },
+        (observerErr) => {
+          this.lastAuthErrorCode = logAuthError('onAuthStateChanged', observerErr);
+          this.lastAuthError = formatFriendlyAuthError(observerErr);
+          done();
+          this._emit();
+        }
+      );
+
+      setTimeout(() => {
+        if (!settled) {
+          console.warn('[FirebaseAuth] Initial onAuthStateChanged took >2200ms; unlocking UI while listener stays active.');
         }
         done();
-        this._emit();
-      });
-
-      setTimeout(done, 2500);
+      }, 2200);
     });
   }
 
@@ -561,7 +653,7 @@ class AuthServiceImpl {
     return this._claimSandboxFriendCode(uid, displayName);
   }
 
-  async _ensureCloudProfile(fbUser, preferredName = null, seedLocal = {}) {
+  async _ensureCloudProfile(fbUser, preferredName = null, seedLocal = {}, opts = {}) {
     const uid = fbUser.uid;
     if (this._ensurePromises.has(uid)) {
       return this._ensurePromises.get(uid);
@@ -571,8 +663,9 @@ class AuthServiceImpl {
     const effPreferredName = preferredName || pending?.preferredName || null;
     const effSeedLocal =
       seedLocal && Object.keys(seedLocal).length > 0 ? seedLocal : pending?.seedLocal || {};
+    const isNewAccount = Boolean(opts?.isNewAccount || pending?.isNewAccount);
 
-    const task = this._ensureCloudProfileCore(fbUser, effPreferredName, effSeedLocal).finally(() => {
+    const task = this._ensureCloudProfileCore(fbUser, effPreferredName, effSeedLocal, isNewAccount).finally(() => {
       if (this._ensurePromises.get(uid) === task) {
         this._ensurePromises.delete(uid);
       }
@@ -581,7 +674,69 @@ class AuthServiceImpl {
     return task;
   }
 
-  async _ensureCloudProfileCore(fbUser, preferredName = null, seedLocal = {}) {
+  _persistNewProfileInBackground(db, uid, docData) {
+    if (!db || !uid || !docData) return;
+    if (this._bgPersistPromises.has(uid)) return;
+    const ref = doc(db, 'users', uid);
+    const task = (async () => {
+      try {
+        // Reserve unique friendCode in Firestore (fall back to another if taken)
+        let claimedCode = docData.friendCode;
+        try {
+          const codeRef = doc(db, 'friendCodes', claimedCode);
+          const codeSnap = await withAuthTimeout(getDoc(codeRef), 3500, '__timeout__');
+          if (codeSnap && codeSnap !== '__timeout__' && !codeSnap.exists()) {
+            await withAuthTimeout(
+              setDoc(codeRef, {
+                uid,
+                displayName: docData.displayName,
+                createdAt: serverTimestamp(),
+              }),
+              3500,
+              null
+            );
+          } else if (codeSnap && codeSnap !== '__timeout__' && codeSnap.exists() && codeSnap.data()?.uid !== uid) {
+            claimedCode = await this._claimFirestoreFriendCode(db, uid, docData.displayName);
+          }
+        } catch {
+          // Non-blocking: continue creating users/{uid}
+        }
+
+        const finalDoc = claimedCode !== docData.friendCode ? { ...docData, friendCode: claimedCode } : docData;
+        if (this.user?.uid === uid) {
+          this.profile = mergeProfileConflict(this.profile || finalDoc, finalDoc);
+          this.profile.friendCode = claimedCode;
+          this._persistCloudCache(this.profile);
+        }
+
+        const existingSnap = await withAuthTimeout(getDoc(ref), 3500, '__timeout__');
+        if (existingSnap && existingSnap !== '__timeout__' && !existingSnap.exists()) {
+          await withAuthTimeout(
+            setDoc(ref, {
+              ...finalDoc,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            }),
+            5000,
+            null
+          );
+          if (this.user?.uid === uid) {
+            this.lastSyncedAt = Date.now();
+            this._emit();
+          }
+        }
+      } catch {
+        // Never block or break an active signed-in session if background write retries later
+      } finally {
+        if (this._bgPersistPromises.get(uid) === task) {
+          this._bgPersistPromises.delete(uid);
+        }
+      }
+    })();
+    this._bgPersistPromises.set(uid, task);
+  }
+
+  async _ensureCloudProfileCore(fbUser, preferredName = null, seedLocal = {}, isNewAccount = false) {
     const { db } = getFirebaseServices();
     const uid = fbUser.uid;
     const provider = fbUser.isAnonymous
@@ -603,10 +758,21 @@ class AuthServiceImpl {
       return this.profile;
     }
 
+    // Fast path for brand-new accounts (Create Account / Play as Guest):
+    // Return immediately (<1s total sign-in) and persist friendCode + users/{uid} in the background.
+    if (isNewAccount) {
+      const quickCode = this._claimSandboxFriendCode(uid, fallbackName);
+      const docData = buildDefaultUserDoc(uid, fallbackName, provider, quickCode, seedLocal);
+      this.profile = docData;
+      this._persistCloudCache(docData);
+      this._persistNewProfileInBackground(db, uid, docData);
+      return this.profile;
+    }
+
     const userPath = `users/${uid}`;
     const ref = doc(db, 'users', uid);
     try {
-      const snap = await withAuthTimeout(getDoc(ref), 5500, '__timeout__');
+      const snap = await withAuthTimeout(getDoc(ref), 2800, '__timeout__');
       if (snap && snap !== '__timeout__' && snap.exists()) {
         const remote = snap.data();
         const remoteNormalized = {
@@ -630,37 +796,29 @@ class AuthServiceImpl {
             landscape: remote.hudLayoutLandscape || null,
             portrait: remote.hudLayoutPortrait || null,
           },
-          friendCode: remote.friendCode || (await this._claimFirestoreFriendCode(db, uid, remote.displayName || fallbackName)),
+          friendCode: remote.friendCode || this._claimSandboxFriendCode(uid, remote.displayName || fallbackName),
           authProvider: remote.authProvider || provider,
         };
         this.profile = mergeProfileConflict(
           seedLocal.displayName ? buildDefaultUserDoc(uid, fallbackName, provider, remoteNormalized.friendCode, seedLocal) : remoteNormalized,
           remoteNormalized
         );
+        this.lastSyncedAt = Date.now();
         this._persistCloudCache(this.profile);
         return this.profile;
       }
 
-      // First sign-in or missing doc: auto-create users/{uid} with unique ARC-XXXX friend code
-      const friendCode =
-        snap === '__timeout__'
-          ? this._claimSandboxFriendCode(uid, fallbackName)
-          : await this._claimFirestoreFriendCode(db, uid, fallbackName);
+      // First-time Google/Email doc missing OR Firestore slow: enter lobby immediately and sync in background
+      const cached = readJsonStorage(CLOUD_CACHE_STORAGE_KEYS.profile, null);
+      if (snap === '__timeout__' && cached && cached.uid === uid) {
+        this.profile = cached;
+        return this.profile;
+      }
+      const friendCode = this._claimSandboxFriendCode(uid, fallbackName);
       const docData = buildDefaultUserDoc(uid, fallbackName, provider, friendCode, seedLocal);
       this.profile = docData;
       this._persistCloudCache(docData);
-
-      if (snap !== '__timeout__') {
-        await withAuthTimeout(
-          setDoc(ref, {
-            ...docData,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          }),
-          5500,
-          null
-        );
-      }
+      this._persistNewProfileInBackground(db, uid, docData);
       return this.profile;
     } catch (err) {
       try {
@@ -720,8 +878,11 @@ class AuthServiceImpl {
         this._emit();
         return { ok: true, state: this.getState() };
       } catch (err) {
+        const code = logAuthError('signInWithEmail', err);
+        this.lastAuthErrorCode = code;
+        this.lastAuthError = formatFriendlyAuthError(err);
         if (!shouldFallbackToSandbox(err)) {
-          return { ok: false, error: formatFriendlyAuthError(err) };
+          return { ok: false, code, error: this.lastAuthError };
         }
         this.sandboxAuth = true;
       }
@@ -753,9 +914,9 @@ class AuthServiceImpl {
     const { auth } = getFirebaseServices();
     if (auth && !this.sandboxAuth) {
       try {
-        this._pendingAuthSeed = { preferredName: nameCheck.cleaned, seedLocal };
+        this._pendingAuthSeed = { preferredName: nameCheck.cleaned, seedLocal, isNewAccount: true };
         const cred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-        await updateProfile(cred.user, { displayName: nameCheck.cleaned }).catch(() => null);
+        updateProfile(cred.user, { displayName: nameCheck.cleaned }).catch(() => null);
         this.user = {
           uid: cred.user.uid,
           email: cred.user.email,
@@ -763,13 +924,16 @@ class AuthServiceImpl {
           isAnonymous: false,
           providerId: 'password',
         };
-        await this._ensureCloudProfile(cred.user, nameCheck.cleaned, seedLocal);
+        await this._ensureCloudProfile(cred.user, nameCheck.cleaned, seedLocal, { isNewAccount: true });
         this._emit();
         return { ok: true, state: this.getState() };
       } catch (err) {
         this._pendingAuthSeed = null;
+        const code = logAuthError('createAccount', err);
+        this.lastAuthErrorCode = code;
+        this.lastAuthError = formatFriendlyAuthError(err);
         if (!shouldFallbackToSandbox(err)) {
-          return { ok: false, error: formatFriendlyAuthError(err) };
+          return { ok: false, code, error: this.lastAuthError };
         }
         this.sandboxAuth = true;
       }
@@ -802,9 +966,9 @@ class AuthServiceImpl {
     const { auth } = getFirebaseServices();
     if (auth && !this.sandboxAuth) {
       try {
-        this._pendingAuthSeed = { preferredName: finalName, seedLocal };
+        this._pendingAuthSeed = { preferredName: finalName, seedLocal, isNewAccount: true };
         const cred = await signInAnonymously(auth);
-        await updateProfile(cred.user, { displayName: finalName }).catch(() => null);
+        updateProfile(cred.user, { displayName: finalName }).catch(() => null);
         this.user = {
           uid: cred.user.uid,
           email: null,
@@ -812,13 +976,16 @@ class AuthServiceImpl {
           isAnonymous: true,
           providerId: 'anonymous',
         };
-        await this._ensureCloudProfile(cred.user, finalName, seedLocal);
+        await this._ensureCloudProfile(cred.user, finalName, seedLocal, { isNewAccount: true });
         this._emit();
         return { ok: true, state: this.getState() };
       } catch (err) {
         this._pendingAuthSeed = null;
+        const code = logAuthError('playAsGuest', err);
+        this.lastAuthErrorCode = code;
+        this.lastAuthError = formatFriendlyAuthError(err);
         if (!shouldFallbackToSandbox(err)) {
-          return { ok: false, error: formatFriendlyAuthError(err) };
+          return { ok: false, code, error: this.lastAuthError };
         }
         this.sandboxAuth = true;
       }
@@ -870,16 +1037,23 @@ class AuthServiceImpl {
         this._emit();
         return { ok: true, state: this.getState() };
       } catch (popupErr) {
+        const popupCode = logAuthError('signInWithGoogle(popup)', popupErr);
         if (shouldFallbackToRedirect(popupErr) && typeof window !== 'undefined' && window.top === window.self) {
           try {
+            console.info('[FirebaseAuth] Falling back from popup to signInWithRedirect:', { popupCode });
             await signInWithRedirect(auth, provider);
             return { ok: true, redirecting: true };
           } catch (redirErr) {
-            return { ok: false, error: formatFriendlyAuthError(redirErr) };
+            const redirCode = logAuthError('signInWithGoogle(redirect)', redirErr);
+            this.lastAuthErrorCode = redirCode;
+            this.lastAuthError = formatFriendlyAuthError(redirErr);
+            return { ok: false, code: redirCode, error: this.lastAuthError };
           }
         }
         if (!shouldFallbackToSandbox(popupErr)) {
-          return { ok: false, error: formatFriendlyAuthError(popupErr) };
+          this.lastAuthErrorCode = popupCode;
+          this.lastAuthError = formatFriendlyAuthError(popupErr);
+          return { ok: false, code: popupCode, error: this.lastAuthError };
         }
       }
     }
@@ -907,8 +1081,9 @@ class AuthServiceImpl {
         await sendPasswordResetEmail(auth, cleanEmail);
         return { ok: true, message: `Password reset email sent to ${cleanEmail}.` };
       } catch (err) {
+        const code = logAuthError('sendPasswordReset', err);
         if (!shouldFallbackToSandbox(err)) {
-          return { ok: false, error: formatFriendlyAuthError(err) };
+          return { ok: false, code, error: formatFriendlyAuthError(err) };
         }
       }
     }
@@ -977,8 +1152,9 @@ class AuthServiceImpl {
         this._emit();
         return { ok: true, state: this.getState() };
       } catch (err) {
+        const code = logAuthError('upgradeGuestToEmail', err);
         if (!shouldFallbackToSandbox(err)) {
-          return { ok: false, error: formatFriendlyAuthError(err) };
+          return { ok: false, code, error: formatFriendlyAuthError(err) };
         }
       }
     }
@@ -1018,6 +1194,9 @@ class AuthServiceImpl {
     const uid = this.user.uid;
     if (this._ensurePromises.has(uid)) {
       await this._ensurePromises.get(uid).catch(() => null);
+    }
+    if (this._bgPersistPromises.has(uid)) {
+      await this._bgPersistPromises.get(uid).catch(() => null);
     }
     const friendCode = this.profile?.friendCode || this._claimSandboxFriendCode(uid, localData.displayName || localData.playerName || 'ArcaneHero');
     const localNorm = buildDefaultUserDoc(
