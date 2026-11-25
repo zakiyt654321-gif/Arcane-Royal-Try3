@@ -9,6 +9,7 @@ import {
   linkWithCredential,
   EmailAuthProvider,
   GoogleAuthProvider,
+  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   signOut,
@@ -238,19 +239,57 @@ function buildDefaultUserDoc(uid, displayName, authProvider, friendCode, seedLoc
   };
 }
 
-function formatFriendlyAuthError(err) {
-  const code = err?.code || '';
-  if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') return 'Incorrect email or password.';
-  if (code === 'auth/user-not-found') return 'No Arcane account found with that email.';
-  if (code === 'auth/email-already-in-use') return 'That email is already linked to another account.';
-  if (code === 'auth/weak-password') return 'Password must be at least 6 characters.';
-  if (code === 'auth/invalid-email') return 'Please enter a valid email address.';
-  if (code === 'auth/network-request-failed') return 'Network error — check your internet connection.';
-  if (code === 'auth/too-many-requests') return 'Too many attempts. Please wait a moment and try again.';
-  return err instanceof Error ? err.message : 'Authentication failed.';
+export function formatFriendlyAuthError(err) {
+  const code = String(err?.code || '').toLowerCase();
+  const msg = String(err?.message || '');
+  const host =
+    typeof window !== 'undefined' && window.location && window.location.hostname
+      ? window.location.hostname
+      : 'this domain';
+
+  if (code === 'auth/unauthorized-domain') {
+    return `Domain "${host}" is not authorized yet. In Firebase Console → Authentication → Settings → Authorized domains, add "${host}".`;
+  }
+  if (code === 'auth/operation-not-allowed' || code === 'auth/admin-restricted-operation' || code === 'auth/restricted-operation') {
+    return 'This sign-in provider is disabled in Firebase Console. Go to Authentication → Sign-in method and enable Email/Password, Google, and Anonymous.';
+  }
+  if (code === 'auth/email-already-in-use' || code === 'auth/credential-already-in-use') {
+    return 'That email is already linked to an Arcane account. Switch to Sign In or tap Forgot Password.';
+  }
+  if (code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials') {
+    return 'Incorrect email or password. Double-check your details or tap Forgot Password.';
+  }
+  if (code === 'auth/user-not-found') {
+    return 'No Arcane account found with that email. Switch to Create Account to register.';
+  }
+  if (code === 'auth/weak-password') {
+    return 'Password is too weak — please use at least 6 characters.';
+  }
+  if (code === 'auth/invalid-email') {
+    return 'Please enter a valid email address.';
+  }
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+    return 'Google Sign-In popup was closed before completing. Tap Google Sign-In again to retry.';
+  }
+  if (code === 'auth/popup-blocked') {
+    return 'Your mobile browser blocked the sign-in popup — switching to redirect sign-in...';
+  }
+  if (code === 'auth/network-request-failed') {
+    return 'Network error — check your mobile data or Wi-Fi connection and try again.';
+  }
+  if (code === 'auth/too-many-requests') {
+    return 'Too many login attempts. Please wait a minute and try again.';
+  }
+  if (code === 'permission-denied' || msg.toLowerCase().includes('permission-denied') || msg.toLowerCase().includes('missing or insufficient permissions')) {
+    return 'Firestore permission denied. Open Settings → Save Data, tap "Copy firestore.rules", and publish it in Firebase Console → Firestore → Rules.';
+  }
+  return err instanceof Error ? err.message : 'Authentication failed. Please try again.';
 }
 
 function shouldFallbackToSandbox(err) {
+  // Never fall back silently into Local Sandbox Mode when live Firebase is configured;
+  // surface exact actionable setup messages instead.
+  if (isFirebaseConfigured()) return false;
   const code = String(err?.code || '');
   return (
     code === 'auth/operation-not-allowed' ||
@@ -263,12 +302,30 @@ function shouldFallbackToSandbox(err) {
   );
 }
 
+function shouldFallbackToRedirect(err) {
+  const code = String(err?.code || '').toLowerCase();
+  return (
+    code === 'auth/popup-blocked' ||
+    code === 'auth/operation-not-supported-in-this-environment' ||
+    code === 'auth/web-storage-unsupported' ||
+    code === 'auth/internal-error'
+  );
+}
+
+function withAuthTimeout(promise, ms, fallbackValue = null) {
+  return Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => resolve(fallbackValue), ms)),
+  ]);
+}
+
 class AuthServiceImpl {
   constructor() {
     this.user = null;
     this.profile = null;
     this.ready = false;
     this.lastSyncedAt = 0;
+    this.lastAuthError = null;
     this.sandboxAuth = !isFirebaseConfigured();
     this.sandboxRtdb = !isRtdbConfigured();
     this.listeners = new Set();
@@ -292,7 +349,7 @@ class AuthServiceImpl {
   getState() {
     const isSandbox = this.sandboxAuth || this.sandboxRtdb;
     const provider = this.profile?.authProvider || (this.user?.isAnonymous ? 'anonymous' : 'password');
-    let statusLabel = 'Local Sandbox';
+    let statusLabel = this.sandboxAuth ? 'Local Sandbox' : 'Live Cloud Ready';
     if (!this.sandboxAuth && this.user) {
       if (this.sandboxRtdb) {
         statusLabel = this.user.isAnonymous
@@ -302,10 +359,10 @@ class AuthServiceImpl {
             : 'Email Account · Sandbox Squads';
       } else {
         statusLabel = this.user.isAnonymous
-          ? 'Guest Account'
+          ? 'Live Cloud · Guest'
           : provider === 'google'
-            ? 'Google Account'
-            : 'Email Account';
+            ? 'Live Cloud · Google'
+            : 'Live Cloud · Email';
       }
     } else if (this.user && this.sandboxAuth) {
       statusLabel = this.user.isAnonymous ? 'Local Sandbox (Guest)' : 'Local Sandbox';
@@ -325,6 +382,7 @@ class AuthServiceImpl {
       authProvider: provider,
       profile: this.profile,
       lastSyncedAt: this.lastSyncedAt,
+      lastAuthError: this.lastAuthError,
       statusLabel,
     };
   }
@@ -360,8 +418,27 @@ class AuthServiceImpl {
         setPersistence(auth, browserLocalPersistence)
       );
       testFirestoreConnection();
-      // Handle Google signInWithRedirect completion on web browsers
-      await getRedirectResult(auth).catch(() => null);
+      // Complete mobile Chrome Google signInWithRedirect return seamlessly
+      const redirectResult = await withAuthTimeout(
+        getRedirectResult(auth).catch((err) => {
+          this.lastAuthError = formatFriendlyAuthError(err);
+          return null;
+        }),
+        4500,
+        null
+      );
+      if (redirectResult && redirectResult.user) {
+        const fbUser = redirectResult.user;
+        this.sandboxAuth = false;
+        this.user = {
+          uid: fbUser.uid,
+          email: fbUser.email || null,
+          displayName: fbUser.displayName || null,
+          isAnonymous: Boolean(fbUser.isAnonymous),
+          providerId: 'google',
+        };
+        await this._ensureCloudProfile(fbUser, fbUser.displayName || null);
+      }
     } catch {
       // Ignore persistence warnings in strict incognito modes
     }
@@ -386,16 +463,20 @@ class AuthServiceImpl {
             isAnonymous: Boolean(fbUser.isAnonymous),
             providerId: fbUser.isAnonymous
               ? 'anonymous'
-              : fbUser.providerData?.[0]?.providerId === 'google.com'
+              : fbUser.providerData?.some((p) => p.providerId === 'google.com')
                 ? 'google'
                 : 'password',
           };
           await this._ensureCloudProfile(fbUser);
         } else {
-          // If user signed into local sandbox (e.g. Email/Password disabled in console), preserve sandbox session
-          const simSess = readJsonStorage(SIM_SESSION_KEY, null);
-          if (simSess && simSess.uid) {
-            this._restoreSandboxSession();
+          if (!isFirebaseConfigured()) {
+            const simSess = readJsonStorage(SIM_SESSION_KEY, null);
+            if (simSess && simSess.uid) {
+              this._restoreSandboxSession();
+            } else {
+              this.user = null;
+              this.profile = null;
+            }
           } else {
             this.user = null;
             this.profile = null;
@@ -451,21 +532,26 @@ class AuthServiceImpl {
   }
 
   async _claimFirestoreFriendCode(db, uid, displayName) {
-    for (let attempt = 0; attempt < 8; attempt++) {
+    for (let attempt = 0; attempt < 6; attempt++) {
       const code = generateFriendCode();
       const codeRef = doc(db, 'friendCodes', code);
       try {
-        const snap = await getDoc(codeRef);
+        const snap = await withAuthTimeout(getDoc(codeRef), 3500, '__timeout__');
+        if (snap === '__timeout__') break;
         if (!snap.exists()) {
-          await setDoc(codeRef, {
-            uid,
-            displayName,
-            createdAt: serverTimestamp(),
-          });
+          await withAuthTimeout(
+            setDoc(codeRef, {
+              uid,
+              displayName,
+              createdAt: serverTimestamp(),
+            }),
+            3500,
+            null
+          );
           return code;
         }
       } catch {
-        // Fallback to next code or local code if rules deny
+        // Retry with another unique ARC-XXXX code or fall back to deterministic local code
       }
     }
     return this._claimSandboxFriendCode(uid, displayName);
@@ -479,9 +565,13 @@ class AuthServiceImpl {
       : fbUser.providerData?.some((p) => p.providerId === 'google.com')
         ? 'google'
         : 'password';
-    const fallbackName =
-      validateChampionName(preferredName || fbUser.displayName || seedLocal.displayName || '').cleaned ||
-      `Arcane_${uid.slice(-4).toUpperCase()}`;
+    const rawCandidate = String(preferredName || fbUser.displayName || seedLocal.displayName || '')
+      .replace(/[^a-zA-Z0-9_]/g, '')
+      .slice(0, 12);
+    const validCandidate = validateChampionName(rawCandidate);
+    const fallbackName = validCandidate.valid
+      ? validCandidate.cleaned
+      : `Arcane_${uid.slice(-4).replace(/[^a-zA-Z0-9]/g, 'X').toUpperCase()}`;
 
     if (!db) {
       const code = this._claimSandboxFriendCode(uid, fallbackName);
@@ -492,8 +582,8 @@ class AuthServiceImpl {
     const userPath = `users/${uid}`;
     const ref = doc(db, 'users', uid);
     try {
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
+      const snap = await withAuthTimeout(getDoc(ref), 5500, '__timeout__');
+      if (snap && snap !== '__timeout__' && snap.exists()) {
         const remote = snap.data();
         const remoteNormalized = {
           ...remote,
@@ -519,26 +609,43 @@ class AuthServiceImpl {
           friendCode: remote.friendCode || (await this._claimFirestoreFriendCode(db, uid, remote.displayName || fallbackName)),
           authProvider: remote.authProvider || provider,
         };
-        this.profile = mergeProfileConflict(seedLocal.displayName ? buildDefaultUserDoc(uid, fallbackName, provider, remoteNormalized.friendCode, seedLocal) : remoteNormalized, remoteNormalized);
+        this.profile = mergeProfileConflict(
+          seedLocal.displayName ? buildDefaultUserDoc(uid, fallbackName, provider, remoteNormalized.friendCode, seedLocal) : remoteNormalized,
+          remoteNormalized
+        );
+        this._persistCloudCache(this.profile);
         return this.profile;
       }
 
-      const friendCode = await this._claimFirestoreFriendCode(db, uid, fallbackName);
+      // First sign-in or missing doc: auto-create users/{uid} with unique ARC-XXXX friend code
+      const friendCode =
+        snap === '__timeout__'
+          ? this._claimSandboxFriendCode(uid, fallbackName)
+          : await this._claimFirestoreFriendCode(db, uid, fallbackName);
       const docData = buildDefaultUserDoc(uid, fallbackName, provider, friendCode, seedLocal);
-      await setDoc(ref, {
-        ...docData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
       this.profile = docData;
+      this._persistCloudCache(docData);
+
+      if (snap !== '__timeout__') {
+        await withAuthTimeout(
+          setDoc(ref, {
+            ...docData,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          }),
+          5500,
+          null
+        );
+      }
       return this.profile;
     } catch (err) {
       try {
         handleFirestoreError(err, OperationType.WRITE, userPath);
       } catch {
-        // Keep user playable in local profile cache if Firestore rules reject during setup
+        // Keep login non-blocking even if Firestore rules need publishing; surface clear message in diagnostics
         const code = this._claimSandboxFriendCode(uid, fallbackName);
         this.profile = buildDefaultUserDoc(uid, fallbackName, provider, code, seedLocal);
+        this._persistCloudCache(this.profile);
         return this.profile;
       }
     }
@@ -667,7 +774,7 @@ class AuthServiceImpl {
     }
 
     const { auth } = getFirebaseServices();
-    if (auth && !this.sandboxAuth && !isSandboxMode()) {
+    if (auth && !this.sandboxAuth) {
       try {
         const cred = await signInAnonymously(auth);
         await updateProfile(cred.user, { displayName: finalName }).catch(() => null);
@@ -697,7 +804,7 @@ class AuthServiceImpl {
   }
 
   async signInWithGoogle(seedLocal = {}) {
-    // 1. Native Android APK WebView Hook (NEVER uses signInWithPopup)
+    // 1. Native Android APK WebView Hook (when running inside native wrapper)
     const bridge = typeof window !== 'undefined' ? window.ArcaneNativeBridge : null;
     if (bridge && bridge.isNativeApk && typeof bridge.signInWithGoogle === 'function') {
       try {
@@ -716,21 +823,40 @@ class AuthServiceImpl {
       }
     }
 
-    // 2. Standard Web Browser: signInWithRedirect (never signInWithPopup)
+    // 2. Live Web & Mobile Chrome: try signInWithPopup first, then auto-fallback to signInWithRedirect
     const { auth } = getFirebaseServices();
-    if (auth && !this.sandboxAuth && typeof window !== 'undefined' && window.top === window.self) {
+    if (auth && !this.sandboxAuth) {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       try {
-        const provider = new GoogleAuthProvider();
-        await signInWithRedirect(auth, provider);
-        return { ok: true, redirecting: true };
-      } catch (err) {
-        if (!shouldFallbackToSandbox(err)) {
-          return { ok: false, error: formatFriendlyAuthError(err) };
+        const cred = await signInWithPopup(auth, provider);
+        this.sandboxAuth = false;
+        this.user = {
+          uid: cred.user.uid,
+          email: cred.user.email || null,
+          displayName: cred.user.displayName || null,
+          isAnonymous: false,
+          providerId: 'google',
+        };
+        await this._ensureCloudProfile(cred.user, cred.user.displayName || null, seedLocal);
+        this._emit();
+        return { ok: true, state: this.getState() };
+      } catch (popupErr) {
+        if (shouldFallbackToRedirect(popupErr) && typeof window !== 'undefined' && window.top === window.self) {
+          try {
+            await signInWithRedirect(auth, provider);
+            return { ok: true, redirecting: true };
+          } catch (redirErr) {
+            return { ok: false, error: formatFriendlyAuthError(redirErr) };
+          }
+        }
+        if (!shouldFallbackToSandbox(popupErr)) {
+          return { ok: false, error: formatFriendlyAuthError(popupErr) };
         }
       }
     }
 
-    // 3. Embedded Preview / Sandbox Safe Fallback (avoids broken iframe redirect/popup)
+    // 3. Offline / Unconfigured Sandbox Fallback
     const uid = `google_sim_${Date.now().toString(36)}`;
     const name = validateChampionName(seedLocal.displayName || 'ArcanePro').cleaned || 'ArcanePro';
     const code = this._claimSandboxFriendCode(uid, name);
@@ -739,7 +865,7 @@ class AuthServiceImpl {
     return {
       ok: true,
       sandbox: true,
-      message: 'Signed in via Local Sandbox Preview (Native APK / live web uses Google Redirect/Bridge).',
+      message: 'Signed in via Local Sandbox Preview.',
       state: this.getState(),
     };
   }
@@ -796,14 +922,29 @@ class AuthServiceImpl {
             authProvider: 'password',
             updatedAtMs: Date.now(),
           };
+          this._persistCloudCache(this.profile);
           if (db) {
-            await updateDoc(doc(db, 'users', linked.user.uid), {
-              displayName,
-              displayNameLower: displayName.toLowerCase(),
-              authProvider: 'password',
-              updatedAt: serverTimestamp(),
-            }).catch(() => null);
+            const userRef = doc(db, 'users', linked.user.uid);
+            await withAuthTimeout(
+              updateDoc(userRef, {
+                displayName,
+                displayNameLower: displayName.toLowerCase(),
+                authProvider: 'password',
+                updatedAtMs: Date.now(),
+                updatedAt: serverTimestamp(),
+              }).catch(() =>
+                setDoc(userRef, {
+                  ...this.profile,
+                  createdAt: serverTimestamp(),
+                  updatedAt: serverTimestamp(),
+                })
+              ),
+              5000,
+              null
+            );
           }
+        } else {
+          await this._ensureCloudProfile(linked.user, displayName);
         }
         this._emit();
         return { ok: true, state: this.getState() };
@@ -962,15 +1103,60 @@ class AuthServiceImpl {
     return { ok: true, sandbox: true, displayName: clean, state: this.getState() };
   }
 
+  /**
+   * @param {{
+   *   costCoins?: number,
+   *   costCrystals?: number,
+   *   costGems?: number,
+   *   costXp?: number,
+   *   unlockField?: string | null,
+   *   unlockId?: string | null,
+   *   equipField?: string | null,
+   *   statKey?: string | null,
+   *   nextTier?: number | null,
+   *   patch?: Record<string, unknown>
+   * }} [options]
+   */
   async spendCurrencyTransaction({
     costCoins = 0,
     costCrystals = 0,
     costGems = 0,
+    costXp = 0,
+    unlockField = null,
+    unlockId = null,
+    equipField = null,
+    statKey = null,
+    nextTier = null,
     patch = {},
   } = {}) {
     const cCoins = Math.max(0, Math.floor(Number(costCoins) || 0));
     const cCrystals = Math.max(0, Math.floor(Number(costCrystals) || 0));
     const cGems = Math.max(0, Math.floor(Number(costGems) || 0));
+    const cXp = Math.max(0, Math.floor(Number(costXp) || 0));
+    const allowedUnlockFields = new Set(['unlockedChampions', 'unlockedRunes', 'unlockedTrails']);
+    const allowedEquipFields = new Set(['selectedChampion', 'equippedRune', 'equippedTrail']);
+    const allowedStatKeys = new Set(['PWR', 'FOC', 'AGI', 'VIT', 'maxHealth', 'movementSpeed', 'attackPower']);
+
+    const computeNextPatch = (cur) => {
+      const mergedPatch = { ...(patch && typeof patch === 'object' ? patch : {}) };
+      if (unlockField && allowedUnlockFields.has(unlockField) && typeof unlockId === 'string' && unlockId.trim()) {
+        const cleanId = unlockId.trim().slice(0, 32);
+        const existingArr = Array.isArray(cur[unlockField]) ? cur[unlockField] : [];
+        mergedPatch[unlockField] = Array.from(new Set([...existingArr, cleanId]));
+      }
+      if (equipField && allowedEquipFields.has(equipField) && typeof unlockId === 'string' && unlockId.trim()) {
+        mergedPatch[equipField] = unlockId.trim().slice(0, 32);
+      }
+      if (statKey && allowedStatKeys.has(statKey) && Number.isFinite(Number(nextTier))) {
+        const clampedTier = Math.max(0, Math.min(25, Math.floor(Number(nextTier))));
+        mergedPatch.statTiers = {
+          ...(cur.statTiers && typeof cur.statTiers === 'object' ? cur.statTiers : {}),
+          [statKey]: clampedTier,
+        };
+      }
+      return mergedPatch;
+    };
+
     if (!this.user) {
       return { ok: true, localOnly: true };
     }
@@ -988,24 +1174,28 @@ class AuthServiceImpl {
           const curCoins = Number(cur.coins || 0);
           const curCrystals = Number(cur.crystals || 0);
           const curGems = Number(cur.gems || 0);
-          if (curCoins < cCoins || curCrystals < cCrystals || curGems < cGems) {
+          const curXp = Number(cur.xp || 0);
+          if (curCoins < cCoins || curCrystals < cCrystals || curGems < cGems || (cXp > 0 && curXp < cXp)) {
             throw new Error('Insufficient currency balance.');
           }
+          const resolvedPatch = computeNextPatch(cur);
           const next = {
-            ...patch,
+            ...resolvedPatch,
             coins: curCoins - cCoins,
             crystals: curCrystals - cCrystals,
             gems: curGems - cGems,
+            ...(cXp > 0 ? { xp: Math.max(0, curXp - cXp) } : {}),
             updatedAtMs: Date.now(),
             updatedAt: serverTimestamp(),
           };
           tx.update(ref, next);
           return {
             ...cur,
-            ...patch,
+            ...resolvedPatch,
             coins: curCoins - cCoins,
             crystals: curCrystals - cCrystals,
             gems: curGems - cGems,
+            ...(cXp > 0 ? { xp: Math.max(0, curXp - cXp) } : {}),
             updatedAtMs: Date.now(),
           };
         });
@@ -1024,15 +1214,18 @@ class AuthServiceImpl {
     const curCoins = Number(cur.coins || 0);
     const curCrystals = Number(cur.crystals || 0);
     const curGems = Number(cur.gems || 0);
-    if (curCoins < cCoins || curCrystals < cCrystals || curGems < cGems) {
+    const curXp = Number(cur.xp || 0);
+    if (curCoins < cCoins || curCrystals < cCrystals || curGems < cGems || (cXp > 0 && curXp < cXp)) {
       return { ok: false, error: 'Insufficient currency balance.' };
     }
+    const resolvedPatch = computeNextPatch(cur);
     const nextProfile = {
       ...cur,
-      ...patch,
+      ...resolvedPatch,
       coins: curCoins - cCoins,
       crystals: curCrystals - cCrystals,
       gems: curGems - cGems,
+      ...(cXp > 0 ? { xp: Math.max(0, curXp - cXp) } : {}),
       updatedAtMs: Date.now(),
     };
     this.lastSyncedAt = Date.now();

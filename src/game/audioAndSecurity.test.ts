@@ -21,12 +21,16 @@ import {
   createVoiceLimiter,
   createAnnouncerGate,
 } from './audioScheduler.ts';
-import { validateChampionName, escapeHtml } from '../authService.js';
+import { validateChampionName, escapeHtml, formatFriendlyAuthError } from '../authService.js';
 import { clampFrameDeltaTime } from './mobileHudAndPerf.ts';
 import {
+  FIREBASE_CONFIG,
   DEV_DEMO_ENABLED,
   SANDBOX_STORAGE_KEYS,
   CLOUD_CACHE_STORAGE_KEYS,
+  isFirebaseConfigured,
+  isRtdbConfigured,
+  isSandboxMode,
   isSimBroadcastEnabled,
 } from '../firebaseConfig.js';
 import {
@@ -256,3 +260,104 @@ test('dt hard-clamp blocks speedhacks and tab-switch wall tunneling (<= 0.05s)',
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   assert.ok(html.includes('Math.min(rawDelta, 0.05)'), 'Main gameLoop must hard-clamp frame delta time at 0.05s');
 });
+
+test('Pass 1 regression: atomicSpend maps currency/unlockField/statKey/xp into spendCurrencyTransaction', () => {
+  const cloudSyncTs = fs.readFileSync(path.join(ROOT, 'src', 'firebase', 'cloudSync.ts'), 'utf8');
+  const authServiceJs = fs.readFileSync(path.join(ROOT, 'src', 'authService.js'), 'utf8');
+
+  assert.ok(cloudSyncTs.includes('p.currency'), 'cloudSync.ts must read currency from atomicSpend event');
+  assert.ok(cloudSyncTs.includes('unlockField,'), 'cloudSync.ts must forward unlockField');
+  assert.ok(cloudSyncTs.includes('statKey:'), 'cloudSync.ts must forward statKey');
+  assert.ok(cloudSyncTs.includes('nextTier:'), 'cloudSync.ts must forward nextTier');
+  assert.ok(cloudSyncTs.includes('costXp:'), 'cloudSync.ts must forward costXp');
+  assert.ok(authServiceJs.includes('costXp'), 'authService.spendCurrencyTransaction must support XP atomic deductions');
+  assert.ok(authServiceJs.includes('statKey') && authServiceJs.includes('nextTier'), 'authService.spendCurrencyTransaction must atomically update statTiers');
+});
+
+test('Pass 1 regression: squadMultiplayer emits reconnecting boolean and writes serverTimestamp heartbeat in live RTDB', () => {
+  const mpJs = fs.readFileSync(path.join(ROOT, 'src', 'squadMultiplayer.js'), 'utf8');
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+  assert.ok(mpJs.includes('reconnecting: !isConn'), 'Connected-state network events must emit reconnecting boolean');
+  assert.ok(mpJs.includes('reconnecting: true'), 'Heartbeat error network events must emit reconnecting: true');
+  assert.ok(mpJs.includes('hb: rtdbServerTimestamp()'), 'Live RTDB pushPlayerState must write server-stamped heartbeat');
+  assert.ok(html.includes("d.payload.reconnecting || d.payload.connectionState === 'reconnecting'"), 'index.html must toggle #reconnect-banner on reconnect state');
+});
+
+test('Pass 1 regression: lookahead offset, crypto supply crates, safe storage wrappers, and APK lifecycle audio suspend', () => {
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+  // Music.schedule applies audioSyncOffsetMs
+  assert.ok(html.includes('this.nextNoteTime + offsetSec'), 'Music.schedule() must apply clamped audioSyncOffsetMs');
+
+  // spawnSupplyCratesForPhase uses cryptoRandomFloat instead of Math.random
+  const crateFnMatch = html.match(/function spawnSupplyCratesForPhase\(phase\)[\s\S]*?^\s{6}\}/m);
+  assert.ok(crateFnMatch, 'spawnSupplyCratesForPhase must exist');
+  assert.ok(crateFnMatch[0].includes('cryptoRandomFloat()'), 'spawnSupplyCratesForPhase must use cryptoRandomFloat()');
+  assert.equal(crateFnMatch[0].includes('Math.random()'), false, 'spawnSupplyCratesForPhase must not use Math.random()');
+
+  // Only safeStorageSet + try/catch HudLayout.save call localStorage.setItem, and only safeStorageRemove calls removeItem
+  const rawSetMatches = html.match(/localStorage\.setItem\(/g) || [];
+  const rawRemoveMatches = html.match(/localStorage\.removeItem\(/g) || [];
+  assert.ok(rawSetMatches.length <= 3, 'No unguarded localStorage.setItem calls should remain outside safe helpers');
+  assert.equal(rawRemoveMatches.length, 1, 'Only safeStorageRemove helper should call localStorage.removeItem');
+
+  // APK lifecycle handler routes through handleFocusLoss / handleFocusRestore
+  const apkBlock = html.match(/document\.addEventListener\('ar:apk:lifecycle'[\s\S]*?\}\);/);
+  assert.ok(apkBlock, 'ar:apk:lifecycle listener must exist');
+  assert.ok(apkBlock[0].includes('handleFocusLoss()'), 'ar:apk:lifecycle background event must suspend audio via handleFocusLoss()');
+  assert.ok(apkBlock[0].includes('handleFocusRestore()'), 'ar:apk:lifecycle resume event must restore audio via handleFocusRestore()');
+});
+
+test('Zero-config live arcane-royale Firebase config boots directly into live cloud mode', () => {
+  assert.equal(FIREBASE_CONFIG.projectId, 'arcane-royale');
+  assert.equal(FIREBASE_CONFIG.authDomain, 'arcane-royale.firebaseapp.com');
+  assert.equal(FIREBASE_CONFIG.databaseURL, 'https://arcane-royale-default-rtdb.firebaseio.com');
+  assert.equal(FIREBASE_CONFIG.storageBucket, 'arcane-royale.firebasestorage.app');
+  assert.equal(FIREBASE_CONFIG.messagingSenderId, '1061349504106');
+  assert.equal(FIREBASE_CONFIG.appId, '1:1061349504106:web:28979c202340019ba60613');
+  assert.equal(isFirebaseConfigured(), true);
+  assert.equal(isRtdbConfigured(), true);
+  assert.equal(isSandboxMode(), false);
+});
+
+test('formatFriendlyAuthError translates Firebase Auth and Firestore errors with actionable fixes', () => {
+  const unauth = formatFriendlyAuthError({ code: 'auth/unauthorized-domain' });
+  assert.ok(unauth.includes('Authorized domains'), 'unauthorized-domain must explain Authorized domains fix');
+
+  const disabled = formatFriendlyAuthError({ code: 'auth/operation-not-allowed' });
+  assert.ok(disabled.includes('Sign-in method'), 'operation-not-allowed must explain Sign-in method fix');
+
+  const inUse = formatFriendlyAuthError({ code: 'auth/email-already-in-use' });
+  assert.ok(inUse.toLowerCase().includes('sign in'), 'email-already-in-use must guide user to Sign In');
+
+  const badCred = formatFriendlyAuthError({ code: 'auth/invalid-credential' });
+  assert.ok(badCred.includes('Incorrect email or password'), 'invalid-credential must show clear credential error');
+
+  const permDenied = formatFriendlyAuthError({ code: 'permission-denied' });
+  assert.ok(permDenied.includes('firestore.rules'), 'permission-denied must guide user to Copy firestore.rules');
+});
+
+test('Protected deployment files and 1-tap Firebase Live Diagnostics UI remain intact', () => {
+  assert.ok(fs.existsSync(path.join(ROOT, 'public', 'google13f3d000d1f9c862.html')), 'Google verification file must remain intact');
+
+  const viteCfg = fs.readFileSync(path.join(ROOT, 'vite.config.ts'), 'utf8');
+  assert.ok(viteCfg.includes("base: './'"), 'vite.config.ts must preserve base: ./');
+
+  const workflow = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'deploy.yml'), 'utf8');
+  assert.ok(workflow.includes('npm install --legacy-peer-deps'), 'deploy.yml must use npm install --legacy-peer-deps');
+  assert.ok(workflow.includes('./dist'), 'deploy.yml must upload ./dist');
+
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  assert.ok(html.includes('id="fb-diagnostics-box"'), 'Firebase Live Diagnostics box must exist in Settings -> Save Data');
+  assert.ok(html.includes('id="diag-pill-auth"'), 'Auth status pill must exist');
+  assert.ok(html.includes('id="diag-pill-firestore"'), 'Firestore status pill must exist');
+  assert.ok(html.includes('id="diag-pill-rtdb"'), 'Realtime DB status pill must exist');
+  assert.ok(html.includes('id="btn-copy-firestore-rules"'), '1-tap Copy firestore.rules button must exist');
+  assert.ok(html.includes('id="btn-copy-rtdb-rules"'), '1-tap Copy database.rules.json button must exist');
+
+  const cloudSync = fs.readFileSync(path.join(ROOT, 'src', 'firebase', 'cloudSync.ts'), 'utf8');
+  assert.ok(cloudSync.includes("case 'runFirebaseDiagnostics'"), 'cloudSync must expose runFirebaseDiagnostics');
+  assert.ok(cloudSync.includes("case 'getFirebaseRulesText'"), 'cloudSync must expose getFirebaseRulesText');
+});
+

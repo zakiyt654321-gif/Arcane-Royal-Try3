@@ -1,7 +1,9 @@
 import { authService } from '../authService.js';
 import { socialService } from '../socialService.js';
 import { squadMultiplayer } from '../squadMultiplayer.js';
-import { DEV_DEMO_ENABLED } from '../firebaseConfig.js';
+import { DEV_DEMO_ENABLED, runFirebaseDiagnostics } from '../firebaseConfig.js';
+import firestoreRulesRaw from '../../firestore.rules?raw';
+import databaseRulesRaw from '../../database.rules.json?raw';
 import '../apkBridge.js';
 
 type CloudRequestDetail = {
@@ -109,19 +111,47 @@ document.addEventListener('ar:cloud:request', async (ev: Event) => {
         result = (await authService.updateDisplayName(String(p.displayName || ''))) as Record<string, unknown>;
         if (result.ok) await socialService.syncMemberProfile();
         break;
-      case 'atomicSpend':
+      case 'atomicSpend': {
+        const currency = String(p.currency || '');
+        const amt = Math.max(0, Math.floor(Number(p.amount || 0)));
+        const unlockField = typeof p.unlockField === 'string' ? p.unlockField : null;
+        const equipField =
+          unlockField === 'unlockedChampions'
+            ? 'selectedChampion'
+            : unlockField === 'unlockedRunes'
+              ? 'equippedRune'
+              : unlockField === 'unlockedTrails'
+                ? 'equippedTrail'
+                : null;
         result = (await authService.spendCurrencyTransaction({
-          costCoins: Number(p.costCoins || 0),
-          costCrystals: Number(p.costCrystals || 0),
-          costGems: Number(p.costGems || 0),
+          costCoins: Number(p.costCoins || (currency === 'coins' ? amt : 0)),
+          costCrystals: Number(p.costCrystals || (currency === 'crystals' ? amt : 0)),
+          costGems: Number(p.costGems || (currency === 'gems' ? amt : 0)),
+          costXp: Number(p.costXp || (currency === 'xp' ? amt : 0)),
+          unlockField,
+          unlockId: typeof p.unlockId === 'string' ? p.unlockId : null,
+          equipField,
+          statKey: typeof p.statKey === 'string' ? p.statKey : null,
+          nextTier: p.nextTier !== undefined ? Number(p.nextTier) : null,
           patch: (p.patch as Record<string, unknown>) || {},
         })) as Record<string, unknown>;
         break;
+      }
       case 'resetLocalCache':
         result = authService.resetLocalCacheAndHud() as Record<string, unknown>;
         break;
       case 'getDevFlags':
         result = { ok: true, devDemoEnabled: Boolean(DEV_DEMO_ENABLED) };
+        break;
+      case 'runFirebaseDiagnostics':
+        result = { ok: true, diagnostics: await runFirebaseDiagnostics() };
+        break;
+      case 'getFirebaseRulesText':
+        result = {
+          ok: true,
+          firestoreRules: firestoreRulesRaw,
+          databaseRules: databaseRulesRaw,
+        };
         break;
 
       // --- Friends, Presence, Leaderboard & 4-Slot Squads ---

@@ -1,27 +1,36 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
-import { getDatabase } from 'firebase/database';
-import appletConfig from '../firebase-applet-config.json';
+import { initializeFirestore, getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getDatabase, ref as rtdbRef, onValue, off } from 'firebase/database';
+
+const viteEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
 
 /**
- * Single Firebase configuration hub for Arcane Royale.
- * Replace placeholder keys below (or update firebase-applet-config.json) with your
- * Firebase project credentials to enable Live Cloud Mode across Auth, Firestore, and RTDB.
- * When placeholder values or an empty databaseURL are detected, Arcane Royale seamlessly
- * runs in Local Auth & Squad Simulator Mode (localStorage + BroadcastChannel) without blocking.
+ * Live zero-config fallback for Arcane Royale (`arcane-royale` Firebase project).
+ * Any build-time VITE_FIREBASE_* env variable overrides the matching default.
+ * Because Firebase web config values are scoped public client identifiers,
+ * GitHub Pages and Cloudflare Pages connect directly to live Firebase with zero manual secrets.
  */
+export const DEFAULT_LIVE_FIREBASE_CONFIG = Object.freeze({
+  apiKey: 'AIzaSyCjGX3tv2LaE2FDKkB13-0w_SK8s3w496I',
+  authDomain: 'arcane-royale.firebaseapp.com',
+  databaseURL: 'https://arcane-royale-default-rtdb.firebaseio.com',
+  projectId: 'arcane-royale',
+  storageBucket: 'arcane-royale.firebasestorage.app',
+  messagingSenderId: '1061349504106',
+  appId: '1:1061349504106:web:28979c202340019ba60613',
+  firestoreDatabaseId: '(default)',
+});
+
 export const FIREBASE_CONFIG = {
-  apiKey: appletConfig.apiKey || 'YOUR_FIREBASE_API_KEY',
-  authDomain: appletConfig.authDomain || 'YOUR_PROJECT_ID.firebaseapp.com',
-  // Set your Firebase Realtime Database URL (e.g. "https://your-project-default-rtdb.firebaseio.com")
-  // to activate live cross-device Presence, 4-Slot Squad Rooms, and Real-Time Squad Matches:
-  databaseURL: appletConfig.databaseURL || 'YOUR_FIREBASE_DATABASE_URL',
-  projectId: appletConfig.projectId || 'YOUR_PROJECT_ID',
-  storageBucket: appletConfig.storageBucket || 'YOUR_PROJECT_ID.firebasestorage.app',
-  messagingSenderId: appletConfig.messagingSenderId || 'YOUR_MESSAGING_SENDER_ID',
-  appId: appletConfig.appId || 'YOUR_FIREBASE_APP_ID',
-  firestoreDatabaseId: appletConfig.firestoreDatabaseId || '(default)',
+  apiKey: viteEnv.VITE_FIREBASE_API_KEY || DEFAULT_LIVE_FIREBASE_CONFIG.apiKey,
+  authDomain: viteEnv.VITE_FIREBASE_AUTH_DOMAIN || DEFAULT_LIVE_FIREBASE_CONFIG.authDomain,
+  databaseURL: viteEnv.VITE_FIREBASE_DATABASE_URL || DEFAULT_LIVE_FIREBASE_CONFIG.databaseURL,
+  projectId: viteEnv.VITE_FIREBASE_PROJECT_ID || DEFAULT_LIVE_FIREBASE_CONFIG.projectId,
+  storageBucket: viteEnv.VITE_FIREBASE_STORAGE_BUCKET || DEFAULT_LIVE_FIREBASE_CONFIG.storageBucket,
+  messagingSenderId: viteEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || DEFAULT_LIVE_FIREBASE_CONFIG.messagingSenderId,
+  appId: viteEnv.VITE_FIREBASE_APP_ID || DEFAULT_LIVE_FIREBASE_CONFIG.appId,
+  firestoreDatabaseId: viteEnv.VITE_FIREBASE_DATABASE_ID || DEFAULT_LIVE_FIREBASE_CONFIG.firestoreDatabaseId,
 };
 
 export const SIM_CHANNEL_NAME = 'arcane_royale_sim';
@@ -84,6 +93,35 @@ export function isSimBroadcastEnabled(cfg = FIREBASE_CONFIG) {
 
 let cachedServices = null;
 
+function buildAppInitConfig(cfg) {
+  const initCfg = {
+    apiKey: cfg.apiKey,
+    authDomain: cfg.authDomain,
+    projectId: cfg.projectId,
+    storageBucket: cfg.storageBucket,
+    messagingSenderId: cfg.messagingSenderId,
+    appId: cfg.appId,
+  };
+  if (isRtdbConfigured(cfg)) {
+    initCfg.databaseURL = cfg.databaseURL;
+  }
+  return initCfg;
+}
+
+function createFirestoreInstance(app, databaseId) {
+  // Force long-polling in browser/WebView/iframe environments so proxied networks
+  // connect immediately instead of stalling for 10s on aborted WebChannel streams.
+  const firestoreSettings =
+    typeof window !== 'undefined' ? { experimentalForceLongPolling: true } : {};
+  try {
+    return databaseId
+      ? initializeFirestore(app, firestoreSettings, databaseId)
+      : initializeFirestore(app, firestoreSettings);
+  } catch {
+    return databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+  }
+}
+
 export function getFirebaseServices() {
   if (cachedServices) return cachedServices;
   if (!isFirebaseConfigured(FIREBASE_CONFIG)) {
@@ -91,12 +129,13 @@ export function getFirebaseServices() {
     return cachedServices;
   }
   try {
-    const app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG);
+    const app = getApps().length ? getApp() : initializeApp(buildAppInitConfig(FIREBASE_CONFIG));
     const auth = getAuth(app);
-    const db =
+    const databaseId =
       FIREBASE_CONFIG.firestoreDatabaseId && FIREBASE_CONFIG.firestoreDatabaseId !== '(default)'
-        ? getFirestore(app, FIREBASE_CONFIG.firestoreDatabaseId)
-        : getFirestore(app);
+        ? FIREBASE_CONFIG.firestoreDatabaseId
+        : undefined;
+    const db = createFirestoreInstance(app, databaseId);
     let rtdb = null;
     if (isRtdbConfigured(FIREBASE_CONFIG)) {
       try {
@@ -120,18 +159,187 @@ export function getFirebaseServices() {
   }
 }
 
+function withTimeout(promise, ms, timeoutMessage = 'timeout') {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutMessage)), ms)),
+  ]);
+}
+
+let connectionCheckPromise = null;
+
 export async function testFirestoreConnection() {
   const { db } = getFirebaseServices();
   if (!db) return false;
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    return true;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
+  if (connectionCheckPromise) return connectionCheckPromise;
+  connectionCheckPromise = (async () => {
+    try {
+      await withTimeout(getDocFromServer(doc(db, 'test', 'connection')), 5000, 'firestore-timeout');
+      return true;
+    } catch (error) {
+      const code = String(error?.code || '');
+      if (code === 'permission-denied' || code === 'not-found') {
+        return true;
+      }
+      if (error instanceof Error && error.message.includes('the client is offline')) {
+        console.error('Please check your Firebase configuration.');
+      }
+      return false;
+    } finally {
+      connectionCheckPromise = null;
     }
-    return false;
-  }
+  })();
+  return connectionCheckPromise;
+}
+
+/**
+ * Live Diagnostics Helper for Settings -> Save Data.
+ * Tests Auth, Firestore, and Realtime Database live with bounded timeouts
+ * so the player sees clear green/red status pills and exact Firebase Console fixes.
+ */
+export async function runFirebaseDiagnostics() {
+  const { auth, db, rtdb } = getFirebaseServices();
+  const domain = typeof window !== 'undefined' && window.location ? window.location.hostname : 'localhost';
+  const currentUser = auth?.currentUser || null;
+
+  // 1. Auth Check
+  const authResult = auth
+    ? {
+        ok: true,
+        label: currentUser
+          ? currentUser.isAnonymous
+            ? 'Guest Signed In'
+            : 'Signed In'
+          : 'Ready',
+        detail: currentUser
+          ? `Authenticated (${currentUser.isAnonymous ? 'Anonymous' : (currentUser.email || 'Google')}) on ${domain}.`
+          : `Auth SDK live for ${FIREBASE_CONFIG.projectId} (${domain}). Sign in to verify cloud profile sync.`,
+      }
+    : {
+        ok: false,
+        label: 'Not Ready',
+        detail: 'Firebase Auth failed to initialize. Check your Firebase web config.',
+      };
+
+  // 2 & 3. Run Cloud Firestore and Realtime Database probes in parallel (<= 3.5s max)
+  const checkFirestore = async () => {
+    if (!db) {
+      return { ok: false, label: 'Offline', detail: 'Firestore not initialized.' };
+    }
+    try {
+      const probeRef = currentUser ? doc(db, 'users', currentUser.uid) : doc(db, 'test', 'connection');
+      await withTimeout(getDocFromServer(probeRef), 3500, 'firestore-timeout');
+      return {
+        ok: true,
+        label: 'Connected',
+        detail: currentUser
+          ? 'Cloud Firestore read succeeded for your profile.'
+          : 'Cloud Firestore backend reachable.',
+      };
+    } catch (err) {
+      const code = String(err?.code || '');
+      const msg = String(err?.message || '');
+      if (code === 'not-found') {
+        return {
+          ok: true,
+          label: 'Connected',
+          detail: 'Cloud Firestore reachable (profile document will auto-create on sign-in).',
+        };
+      }
+      if (code === 'permission-denied') {
+        if (!currentUser) {
+          return {
+            ok: true,
+            label: 'Reachable',
+            detail: 'Cloud Firestore is online and enforcing security rules (sign in to sync).',
+          };
+        }
+        return {
+          ok: false,
+          label: 'Rules Blocked',
+          detail: 'Firestore permission-denied. Tap "Copy firestore.rules" and publish it in Firebase Console → Firestore → Rules.',
+        };
+      }
+      if (msg === 'firestore-timeout' || msg.includes('offline') || code === 'unavailable') {
+        return {
+          ok: false,
+          label: 'Offline',
+          detail: 'Firestore timed out. Make sure Cloud Firestore database is created in Firebase Console.',
+        };
+      }
+      return {
+        ok: false,
+        label: 'Error',
+        detail: `Firestore check failed (${code || msg || 'unknown'}).`,
+      };
+    }
+  };
+
+  const checkRtdb = async () => {
+    if (!rtdb) {
+      return { ok: false, label: 'Not Set', detail: 'Realtime Database URL missing.' };
+    }
+    return new Promise((resolve) => {
+      let settled = false;
+      const connRef = rtdbRef(rtdb, '.info/connected');
+      const finish = (res) => {
+        if (settled) return;
+        settled = true;
+        try {
+          off(connRef, 'value', handler);
+        } catch {}
+        clearTimeout(timer);
+        resolve(res);
+      };
+      const handler = (snap) => {
+        if (snap.val() === true) {
+          finish({
+            ok: true,
+            label: 'Connected',
+            detail: `Realtime Database live (${FIREBASE_CONFIG.databaseURL}).`,
+          });
+        }
+      };
+      const timer = setTimeout(() => {
+        finish({
+          ok: false,
+          label: 'Offline',
+          detail: 'Realtime Database did not connect. Enable Realtime Database in Firebase Console and publish database.rules.json.',
+        });
+      }, 3500);
+      try {
+        onValue(connRef, handler, (err) => {
+          finish({
+            ok: false,
+            label: 'Error',
+            detail: `RTDB error: ${err?.message || 'check database.rules.json'}`,
+          });
+        });
+      } catch (err) {
+        finish({
+          ok: false,
+          label: 'Error',
+          detail: `RTDB init error: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }
+    });
+  };
+
+  const [firestoreResult, rtdbResult] = await Promise.all([checkFirestore(), checkRtdb()]);
+
+  return {
+    projectId: FIREBASE_CONFIG.projectId,
+    authDomain: FIREBASE_CONFIG.authDomain,
+    databaseURL: FIREBASE_CONFIG.databaseURL,
+    domain,
+    signedIn: Boolean(currentUser),
+    uid: currentUser?.uid || null,
+    auth: authResult,
+    firestore: firestoreResult,
+    rtdb: rtdbResult,
+    allOk: Boolean(authResult.ok && firestoreResult.ok && rtdbResult.ok),
+    checkedAt: Date.now(),
+  };
 }
 
 export function handleFirestoreError(error, operationType, path) {

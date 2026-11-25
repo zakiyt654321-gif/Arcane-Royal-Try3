@@ -235,7 +235,7 @@ test('Quick-Comms and Squad Color palettes match 6 callouts and 4 distinct squad
   assert.equal(new Set(SQUAD_COLORS).size, 4);
 });
 
-test('Asset & APK contracts: 6 verbatim PNGs, Local-First + Remote-Fallback, Berserker spelling, zero signInWithPopup & SW', () => {
+test('Asset & APK contracts: 6 verbatim PNGs, Local-First + Remote-Fallback, Berserker spelling, mobile popup+redirect Auth & zero SW', () => {
   const expectedPngs = [
     'Beserker_Portrait.png',
     'Beserker_Sprite.png',
@@ -269,11 +269,11 @@ test('Asset & APK contracts: 6 verbatim PNGs, Local-First + Remote-Fallback, Ber
   assert.equal(manifest.display, 'fullscreen');
   assert.equal(manifest.orientation, 'any');
 
-  // Verify zero signInWithPopup imports or calls across src/authService.js and index.html
+  // Verify Google Sign-In tries native APK bridge, then signInWithPopup with automatic signInWithRedirect + getRedirectResult fallback
   const authCode = fs.readFileSync(path.join(ROOT, 'src', 'authService.js'), 'utf8');
-  const stripComments = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
-  assert.equal(stripComments(authCode).includes('signInWithPopup'), false);
-  assert.equal(stripComments(html).includes('signInWithPopup'), false);
+  assert.ok(authCode.includes('signInWithPopup'), 'Google Sign-In must try signInWithPopup first on mobile/web');
+  assert.ok(authCode.includes('signInWithRedirect'), 'Google Sign-In must fall back to signInWithRedirect when popups are blocked');
+  assert.ok(authCode.includes('getRedirectResult'), 'Auth init must complete getRedirectResult on mobile return');
 });
 
 test('evaluateSquadMatchOutcome handles Squad Victory (alive or spectating), Spectating, and Squad Wipe', async () => {

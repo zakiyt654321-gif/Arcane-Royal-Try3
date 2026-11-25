@@ -497,13 +497,17 @@ class SquadMultiplayerController {
       const connUnsub = onValue(rtdbRef(rtdb, '.info/connected'), (snap) => {
         const isConn = snap.val() === true;
         this.connectionState = isConn ? 'connected' : 'reconnecting';
-        this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
+        this._emit('network', {
+          pingMs: this.pingMs,
+          connectionState: this.connectionState,
+          reconnecting: !isConn,
+        });
       });
       this.unsubs.push(connUnsub);
     } else {
       this.connectionState = 'connected';
       this.pingMs = 14;
-      this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
+      this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState, reconnecting: false });
       this._pullSandboxMatch();
     }
 
@@ -604,11 +608,11 @@ class SquadMultiplayerController {
           const t1 = typeof performance !== 'undefined' ? performance.now() : Date.now();
           this.pingMs = Math.max(8, Math.min(999, Math.round(t1 - t0)));
           this.connectionState = 'connected';
-          this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
+          this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState, reconnecting: false });
         })
         .catch(() => {
           this.connectionState = 'reconnecting';
-          this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
+          this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState, reconnecting: true });
         });
     } else {
       const all = readSimMatches();
@@ -618,7 +622,7 @@ class SquadMultiplayerController {
       }
       this.pingMs = 12 + Math.floor(Math.random() * 14);
       this.connectionState = 'connected';
-      this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
+      this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState, reconnecting: false });
     }
 
     // Check if host disconnected or heartbeat stalled > 6s -> deterministic host migration
@@ -681,7 +685,10 @@ class SquadMultiplayerController {
 
     const { rtdb } = getFirebaseServices();
     if (rtdb && !auth.sandboxAuth) {
-      rtdbUpdate(rtdbRef(rtdb, `matches/${this.matchId}/players/${auth.uid}`), compact).catch(() => null);
+      rtdbUpdate(rtdbRef(rtdb, `matches/${this.matchId}/players/${auth.uid}`), {
+        ...compact,
+        hb: rtdbServerTimestamp(),
+      }).catch(() => null);
       return;
     }
     const all = readSimMatches();

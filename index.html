@@ -6398,18 +6398,37 @@
               </div>
             </div>
 
-            <!-- Save Data Tab (Unified Cloud Sync & Account + Backup Transfer) -->
+            <!-- Save Data Tab (Unified Cloud Sync & Account + Live Firebase Diagnostics + Backup Transfer) -->
             <div id="settings-pane-data" class="settings-pane-section hidden" role="tabpanel">
               <div class="settings-tile span-2" style="border-color: rgba(56, 189, 248, 0.35);">
                 <div class="settings-tile-head">
                   <span class="settings-tile-label">☁️ Arcane Cloud Sync &amp; Account</span>
-                  <span id="cloud-sync-status-pill" class="cloud-status-pill">Local Sandbox Mode</span>
+                  <span id="cloud-sync-status-pill" class="cloud-status-pill">Live Cloud Ready</span>
                 </div>
                 <span id="cloud-sync-account-desc" class="settings-tile-desc">Sign in to sync progression, dual HUD profiles, Friends, and Global Top-50 Leaderboard rank across devices.</span>
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
                   <button type="button" id="btn-cloud-manage" class="btn-lobby-sec" data-ar-click="openAccountModal" style="justify-content: center; border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff;">👤 Account</button>
                   <button type="button" id="btn-cloud-sync-now" class="btn-lobby-sec" data-ar-click="cloudSyncNow" style="justify-content: center; border-color: rgba(52, 211, 153, 0.45); color: #6ee7b7;">↻ Sync Now</button>
                   <button type="button" id="btn-cloud-signout" class="btn-lobby-sec" data-ar-click="requestCloudSignOut" style="justify-content: center; border-color: rgba(248, 113, 113, 0.45); color: #fca5a5;">🚪 Sign Out</button>
+                </div>
+              </div>
+
+              <!-- 1-Tap Firebase Live Diagnostics & Security Rules Copy Helper -->
+              <div id="fb-diagnostics-box" class="settings-tile span-2" style="border-color: rgba(251, 191, 36, 0.38); gap: 8px;">
+                <div class="settings-tile-head">
+                  <span class="settings-tile-label">🔥 Firebase Live Diagnostics</span>
+                  <button type="button" id="btn-fb-diag-run" class="btn-lobby-sec" data-ar-click="runFirebaseDiagnosticsUI" style="min-height: 28px; padding: 4px 10px; font-size: 11px; border-color: rgba(56, 189, 248, 0.5); color: #bae6fd;">↻ Test Live</button>
+                </div>
+                <span id="fb-diag-meta" class="settings-tile-desc" style="font-size: 11px; color: #94a3b8;">Project: arcane-royale · Tap Test Live to verify Auth, Firestore, and Realtime DB.</span>
+                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;">
+                  <div id="diag-pill-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; border-radius: 9px; font-size: 10.5px; font-weight: 800; line-height: 1.2; text-align: center; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(148, 163, 184, 0.35); color: #cbd5e1;"><span>● Auth</span><span style="font-size: 9.5px; opacity: 0.9;">Testing…</span></div>
+                  <div id="diag-pill-firestore" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; border-radius: 9px; font-size: 10.5px; font-weight: 800; line-height: 1.2; text-align: center; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(148, 163, 184, 0.35); color: #cbd5e1;"><span>● Firestore</span><span style="font-size: 9.5px; opacity: 0.9;">Testing…</span></div>
+                  <div id="diag-pill-rtdb" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; border-radius: 9px; font-size: 10.5px; font-weight: 800; line-height: 1.2; text-align: center; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(148, 163, 184, 0.35); color: #cbd5e1;"><span>● RTDB</span><span style="font-size: 9.5px; opacity: 0.9;">Testing…</span></div>
+                </div>
+                <div id="fb-diag-detail" style="font-size: 11px; line-height: 1.4; color: #cbd5e1; background: rgba(2, 6, 23, 0.55); border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 8px; padding: 6px 9px;">Checking live Firebase services...</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <button type="button" id="btn-copy-firestore-rules" class="btn-lobby-sec" data-ar-click="copyFirestoreRules" style="justify-content: center; font-size: 11.5px; border-color: rgba(52, 211, 153, 0.48); color: #6ee7b7;">📋 Copy firestore.rules</button>
+                  <button type="button" id="btn-copy-rtdb-rules" class="btn-lobby-sec" data-ar-click="copyDatabaseRules" style="justify-content: center; font-size: 11.5px; border-color: rgba(251, 191, 36, 0.48); color: #fde68a;">📋 Copy database.rules.json</button>
                 </div>
               </div>
 
@@ -9405,16 +9424,18 @@
           const climaxNotes = [146.83, 155.56, 220, 233.08, 293.66, 233.08, 220, 155.56];
           const notes = this.currentTrack === 'climax' ? climaxNotes : (this.currentTrack === 'combat' ? battleNotes : lobbyNotes);
           const beat = this.currentTrack === 'climax' ? 0.19 : (this.currentTrack === 'combat' ? 0.24 : 0.42);
+          const offsetSec = Math.max(-0.15, Math.min(0.15, (Number(PlayerData.audioSyncOffsetMs || 0)) / 1000));
           let guard = 0;
           while (this.nextNoteTime < now + this.LOOKAHEAD_WINDOW_SEC && guard < 8) {
             guard++;
             const index = this.step % notes.length;
-            this.scheduleTone(notes[index], this.nextNoteTime, beat * 0.78, this.currentTrack === 'lobby' ? 'sine' : 'triangle', 0.055);
+            const noteStart = Math.max(now, this.nextNoteTime + offsetSec);
+            this.scheduleTone(notes[index], noteStart, beat * 0.78, this.currentTrack === 'lobby' ? 'sine' : 'triangle', 0.055);
             if (index % 4 === 0) {
-              this.scheduleTone(notes[index] / 2, this.nextNoteTime, beat * 3.2, 'sine', 0.075);
+              this.scheduleTone(notes[index] / 2, noteStart, beat * 3.2, 'sine', 0.075);
             }
             if (this.currentTrack !== 'lobby' && index % 2 === 0) {
-              this.scheduleTone(55, this.nextNoteTime, 0.055, 'square', this.currentTrack === 'climax' ? 0.036 : 0.025);
+              this.scheduleTone(55, noteStart, 0.055, 'square', this.currentTrack === 'climax' ? 0.036 : 0.025);
             }
             this.step++;
             this.nextNoteTime += beat;
@@ -10497,8 +10518,8 @@
           let sx = cx;
           let sy = cy;
           for (let attempt = 0; attempt < 24; attempt++) {
-            const a = Math.random() * Math.PI * 2;
-            const d = (0.22 + Math.random() * 0.72) * maxR;
+            const a = cryptoRandomFloat() * Math.PI * 2;
+            const d = (0.22 + cryptoRandomFloat() * 0.72) * maxR;
             const tx = Math.max(200, Math.min(ARENA_WIDTH - 200, cx + Math.cos(a) * d));
             const ty = Math.max(200, Math.min(ARENA_HEIGHT - 200, cy + Math.sin(a) * d));
             if (isSafeDeployment(tx, ty, 36)) { sx = tx; sy = ty; break; }
@@ -10511,7 +10532,7 @@
               c.y = sy;
               c.z = 520;
               c.phase = phase;
-              c.pulse = Math.random() * 6;
+              c.pulse = cryptoRandomFloat() * 6;
               c.opened = false;
               spawned++;
               break;
@@ -17634,7 +17655,9 @@
         else handleFocusRestore();
       });
       window.addEventListener('pagehide', handleFocusLoss);
-      window.addEventListener('blur', handleFocusLoss);
+      window.addEventListener('blur', () => {
+        Input.reset();
+      });
       window.addEventListener('focus', handleFocusRestore);
 
       // ==========================================
@@ -19334,6 +19357,9 @@
             btn.setAttribute('aria-selected', String(active));
           }
         }
+        if (target === 'data' && typeof runFirebaseDiagnosticsUI === 'function') {
+          runFirebaseDiagnosticsUI(true);
+        }
       }
 
       function closeSettings() {
@@ -19879,17 +19905,17 @@
           const importedSave = { ...res.payload.save };
           const importSig = computeSaveChecksum(importedSave);
           importedSave._sig = importSig;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(importedSave));
-          localStorage.setItem(STORAGE_SIG_KEY, importSig);
+          safeStorageSet(STORAGE_KEY, JSON.stringify(importedSave));
+          safeStorageSet(STORAGE_SIG_KEY, importSig);
           const landHud = res.payload.hudLayoutLandscape || res.payload.hudLayout;
           const portHud = res.payload.hudLayoutPortrait;
           if (landHud && typeof landHud === 'object') {
             const s = JSON.stringify(landHud);
-            localStorage.setItem(HUD_LAYOUT_LANDSCAPE_KEY, s);
-            localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, s);
+            safeStorageSet(HUD_LAYOUT_LANDSCAPE_KEY, s);
+            safeStorageSet(HUD_LAYOUT_STORAGE_KEY, s);
           }
           if (portHud && typeof portHud === 'object') {
-            localStorage.setItem(HUD_LAYOUT_PORTRAIT_KEY, JSON.stringify(portHud));
+            safeStorageSet(HUD_LAYOUT_PORTRAIT_KEY, JSON.stringify(portHud));
           }
           if (typeof HudLayoutManager !== 'undefined') {
             HudLayoutManager.load();
@@ -20040,12 +20066,12 @@
           confirmLabel: 'Reset Save',
           cancelLabel: 'Cancel',
           onConfirm: () => {
-            localStorage.removeItem(STORAGE_KEY);
-            localStorage.removeItem(STORAGE_SIG_KEY);
-            localStorage.removeItem(HUD_LAYOUT_STORAGE_KEY);
-            localStorage.removeItem(HUD_LAYOUT_LANDSCAPE_KEY);
-            localStorage.removeItem(HUD_LAYOUT_PORTRAIT_KEY);
-            for (const key of LEGACY_STORAGE_KEYS) localStorage.removeItem(key);
+            safeStorageRemove(STORAGE_KEY);
+            safeStorageRemove(STORAGE_SIG_KEY);
+            safeStorageRemove(HUD_LAYOUT_STORAGE_KEY);
+            safeStorageRemove(HUD_LAYOUT_LANDSCAPE_KEY);
+            safeStorageRemove(HUD_LAYOUT_PORTRAIT_KEY);
+            for (const key of LEGACY_STORAGE_KEYS) safeStorageRemove(key);
             location.reload();
           }
         });
@@ -20473,6 +20499,8 @@
           Object.assign(state, detail);
           if (detail.signedIn && detail.profile) {
             applyAuthProfileToLocal(detail.profile, detail);
+          } else if (!detail.signedIn && detail.lastAuthError && typeof showAuthFeedback === 'function') {
+            showAuthFeedback(detail.lastAuthError, true);
           }
           refreshUI();
         });
@@ -20480,12 +20508,24 @@
         function request(action, payload = {}) {
           return new Promise((resolve) => {
             const id = `ar_req_${++reqSeq}_${Date.now()}`;
+            // Interactive Google popup needs generous timeout on mobile browsers; auth/diagnostics need 12s
+            const timeoutMs =
+              action === 'signInGoogle'
+                ? 60000
+                : (action === 'signInEmail' ||
+                   action === 'createAccount' ||
+                   action === 'playAsGuest' ||
+                   action === 'upgradeGuest' ||
+                   action === 'sendPasswordReset' ||
+                   action === 'runFirebaseDiagnostics')
+                  ? 12000
+                  : 6500;
             const timer = setTimeout(() => {
               if (pending.has(id)) {
                 pending.delete(id);
-                resolve({ ok: false, fallback: true, mode: 'local' });
+                resolve({ ok: false, fallback: true, mode: 'local', error: 'Request timed out — check your internet connection and try again.' });
               }
-            }, 4500);
+            }, timeoutMs);
             pending.set(id, (res) => {
               clearTimeout(timer);
               resolve(res);
@@ -20564,11 +20604,11 @@
           const hPort = (remote.hudLayouts && remote.hudLayouts.portrait) || remote.hudLayoutPortrait;
           if (hLand && typeof hLand === 'object') {
             const s = JSON.stringify(hLand);
-            localStorage.setItem(HUD_LAYOUT_LANDSCAPE_KEY, s);
-            localStorage.setItem(HUD_LAYOUT_STORAGE_KEY, s);
+            safeStorageSet(HUD_LAYOUT_LANDSCAPE_KEY, s);
+            safeStorageSet(HUD_LAYOUT_STORAGE_KEY, s);
           }
           if (hPort && typeof hPort === 'object') {
-            localStorage.setItem(HUD_LAYOUT_PORTRAIT_KEY, JSON.stringify(hPort));
+            safeStorageSet(HUD_LAYOUT_PORTRAIT_KEY, JSON.stringify(hPort));
           }
           PlayerData.save();
           if (typeof HudLayoutManager !== 'undefined') {
@@ -20778,17 +20818,33 @@
         });
       }
 
+      function setAuthButtonsBusy(busy, activeId) {
+        const ids = ['btn-auth-signin', 'btn-auth-signup', 'btn-auth-guest', 'btn-auth-google'];
+        for (let i = 0; i < ids.length; i++) {
+          const el = document.getElementById(ids[i]);
+          if (el) {
+            el.disabled = Boolean(busy);
+            el.style.opacity = busy ? (ids[i] === activeId ? '0.85' : '0.55') : '';
+          }
+        }
+      }
+
       async function authSubmitSignIn() {
         AudioEngine.init();
         showAuthFeedback('');
         const email = (document.getElementById('auth-signin-email')?.value || '').trim();
         const password = document.getElementById('auth-signin-password')?.value || '';
-        const res = await CloudBridge.request('signInEmail', { email, password });
-        if (res && res.ok) {
-          completeAuthEntry(res);
-          showToast('☁️ Welcome back to Arcane Royale!', '#34d399');
-        } else {
-          showAuthFeedback((res && res.error) || 'Sign-in failed.');
+        setAuthButtonsBusy(true, 'btn-auth-signin');
+        try {
+          const res = await CloudBridge.request('signInEmail', { email, password });
+          if (res && res.ok) {
+            completeAuthEntry(res);
+            showToast('☁️ Welcome back to Arcane Royale!', '#34d399');
+          } else {
+            showAuthFeedback((res && res.error) || 'Sign-in failed.');
+          }
+        } finally {
+          setAuthButtonsBusy(false);
         }
       }
 
@@ -20799,18 +20855,23 @@
         const email = (document.getElementById('auth-signup-email')?.value || '').trim();
         const password = document.getElementById('auth-signup-password')?.value || '';
         const confirmPassword = document.getElementById('auth-signup-confirm')?.value || '';
-        const res = await CloudBridge.request('createAccount', {
-          championName,
-          email,
-          password,
-          confirmPassword,
-          seedLocal: CloudBridge.buildProfilePayload()
-        });
-        if (res && res.ok) {
-          completeAuthEntry(res);
-          showToast(`✨ Account created! Friend Code: ${res.state?.friendCode || ''}`, '#34d399');
-        } else {
-          showAuthFeedback((res && res.error) || 'Account creation failed.');
+        setAuthButtonsBusy(true, 'btn-auth-signup');
+        try {
+          const res = await CloudBridge.request('createAccount', {
+            championName,
+            email,
+            password,
+            confirmPassword,
+            seedLocal: CloudBridge.buildProfilePayload()
+          });
+          if (res && res.ok) {
+            completeAuthEntry(res);
+            showToast(`✨ Account created! Friend Code: ${res.state?.friendCode || ''}`, '#34d399');
+          } else {
+            showAuthFeedback((res && res.error) || 'Account creation failed.');
+          }
+        } finally {
+          setAuthButtonsBusy(false);
         }
       }
 
@@ -20818,31 +20879,41 @@
         AudioEngine.init();
         showAuthFeedback('');
         const nameVal = (document.getElementById('name-input')?.value || '').trim();
-        const res = await CloudBridge.request('playAsGuest', {
-          preferredName: nameVal,
-          seedLocal: CloudBridge.buildProfilePayload()
-        });
-        if (res && res.ok) {
-          completeAuthEntry(res);
-          showToast(`👤 Playing as Guest (${res.state?.displayName || 'Arcane'}) · Link email anytime!`, '#c084fc');
-        } else {
-          showAuthFeedback((res && res.error) || 'Guest login unavailable.');
+        setAuthButtonsBusy(true, 'btn-auth-guest');
+        try {
+          const res = await CloudBridge.request('playAsGuest', {
+            preferredName: nameVal,
+            seedLocal: CloudBridge.buildProfilePayload()
+          });
+          if (res && res.ok) {
+            completeAuthEntry(res);
+            showToast(`👤 Playing as Guest (${res.state?.displayName || 'Arcane'}) · Link email anytime!`, '#c084fc');
+          } else {
+            showAuthFeedback((res && res.error) || 'Guest login unavailable.');
+          }
+        } finally {
+          setAuthButtonsBusy(false);
         }
       }
 
       async function authSignInGoogle() {
         AudioEngine.init();
         showAuthFeedback('');
-        const res = await CloudBridge.request('signInGoogle', { seedLocal: CloudBridge.buildProfilePayload() });
-        if (res && res.ok) {
-          if (res.redirecting) {
-            showAuthFeedback('Redirecting to Google Sign-In...', false);
-            return;
+        setAuthButtonsBusy(true, 'btn-auth-google');
+        try {
+          const res = await CloudBridge.request('signInGoogle', { seedLocal: CloudBridge.buildProfilePayload() });
+          if (res && res.ok) {
+            if (res.redirecting) {
+              showAuthFeedback('Redirecting to Google Sign-In...', false);
+              return;
+            }
+            completeAuthEntry(res);
+            showToast(res.message || '☁️ Signed in with Google!', '#34d399');
+          } else {
+            showAuthFeedback((res && res.error) || 'Google Sign-In failed.');
           }
-          completeAuthEntry(res);
-          showToast(res.message || '☁️ Signed in with Google!', '#34d399');
-        } else {
-          showAuthFeedback((res && res.error) || 'Google Sign-In failed.');
+        } finally {
+          setAuthButtonsBusy(false);
         }
       }
 
@@ -20854,6 +20925,116 @@
         } else {
           showAuthFeedback((res && res.error) || 'Enter your email address first.');
         }
+      }
+
+      function styleDiagPill(el, name, svc) {
+        if (!el || !svc) return;
+        const ok = Boolean(svc.ok);
+        el.textContent = '';
+        const top = document.createElement('span');
+        top.textContent = `${ok ? '🟢' : '🔴'} ${name}`;
+        const sub = document.createElement('span');
+        sub.style.fontSize = '9.5px';
+        sub.style.opacity = '0.92';
+        sub.textContent = svc.label || (ok ? 'Connected' : 'Error');
+        el.appendChild(top);
+        el.appendChild(sub);
+        el.style.borderColor = ok ? 'rgba(52, 211, 153, 0.55)' : 'rgba(248, 113, 113, 0.6)';
+        el.style.background = ok ? 'rgba(6, 78, 59, 0.45)' : 'rgba(127, 29, 29, 0.45)';
+        el.style.color = ok ? '#6ee7b7' : '#fca5a5';
+      }
+
+      let diagRunning = false;
+      async function runFirebaseDiagnosticsUI(silent = false) {
+        if (diagRunning) return;
+        diagRunning = true;
+        const btn = document.getElementById('btn-fb-diag-run');
+        const metaEl = document.getElementById('fb-diag-meta');
+        const detailEl = document.getElementById('fb-diag-detail');
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Testing…';
+        }
+        if (detailEl) detailEl.textContent = 'Testing live Auth, Cloud Firestore, and Realtime Database…';
+        try {
+          const res = await CloudBridge.request('runFirebaseDiagnostics', {});
+          const d = res && res.diagnostics;
+          if (!d) {
+            if (detailEl) detailEl.textContent = (res && res.error) || 'Could not reach Firebase diagnostics bridge.';
+            return;
+          }
+          if (metaEl) {
+            metaEl.textContent = `Project: ${d.projectId || 'arcane-royale'} · Host: ${d.domain || window.location.hostname}`;
+          }
+          styleDiagPill(document.getElementById('diag-pill-auth'), 'Auth', d.auth);
+          styleDiagPill(document.getElementById('diag-pill-firestore'), 'Firestore', d.firestore);
+          styleDiagPill(document.getElementById('diag-pill-rtdb'), 'RTDB', d.rtdb);
+          if (detailEl) {
+            if (d.allOk) {
+              detailEl.style.color = '#6ee7b7';
+              detailEl.textContent = `✓ All live Firebase services connected (${d.auth.detail})`;
+            } else {
+              const issues = [d.auth, d.firestore, d.rtdb].filter((s) => s && !s.ok).map((s) => s.detail);
+              detailEl.style.color = '#fde68a';
+              detailEl.textContent = issues.join(' · ') || 'Some Firebase services need setup in Firebase Console.';
+            }
+          }
+          if (!silent) {
+            showToast(d.allOk ? '🟢 Firebase Auth, Firestore & RTDB connected!' : '⚠️ See Firebase Diagnostics details for quick fix.', d.allOk ? '#34d399' : '#fbbf24');
+          }
+        } finally {
+          diagRunning = false;
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = '↻ Test Live';
+          }
+        }
+      }
+
+      async function copyTextWithMobileFallback(text) {
+        if (!text) return false;
+        try {
+          if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            await navigator.clipboard.writeText(text);
+            return true;
+          }
+        } catch (_) {}
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          ta.setSelectionRange(0, text.length);
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          return ok;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      async function copyFirestoreRules() {
+        const res = await CloudBridge.request('getFirebaseRulesText', {});
+        const text = res && res.ok ? res.firestoreRules : '';
+        const copied = await copyTextWithMobileFallback(text);
+        showToast(
+          copied ? '📋 Copied firestore.rules! Paste in Firebase Console → Firestore → Rules.' : '⚠️ Clipboard blocked — retry copy.',
+          copied ? '#34d399' : '#f87171'
+        );
+      }
+
+      async function copyDatabaseRules() {
+        const res = await CloudBridge.request('getFirebaseRulesText', {});
+        const text = res && res.ok ? res.databaseRules : '';
+        const copied = await copyTextWithMobileFallback(text);
+        showToast(
+          copied ? '📋 Copied database.rules.json! Paste in Firebase Console → Realtime Database → Rules.' : '⚠️ Clipboard blocked — retry copy.',
+          copied ? '#fbbf24' : '#f87171'
+        );
       }
 
       function setLobbyNavActive(tab) {
@@ -21495,7 +21676,8 @@
               pingPill.classList.remove('hidden');
             }
             if (recBanner) {
-              recBanner.classList.toggle('hidden', !Boolean(d.payload.reconnecting));
+              const isRec = Boolean(d.payload.reconnecting || d.payload.connectionState === 'reconnecting');
+              recBanner.classList.toggle('hidden', !isRec);
             }
           } else if (d.eventType === 'fx' && d.payload) {
             const fx = d.payload;
@@ -22004,12 +22186,12 @@
       document.addEventListener('ar:apk:lifecycle', (ev) => {
         const d = ev && ev.detail;
         if (!d) return;
-        if (d.hidden || d.blurred || d.pagehide) {
+        if (d.hidden || d.pagehide) {
+          handleFocusLoss();
+        } else if (d.blurred) {
           Input.reset();
-          Music.setVolume(0);
         } else {
-          Music.setVolume(PlayerData.musicVolume);
-          lastTime = performance.now();
+          handleFocusRestore();
         }
       });
 
@@ -22303,6 +22485,8 @@
         confirmDrop: () => confirmDrop(),
         confirmModalAccept: () => confirmModalAccept(),
         confirmModalCancel: () => confirmModalCancel(),
+        copyDatabaseRules: () => copyDatabaseRules(),
+        copyFirestoreRules: () => copyFirestoreRules(),
         copyMyFriendCode: () => copyMyFriendCode(),
         copySquadRoomCode: () => copySquadRoomCode(),
         cycleLobbyHero: (arg) => cycleLobbyHero(Number(arg)),
@@ -22345,6 +22529,7 @@
         restartKillcamReplay: () => restartKillcamReplay(),
         resumeGame: () => resumeGame(),
         retryOnlineConnection: () => retryOnlineConnection(),
+        runFirebaseDiagnosticsUI: () => runFirebaseDiagnosticsUI(false),
         saveHudEditorLayout: () => saveHudEditorLayout(),
         selectFighter: (arg) => selectFighter(arg),
         selectRandomDrop: () => selectRandomDrop(),
