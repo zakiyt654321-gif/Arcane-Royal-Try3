@@ -25,6 +25,24 @@ export const FIREBASE_CONFIG = {
 };
 
 export const SIM_CHANNEL_NAME = 'arcane_royale_sim';
+export const DEV_DEMO_ENABLED = true;
+
+export const SANDBOX_STORAGE_KEYS = Object.freeze({
+  users: 'arcane_sandbox_users_v1',
+  session: 'arcane_sandbox_session_v1',
+  friendCodes: 'arcane_sandbox_friendcodes_v1',
+  friends: 'arcane_sandbox_friends_v1',
+  requests: 'arcane_sandbox_requests_v1',
+  presence: 'arcane_sandbox_presence_v1',
+  squads: 'arcane_sandbox_squads_v1',
+  invites: 'arcane_sandbox_invites_v1',
+  matches: 'arcane_sandbox_matches_v1',
+});
+
+export const CLOUD_CACHE_STORAGE_KEYS = Object.freeze({
+  profile: 'arcane_cloud_cache_profile_v1',
+  meta: 'arcane_cloud_cache_meta_v1',
+});
 
 export const OperationType = Object.freeze({
   CREATE: 'create',
@@ -58,6 +76,10 @@ export function isRtdbConfigured(cfg = FIREBASE_CONFIG) {
 
 export function isSandboxMode(cfg = FIREBASE_CONFIG) {
   return !isFirebaseConfigured(cfg) || !isRtdbConfigured(cfg);
+}
+
+export function isSimBroadcastEnabled(cfg = FIREBASE_CONFIG) {
+  return !isFirebaseConfigured(cfg);
 }
 
 let cachedServices = null;

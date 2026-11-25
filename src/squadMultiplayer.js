@@ -7,19 +7,26 @@ import {
   onValue,
   onDisconnect,
   runTransaction,
+  serverTimestamp as rtdbServerTimestamp,
 } from 'firebase/database';
-import { getFirebaseServices, SIM_CHANNEL_NAME } from './firebaseConfig.js';
+import {
+  getFirebaseServices,
+  isSimBroadcastEnabled,
+  SIM_CHANNEL_NAME,
+  SANDBOX_STORAGE_KEYS,
+} from './firebaseConfig.js';
 import { authService, sanitizeChampionId } from './authService.js';
 
 export const SQUAD_COLORS = Object.freeze(['#fbbf24', '#38bdf8', '#34d399', '#e879f9']);
 export const SQUAD_COLOR_NAMES = Object.freeze(['Gold', 'Cyan', 'Emerald', 'Magenta']);
-export const AOI_RADIUS = 950;
+export const AOI_RADIUS = 600;
 export const INTERP_DELAY_MS = 100;
 export const HOST_STALL_MS = 6000;
 export const RECONNECT_GRACE_MS = 12000;
 export const INTENT_TTL_MS = 3000;
+export const REMOTE_SFX_STALE_MS = 350;
 export const ACTIVE_MATCH_SESSION_KEY = 'arcane_active_match_v1';
-const SIM_MATCHES_KEY = 'arcane_royale_sim_matches_v1';
+const SIM_MATCHES_KEY = SANDBOX_STORAGE_KEYS.matches;
 
 export const QUICK_COMMS_OPTIONS = Object.freeze([
   Object.freeze({ id: 'enemy', icon: '⚠️', label: 'Enemy Here!' }),
@@ -37,7 +44,7 @@ const IDX_TO_STATE = ['idle', 'walk', 'attack'];
 const ELEM_TO_IDX = { '': 0, FIRE: 1, WATER: 2, DARK: 3 };
 const IDX_TO_ELEM = [null, 'FIRE', 'WATER', 'DARK'];
 
-/** Deterministic 32-bit PRNG (Mulberry32) so all squadmates generate identical islands & loot */
+/** Deterministic 32-bit PRNG (Mulberry32) so all squadmates generate identical static terrain & obstacles */
 export function createSeededRng(seed) {
   let a = (Number(seed) >>> 0) || 1;
   return function next() {
@@ -49,9 +56,82 @@ export function createSeededRng(seed) {
   };
 }
 
+/** Cryptographically unbiased float in [0, 1) for dynamic storm circles & supply drop placement */
+export function cryptoRandomFloat() {
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+    const buf = new Uint32Array(1);
+    globalThis.crypto.getRandomValues(buf);
+    return buf[0] / 4294967296;
+  }
+  return Math.random();
+}
+
+/** Splits deterministic static worldRng from non-deterministic visual fxRng */
+export function createWorldAndFxRng(seed) {
+  return {
+    worldRng: createSeededRng(seed),
+    fxRng: () => Math.random(),
+  };
+}
+
 /**
- * Area-of-Interest (AOI) quantized bot packer (~90% RTDB bandwidth savings).
- * Includes ONLY alive bots within `aoiRadius` (default 950u) of at least one living human.
+ * Host-authoritative validation for remote squadmate intents (`hit`, `loot`, `barrel`, `revive`).
+ * Verifies range (+tolerance), cooldown (>= 85%), champion damage cap, and velocity sanity.
+ */
+export function validateRemoteIntent(intent, senderState, targetState, skillConfig = {}, nowMs = Date.now(), lastSenderState = null) {
+  if (!intent || typeof intent !== 'object') return { valid: false, reason: 'missing_intent' };
+  if (!senderState || typeof senderState !== 'object') return { valid: false, reason: 'missing_sender' };
+
+  const type = String(intent.type || 'hit');
+  const maxRange = Number(skillConfig.range ?? (type === 'loot' ? 140 : type === 'revive' ? 150 : 560));
+  const tolerance = Number(skillConfig.tolerance ?? 70);
+  const cooldownMs = Math.max(0, Number(skillConfig.cooldownMs ?? 250));
+  const maxDamageCap = Math.max(1, Number(skillConfig.maxDamageCap ?? 185));
+  const maxSpeed = Math.max(100, Number(skillConfig.maxSpeed ?? 440));
+
+  // 1. Velocity sanity check (unless verified dash/teleport)
+  if (lastSenderState && !intent.verifiedMobility) {
+    const elapsedSec = Math.max(0.05, (nowMs - Number(lastSenderState.ts || nowMs - 100)) / 1000);
+    const mdx = Number(senderState.x || 0) - Number(lastSenderState.x || 0);
+    const mdy = Number(senderState.y || 0) - Number(lastSenderState.y || 0);
+    const speed = Math.hypot(mdx, mdy) / elapsedSec;
+    if (speed > maxSpeed * 1.25) {
+      return { valid: false, reason: 'velocity_exceeded' };
+    }
+  }
+
+  // 2. Cooldown check (>= 85% of skill cooldown)
+  if (cooldownMs > 0 && Number.isFinite(skillConfig.lastUsedAtMs) && skillConfig.lastUsedAtMs > 0) {
+    const sinceLast = nowMs - skillConfig.lastUsedAtMs;
+    if (sinceLast < cooldownMs * 0.85) {
+      return { valid: false, reason: 'cooldown_violation' };
+    }
+  }
+
+  // 3. Distance check against target or intent coordinates
+  const tx = targetState ? Number(targetState.x) : Number(intent.x);
+  const ty = targetState ? Number(targetState.y) : Number(intent.y);
+  if (Number.isFinite(tx) && Number.isFinite(ty)) {
+    const dist = Math.hypot(tx - Number(senderState.x || 0), ty - Number(senderState.y || 0));
+    if (dist > maxRange + tolerance) {
+      return { valid: false, reason: 'out_of_range' };
+    }
+  }
+
+  // 4. Champion damage cap check
+  if (type === 'hit' || type === 'barrel') {
+    const dmg = Number(intent.dmg ?? intent.damage ?? 0);
+    if (!Number.isFinite(dmg) || dmg < 0 || dmg > maxDamageCap) {
+      return { valid: false, reason: 'damage_cap_exceeded' };
+    }
+  }
+
+  return { valid: true, reason: null };
+}
+
+/**
+ * Area-of-Interest (AOI) quantized bot packer (~92% RTDB bandwidth savings).
+ * Includes ONLY alive bots within `aoiRadius` (default 600u) of at least one living human.
  * Tuple layout: [id, x, y, a10, hp, st, chIdx, elemMark]
  */
 export function packAoiBots(bots, livingHumans, aoiRadius = AOI_RADIUS) {
@@ -252,12 +332,16 @@ class SquadMultiplayerController {
     this.lastPlayerPush = 0;
     this.lastBotPush = 0;
     this.lastWorldPush = 0;
+    this.pingMs = 24;
+    this.connectionState = 'connected';
     this.interpBuffers = new Map();
+    this.senderCooldowns = new Map();
+    this.senderPrevPos = new Map();
     this.intentDedup = createIntentDeduplicator(INTENT_TTL_MS);
     this.fxSeen = createIntentDeduplicator(INTENT_TTL_MS);
     this.listeners = new Set();
     this.channel =
-      typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined'
+      isSimBroadcastEnabled() && typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined'
         ? new BroadcastChannel(SIM_CHANNEL_NAME)
         : null;
     if (this.channel) {
@@ -369,7 +453,13 @@ class SquadMultiplayerController {
     const { rtdb } = getFirebaseServices();
     if (rtdb && !auth.sandboxAuth) {
       try {
-        await rtdbSet(rtdbRef(rtdb, `matches/${matchId}`), matchObj);
+        const rtdbMatchObj = {
+          ...matchObj,
+          players: Object.fromEntries(
+            Object.entries(players).map(([u, p]) => [u, { ...p, hb: rtdbServerTimestamp() }])
+          ),
+        };
+        await rtdbSet(rtdbRef(rtdb, `matches/${matchId}`), rtdbMatchObj);
         await this.joinMatch(matchId);
         return { ok: true, matchId, seed };
       } catch {}
@@ -397,14 +487,23 @@ class SquadMultiplayerController {
       onDisconnect(rtdbRef(rtdb, `matches/${matchId}/members/${auth.uid}/connected`)).set(false);
       onDisconnect(rtdbRef(rtdb, `matches/${matchId}/players/${auth.uid}/connected`)).set(false);
       await rtdbUpdate(rtdbRef(rtdb, `matches/${matchId}/members/${auth.uid}`), { connected: true }).catch(() => null);
-      await rtdbUpdate(rtdbRef(rtdb, `matches/${matchId}/players/${auth.uid}`), { connected: true, hb: Date.now() }).catch(() => null);
+      await rtdbUpdate(rtdbRef(rtdb, `matches/${matchId}/players/${auth.uid}`), { connected: true, hb: rtdbServerTimestamp() }).catch(() => null);
       const unsub = onValue(mRef, (snap) => {
         const val = snap.val();
         if (!val) return;
         this._ingestMatchSnapshot(val);
       });
       this.unsubs.push(unsub);
+      const connUnsub = onValue(rtdbRef(rtdb, '.info/connected'), (snap) => {
+        const isConn = snap.val() === true;
+        this.connectionState = isConn ? 'connected' : 'reconnecting';
+        this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
+      });
+      this.unsubs.push(connUnsub);
     } else {
+      this.connectionState = 'connected';
+      this.pingMs = 14;
+      this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
       this._pullSandboxMatch();
     }
 
@@ -439,24 +538,52 @@ class SquadMultiplayerController {
       pushInterpSample(buf, Number(p.x || 0), Number(p.y || 0), Number(p.a || 0), Number(p.vx || 0), Number(p.vy || 0), now);
     }
 
-    // Deliver fresh FX events
+    // Deliver fresh FX/SFX events (drop remote audio events older than 350ms to prevent lag-spike ghost sounds)
     const fxMap = val.fx || {};
     for (const fxId of Object.keys(fxMap)) {
       const fx = fxMap[fxId];
-      if (!fx || now - (fx.ts || 0) > INTENT_TTL_MS) continue;
+      const ageMs = now - (fx?.ts || 0);
+      if (!fx || ageMs > INTENT_TTL_MS) continue;
+      if (fx.src !== auth.uid && ageMs > REMOTE_SFX_STALE_MS && (fx.kind === 'sfx' || fx.sfx)) continue;
       if (this.fxSeen.accept(fxId, now)) {
         this._emit('fx', { id: fxId, ...fx });
       }
     }
 
-    // Host processes incoming client intents idempotently
+    // Host validates & processes incoming client intents idempotently
     if (this.isHost && val.intents) {
       for (const intentId of Object.keys(val.intents)) {
         const intent = val.intents[intentId];
         if (!intent || now - (intent.ts || 0) > INTENT_TTL_MS) continue;
-        if (this.intentDedup.accept(intentId, now)) {
-          this._emit('intent', { id: intentId, ...intent });
+        if (!this.intentDedup.accept(intentId, now)) continue;
+        const srcUid = intent.src;
+        if (srcUid && srcUid !== auth.uid) {
+          const sender = players[srcUid];
+          const prevPos = this.senderPrevPos.get(srcUid) || null;
+          const cdKey = `${srcUid}:${intent.type || 'hit'}:${intent.skill || 'basic'}`;
+          const lastUsedAtMs = this.senderCooldowns.get(cdKey) || 0;
+          const check = validateRemoteIntent(
+            intent,
+            sender,
+            null,
+            {
+              range: intent.type === 'loot' ? 140 : intent.type === 'revive' ? 160 : 620,
+              tolerance: 90,
+              cooldownMs: intent.type === 'hit' ? 220 : 120,
+              maxDamageCap: 220,
+              maxSpeed: 520,
+              lastUsedAtMs,
+            },
+            now,
+            prevPos
+          );
+          if (sender) {
+            this.senderPrevPos.set(srcUid, { x: Number(sender.x || 0), y: Number(sender.y || 0), ts: now });
+          }
+          if (!check.valid) continue;
+          this.senderCooldowns.set(cdKey, now);
         }
+        this._emit('intent', { id: intentId, ...intent });
       }
     }
 
@@ -471,13 +598,27 @@ class SquadMultiplayerController {
 
     const { rtdb } = getFirebaseServices();
     if (rtdb && !auth.sandboxAuth) {
-      rtdbUpdate(rtdbRef(rtdb, `matches/${this.matchId}/players/${auth.uid}`), { hb: now, connected: true }).catch(() => null);
+      const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      rtdbUpdate(rtdbRef(rtdb, `matches/${this.matchId}/players/${auth.uid}`), { hb: rtdbServerTimestamp(), connected: true })
+        .then(() => {
+          const t1 = typeof performance !== 'undefined' ? performance.now() : Date.now();
+          this.pingMs = Math.max(8, Math.min(999, Math.round(t1 - t0)));
+          this.connectionState = 'connected';
+          this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
+        })
+        .catch(() => {
+          this.connectionState = 'reconnecting';
+          this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
+        });
     } else {
       const all = readSimMatches();
       if (all[this.matchId]?.players?.[auth.uid]) {
         all[this.matchId].players[auth.uid].hb = now;
         writeSimMatches(all);
       }
+      this.pingMs = 12 + Math.floor(Math.random() * 14);
+      this.connectionState = 'connected';
+      this._emit('network', { pingMs: this.pingMs, connectionState: this.connectionState });
     }
 
     // Check if host disconnected or heartbeat stalled > 6s -> deterministic host migration
@@ -715,10 +856,15 @@ class SquadMultiplayerController {
     });
     this.unsubs = [];
     this.interpBuffers.clear();
+    this.senderCooldowns.clear();
+    this.senderPrevPos.clear();
+    this.intentDedup = createIntentDeduplicator(INTENT_TTL_MS);
+    this.fxSeen = createIntentDeduplicator(INTENT_TTL_MS);
     if (clearToken) this.clearReconnectToken();
     this.matchId = null;
     this.matchData = null;
     this.isHost = false;
+    this.connectionState = 'connected';
   }
 }
 

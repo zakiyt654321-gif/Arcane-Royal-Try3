@@ -1,6 +1,7 @@
 import { authService } from '../authService.js';
 import { socialService } from '../socialService.js';
 import { squadMultiplayer } from '../squadMultiplayer.js';
+import { DEV_DEMO_ENABLED } from '../firebaseConfig.js';
 import '../apkBridge.js';
 
 type CloudRequestDetail = {
@@ -104,6 +105,24 @@ document.addEventListener('ar:cloud:request', async (ev: Event) => {
         if (result.ok) await socialService.syncMemberProfile();
         break;
       }
+      case 'updateDisplayName':
+        result = (await authService.updateDisplayName(String(p.displayName || ''))) as Record<string, unknown>;
+        if (result.ok) await socialService.syncMemberProfile();
+        break;
+      case 'atomicSpend':
+        result = (await authService.spendCurrencyTransaction({
+          costCoins: Number(p.costCoins || 0),
+          costCrystals: Number(p.costCrystals || 0),
+          costGems: Number(p.costGems || 0),
+          patch: (p.patch as Record<string, unknown>) || {},
+        })) as Record<string, unknown>;
+        break;
+      case 'resetLocalCache':
+        result = authService.resetLocalCacheAndHud() as Record<string, unknown>;
+        break;
+      case 'getDevFlags':
+        result = { ok: true, devDemoEnabled: Boolean(DEV_DEMO_ENABLED) };
+        break;
 
       // --- Friends, Presence, Leaderboard & 4-Slot Squads ---
       case 'refreshFriends':
@@ -160,6 +179,9 @@ document.addEventListener('ar:cloud:request', async (ev: Event) => {
       case 'updatePresence':
         await socialService.updatePresence(String(p.state || 'online'));
         result = { ok: true };
+        break;
+      case 'setSquadPrivacy':
+        result = (await socialService.setSquadPrivacy(Boolean(p.isPrivate))) as Record<string, unknown>;
         break;
       case 'addSandboxTestMate':
         result = (await socialService.addSandboxTestMate(

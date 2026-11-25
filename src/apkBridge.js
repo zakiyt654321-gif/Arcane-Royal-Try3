@@ -66,14 +66,30 @@ export function initApkBridge() {
     },
 
     async purchaseSku(sku) {
+      const cleanSku = String(sku || '').trim();
+      if (!/^[a-zA-Z0-9_.-]{3,64}$/.test(cleanSku)) {
+        return { ok: false, sku: cleanSku, purchaseToken: null, channel: 'invalid' };
+      }
       if (typeof existing.purchaseSku === 'function') {
-        return existing.purchaseSku(sku);
+        const res = await existing.purchaseSku(cleanSku);
+        return {
+          ok: Boolean(res?.ok && res?.purchaseToken),
+          sku: cleanSku,
+          purchaseToken: typeof res?.purchaseToken === 'string' ? res.purchaseToken : null,
+          channel: 'native-bridge',
+        };
       }
       if (window.AndroidBilling && typeof window.AndroidBilling.purchase === 'function') {
-        const res = await window.AndroidBilling.purchase(sku);
-        return typeof res === 'string' ? JSON.parse(res) : res;
+        const raw = await window.AndroidBilling.purchase(cleanSku);
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        return {
+          ok: Boolean(parsed?.ok && parsed?.purchaseToken),
+          sku: cleanSku,
+          purchaseToken: typeof parsed?.purchaseToken === 'string' ? parsed.purchaseToken : null,
+          channel: 'android-billing',
+        };
       }
-      return { ok: false, fallbackWeb: true, sku };
+      return { ok: false, fallbackWeb: true, sku: cleanSku, purchaseToken: null, channel: 'web-preview' };
     },
 
     hapticImpact(style = 'light') {
@@ -135,7 +151,11 @@ export function initApkBridge() {
     },
   };
 
-  window.ArcaneNativeBridge = bridge;
+  Object.defineProperty(window, 'ArcaneNativeBridge', {
+    value: Object.freeze(bridge),
+    writable: false,
+    configurable: false,
+  });
 
   // 3. Hardware Back Button / Browser Back Gesture
   window.addEventListener('popstate', () => {

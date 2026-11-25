@@ -23,7 +23,9 @@ import {
 } from 'firebase/database';
 import {
   getFirebaseServices,
+  isSimBroadcastEnabled,
   SIM_CHANNEL_NAME,
+  SANDBOX_STORAGE_KEYS,
   OperationType,
   handleFirestoreError,
 } from './firebaseConfig.js';
@@ -33,13 +35,13 @@ import {
   sanitizeChampionId,
 } from './authService.js';
 
-const SIM_USERS_KEY = 'arcane_royale_sim_users_v1';
-const SIM_CODES_KEY = 'arcane_royale_sim_friendcodes_v1';
-const SIM_FRIENDS_KEY = 'arcane_royale_sim_friends_v1';
-const SIM_REQUESTS_KEY = 'arcane_royale_sim_requests_v1';
-const SIM_PRESENCE_KEY = 'arcane_royale_sim_presence_v1';
-const SIM_SQUADS_KEY = 'arcane_royale_sim_squads_v1';
-const SIM_INVITES_KEY = 'arcane_royale_sim_invites_v1';
+const SIM_USERS_KEY = SANDBOX_STORAGE_KEYS.users;
+const SIM_CODES_KEY = SANDBOX_STORAGE_KEYS.friendCodes;
+const SIM_FRIENDS_KEY = SANDBOX_STORAGE_KEYS.friends;
+const SIM_REQUESTS_KEY = SANDBOX_STORAGE_KEYS.requests;
+const SIM_PRESENCE_KEY = SANDBOX_STORAGE_KEYS.presence;
+const SIM_SQUADS_KEY = SANDBOX_STORAGE_KEYS.squads;
+const SIM_INVITES_KEY = SANDBOX_STORAGE_KEYS.invites;
 
 export const INVITE_TTL_MS = 45000;
 export const MAX_SQUAD_SIZE = 4;
@@ -69,6 +71,7 @@ function writeJson(key, val) {
 }
 
 function makeChannel() {
+  if (!isSimBroadcastEnabled()) return null;
   if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined') return null;
   try {
     return new BroadcastChannel(SIM_CHANNEL_NAME);
@@ -636,12 +639,35 @@ class SocialServiceImpl {
       roomCode: squadId,
       leaderUid: auth.uid,
       activeMatchId: null,
+      isPrivate: false,
       createdAt: Date.now(),
       members: {
         [auth.uid]: this._buildMemberEntry(auth, 0, true),
       },
     };
     return this._saveAndSubscribeSquad(squad);
+  }
+
+  async setSquadPrivacy(isPrivate) {
+    const auth = authService.getState();
+    if (!this.currentSquad || this.currentSquad.leaderUid !== auth.uid) {
+      return { ok: false, error: 'Only the Squad Leader can change privacy.' };
+    }
+    const nextVal = Boolean(isPrivate);
+    const { rtdb } = getFirebaseServices();
+    if (rtdb && !auth.sandboxAuth) {
+      await rtdbUpdate(rtdbRef(rtdb, `squads/${this.currentSquadId}`), { isPrivate: nextVal }).catch(() => null);
+      return { ok: true, isPrivate: nextVal };
+    }
+    const squads = readJson(SIM_SQUADS_KEY, {});
+    const sq = squads[this.currentSquadId] || this.currentSquad;
+    sq.isPrivate = nextVal;
+    squads[this.currentSquadId] = sq;
+    writeJson(SIM_SQUADS_KEY, squads);
+    this.currentSquad = sq;
+    this._broadcast('squad:update', { squadId: this.currentSquadId });
+    this._emit();
+    return { ok: true, isPrivate: nextVal };
   }
 
   async _saveAndSubscribeSquad(squad) {
@@ -723,6 +749,10 @@ class SocialServiceImpl {
               resolve({ ok: false, error: `Squad room ${code} not found.` });
               return;
             }
+            if (sq.isPrivate && sq.leaderUid !== auth.uid && !this.friends.some((f) => f.uid === sq.leaderUid)) {
+              resolve({ ok: false, error: 'This squad is set to Friends Only.' });
+              return;
+            }
             const count = Object.keys(sq.members).length;
             if (count >= MAX_SQUAD_SIZE && !sq.members[auth.uid]) {
               resolve({ ok: false, error: 'Squad is already full (4/4).' });
@@ -745,6 +775,9 @@ class SocialServiceImpl {
     const squads = readJson(SIM_SQUADS_KEY, {});
     const target = squads[code];
     if (!target || !target.members) return { ok: false, error: `Squad room ${code} not found.` };
+    if (target.isPrivate && target.leaderUid !== auth.uid && !this.friends.some((f) => f.uid === target.leaderUid)) {
+      return { ok: false, error: 'This squad is set to Friends Only.' };
+    }
     const memberKeys = Object.keys(target.members);
     if (memberKeys.length >= MAX_SQUAD_SIZE && !target.members[auth.uid]) {
       return { ok: false, error: 'Squad is already full (4/4).' };

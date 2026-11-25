@@ -3222,14 +3222,19 @@
         color: #7dd3fc;
         font-variant-numeric: tabular-nums;
       }
-      html[data-device-profile="mobile-portrait"] #hud-editor-toolbar {
-        flex-wrap: wrap;
-        gap: 4px;
-      }
-      html[data-device-profile="mobile-portrait"] #hud-editor-inspector {
-        top: calc(max(6px, env(safe-area-inset-top, 0px)) + 74px);
-        flex-wrap: wrap;
-        gap: 6px;
+      @media (orientation: portrait), (max-width: 640px) {
+        #hud-editor-toolbar {
+          flex-wrap: wrap;
+          gap: 4px;
+          width: calc(100vw - 12px);
+          z-index: 276;
+        }
+        #hud-editor-inspector {
+          top: calc(max(6px, env(safe-area-inset-top, 0px)) + 96px);
+          flex-wrap: wrap;
+          gap: 6px;
+          width: calc(100vw - 12px);
+        }
       }
 
       /* ==========================================
@@ -4965,6 +4970,612 @@
         left: max(8px, env(safe-area-inset-left));
         width: 112px;
       }
+
+      /* ==============================================================
+         DE-CRAMPED DUAL-ORIENTATION LOBBY SHELL (100dvh, ZERO OVERLAP)
+         Supports 390x844, 360x640, 844x390, and 760x320 cleanly
+         ============================================================== */
+      #lobby-screen {
+        display: grid !important;
+        grid-template-rows: 42px minmax(0, 1fr) 46px !important;
+        gap: 6px !important;
+        padding: max(4px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px)) max(6px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px)) !important;
+      }
+      .lobby-topbar {
+        height: 42px !important;
+        max-height: 44px !important;
+        min-height: 36px !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        padding: 0 8px !important;
+        overflow: hidden;
+      }
+      .lobby-currency-strip {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        font-size: clamp(10.5px, 2.4vw, 12px) !important;
+        font-weight: 800;
+        white-space: nowrap !important;
+        flex: 0 1 auto !important;
+        width: auto !important;
+        border-top: none !important;
+        padding-top: 0 !important;
+        order: 0 !important;
+        min-width: 0;
+      }
+      .lobby-curr-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .lobby-topbar-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 4px !important;
+        flex-shrink: 0;
+      }
+      .lobby-status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #fbbf24;
+        box-shadow: 0 0 8px rgba(251, 191, 36, 0.75);
+        flex-shrink: 0;
+        display: inline-block;
+        margin-right: 2px;
+      }
+      .lobby-status-dot.online { background: #34d399; box-shadow: 0 0 8px rgba(52, 211, 153, 0.8); }
+      .lobby-status-dot.offline { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.8); }
+      .lobby-icon-btn {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        min-height: 30px !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+      }
+      .lobby-icon-btn.muted-active {
+        border-color: rgba(248, 113, 113, 0.65);
+        background: rgba(127, 29, 29, 0.45);
+        color: #fca5a5;
+      }
+
+      /* Landscape 3-Column Budget: Left (3 compact rows) | Center (Hero Stage) | Right (PLAY + Quick Tools) */
+      .lobby-shell-grid {
+        display: grid !important;
+        grid-template-columns: minmax(0, 31fr) minmax(0, 41fr) minmax(0, 28fr) !important;
+        gap: 8px !important;
+        min-height: 0 !important;
+        height: 100% !important;
+        align-items: stretch !important;
+      }
+      .lobby-left-panel {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        overflow: hidden !important;
+        min-height: 0 !important;
+      }
+      .lobby-quick-pills-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+        gap: 6px;
+        width: 100%;
+        flex-shrink: 0;
+      }
+      .lobby-compact-pill {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        padding: 6px 9px;
+        border-radius: 11px;
+        background: rgba(12, 19, 36, 0.88);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        color: #f8fafc;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 0.14s ease, transform 0.12s ease;
+        min-width: 0;
+        flex-shrink: 0;
+      }
+      .lobby-compact-pill:hover { border-color: rgba(56, 189, 248, 0.65); }
+      .lobby-compact-pill:active { transform: scale(0.98); }
+      .lobby-profile-pill-main {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+        flex: 1;
+      }
+      .lobby-profile-pill-top {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+      }
+      .lobby-profile-pill-xp {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 9.5px;
+        font-weight: 800;
+        color: #fde68a;
+        white-space: nowrap;
+      }
+      .lobby-mini-xp-track {
+        flex: 1;
+        height: 4px;
+        border-radius: 99px;
+        background: rgba(30, 41, 59, 0.95);
+        overflow: hidden;
+      }
+      .lobby-mini-xp-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #f59e0b, #fde047);
+      }
+      .missions-pill-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: #090d16;
+        font-size: 10px;
+        font-weight: 900;
+        flex-shrink: 0;
+      }
+      .missions-pill-badge.hidden { display: none !important; }
+
+      /* Compact Single-Row Squad Pill */
+      .squad-compact-card {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 6px 9px;
+        border-radius: 11px;
+        background: rgba(12, 19, 36, 0.88);
+        border: 1px solid rgba(168, 85, 247, 0.36);
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .squad-compact-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        font-size: 10px;
+        font-weight: 900;
+        color: #e2e8f0;
+        white-space: nowrap;
+      }
+      .squad-mini-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-height: 28px;
+      }
+      .squad-mini-avatar-wrap {
+        position: relative;
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        background: rgba(15, 23, 42, 0.92);
+        border: 1px solid rgba(148, 163, 184, 0.32);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .squad-mini-avatar-wrap.is-ready { border-color: #34d399; }
+      .squad-mini-avatar-wrap img {
+        width: 22px;
+        height: 22px;
+        object-fit: contain;
+      }
+      .squad-mini-crown {
+        position: absolute;
+        top: -5px;
+        left: -4px;
+        font-size: 9px;
+        line-height: 1;
+      }
+      .squad-mini-dot {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #fbbf24;
+        border: 1px solid #090d16;
+      }
+      .squad-mini-dot.ready { background: #34d399; }
+      .squad-mini-add {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        border: 1px dashed rgba(192, 132, 252, 0.55);
+        background: rgba(88, 28, 135, 0.18);
+        color: #d8b4fe;
+        font-size: 13px;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      /* Center Hero Stage */
+      .lobby-center-stage {
+        gap: 3px !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden;
+      }
+      .showcase-carousel-row { gap: 10px !important; }
+      .showcase-avatar-ring {
+        width: clamp(92px, 31dvh, 136px) !important;
+        height: clamp(92px, 31dvh, 136px) !important;
+        overflow: visible !important;
+        padding: 4px;
+      }
+      .hero-portrait-img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        display: block;
+      }
+      #showcase-hero-name { font-size: clamp(15px, 3.8dvh, 20px) !important; margin: 0; line-height: 1.1; }
+      .showcase-meta-line { font-size: clamp(10px, 2.5dvh, 12px) !important; }
+      #showcase-hero-art { font-size: 10.5px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+      /* Right Action Dock */
+      .lobby-right-dock {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        padding: 0 !important;
+      }
+      .lobby-quick-tools-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .lobby-quick-tool-btn {
+        min-height: 36px;
+        padding: 5px 7px;
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(15, 23, 42, 0.88);
+        color: #e2e8f0;
+        font-size: clamp(10.5px, 2.5vw, 12px);
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .lobby-quick-tool-btn:hover { border-color: rgba(56, 189, 248, 0.65); }
+      .lobby-play-cta {
+        min-height: clamp(46px, 13dvh, 58px) !important;
+        padding: 8px 12px !important;
+        font-size: clamp(15px, 4dvh, 19px) !important;
+        white-space: nowrap !important;
+      }
+
+      /* 5-Tab Bottom Navigation Bar (<= 48px, >= 72px tap width on 360px phones, zero wrapping) */
+      #lobby-bottom-nav {
+        height: 46px;
+        max-height: 48px;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 4px;
+        padding: 3px 5px;
+        background: rgba(10, 16, 32, 0.94);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 12px;
+        align-items: center;
+      }
+      .lobby-nav-btn {
+        height: 38px;
+        border-radius: 9px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: #94a3b8;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1px;
+        padding: 2px;
+        cursor: pointer;
+        position: relative;
+        min-width: 0;
+        transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+      }
+      .lobby-nav-btn:hover { color: #f8fafc; background: rgba(30, 41, 59, 0.65); }
+      .lobby-nav-btn.active {
+        color: #fde68a;
+        background: rgba(245, 158, 11, 0.14);
+        border-color: rgba(251, 191, 36, 0.45);
+      }
+      .lobby-nav-icon { font-size: 14px; line-height: 1.05; }
+      .lobby-nav-label {
+        font-size: clamp(9.5px, 2.5vw, 11px);
+        font-weight: 800;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+
+      /* COMPACT LANDSCAPE OVERRIDE (e.g. 760x320 Chrome with address bar) */
+      @media (max-height: 360px) {
+        html[data-device-profile="mobile-landscape"] #lobby-screen {
+          grid-template-rows: 38px minmax(0, 1fr) 42px !important;
+          gap: 4px !important;
+          padding: 3px max(8px, env(safe-area-inset-right, 0px)) 4px max(8px, env(safe-area-inset-left, 0px)) !important;
+        }
+        html[data-device-profile="mobile-landscape"] .lobby-topbar { height: 38px !important; }
+        html[data-device-profile="mobile-landscape"] #lobby-bottom-nav { height: 42px; }
+        html[data-device-profile="mobile-landscape"] .lobby-nav-btn { height: 34px; }
+        html[data-device-profile="mobile-landscape"] .lobby-compact-pill { padding: 4px 7px; }
+        html[data-device-profile="mobile-landscape"] .squad-compact-card { padding: 4px 7px; gap: 3px; }
+        html[data-device-profile="mobile-landscape"] .showcase-avatar-ring { width: 92px !important; height: 92px !important; }
+        html[data-device-profile="mobile-landscape"] #showcase-hero-art { display: none; }
+        html[data-device-profile="mobile-landscape"] .lobby-play-cta { min-height: 44px !important; }
+        html[data-device-profile="mobile-landscape"] .lobby-quick-tool-btn { min-height: 32px; }
+      }
+
+      /* PORTRAIT LOBBY OVERRIDES (390x844 & Compact 360x640 Balanced Stack) */
+      html[data-device-profile="mobile-portrait"] #lobby-screen {
+        grid-template-rows: 42px minmax(0, 1fr) 46px !important;
+        padding: max(4px, env(safe-area-inset-top, 0px)) 8px max(4px, env(safe-area-inset-bottom, 0px)) 8px !important;
+        gap: 6px !important;
+      }
+      html[data-device-profile="mobile-portrait"] #lobby-bottom-nav {
+        margin: 0 -8px;
+        padding: 2px 0;
+        gap: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        height: 46px;
+        max-height: 48px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-nav-btn {
+        border-radius: 6px;
+        height: 40px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-currency-strip {
+        gap: 4px !important;
+        font-size: 10.5px !important;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-curr-pill {
+        padding: 2px 5px;
+        gap: 2px;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-shell-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-left-panel {
+        order: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        flex: 0 0 auto !important;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-center-stage {
+        order: 2 !important;
+        flex: 1 1 auto !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        min-height: 0 !important;
+      }
+      html[data-device-profile="mobile-portrait"] .showcase-avatar-ring {
+        width: clamp(112px, 23dvh, 186px) !important;
+        height: clamp(112px, 23dvh, 186px) !important;
+      }
+      html[data-device-profile="mobile-portrait"] #showcase-hero-name {
+        font-size: clamp(17px, 3dvh, 22px) !important;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-right-dock {
+        order: 3 !important;
+        flex: 0 0 auto !important;
+        gap: 6px !important;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-play-cta {
+        order: 1;
+        min-height: clamp(46px, 7.2dvh, 54px) !important;
+      }
+      html[data-device-profile="mobile-portrait"] .lobby-quick-tools-row {
+        order: 2;
+      }
+      @media (max-height: 670px) {
+        html[data-device-profile="mobile-portrait"] .lobby-compact-pill { padding: 5px 8px; }
+        html[data-device-profile="mobile-portrait"] .squad-compact-card { padding: 5px 8px; }
+        html[data-device-profile="mobile-portrait"] .showcase-avatar-ring { width: 118px !important; height: 118px !important; }
+        html[data-device-profile="mobile-portrait"] .lobby-quick-tool-btn { min-height: 32px; }
+      }
+
+      /* Daily Missions Drawer Modal */
+      #missions-modal {
+        z-index: 218;
+        background: rgba(4, 7, 15, 0.88);
+      }
+      .missions-drawer-shell {
+        width: min(520px, 94vw);
+        max-height: 88dvh;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 16px;
+        background: linear-gradient(180deg, rgba(12, 19, 36, 0.98), rgba(7, 11, 24, 0.98));
+        border: 1.5px solid rgba(56, 189, 248, 0.35);
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+      }
+      .missions-drawer-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow-y: auto;
+        min-height: 0;
+        padding-right: 2px;
+      }
+
+      /* Upgraded Dedicated Account Modal */
+      .acct-modal-shell {
+        width: min(520px, 95vw);
+        max-height: 90dvh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 16px;
+        background: linear-gradient(180deg, rgba(12, 19, 36, 0.98), rgba(7, 11, 24, 0.98));
+        border: 1.5px solid rgba(251, 191, 36, 0.35);
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      }
+      .acct-identity-card {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        background: rgba(15, 23, 42, 0.88);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 12px;
+        padding: 10px;
+      }
+      .acct-portrait-img {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: radial-gradient(circle, rgba(30, 41, 59, 0.85), rgba(2, 6, 23, 0.9));
+        border: 1px solid rgba(251, 191, 36, 0.45);
+      }
+      .acct-career-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+      html[data-device-profile="mobile-portrait"] .acct-career-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .acct-stat-tile {
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 10px;
+        padding: 7px 6px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .acct-stat-tile strong {
+        font-size: 14px;
+        font-weight: 900;
+        color: #f8fafc;
+        font-variant-numeric: tabular-nums;
+      }
+      .acct-stat-tile span {
+        font-size: 9.5px;
+        font-weight: 700;
+        color: #94a3b8;
+        white-space: nowrap;
+      }
+
+      /* Leaderboard Pinned Current Player Row */
+      #lb-self-pinned {
+        position: sticky;
+        bottom: 0;
+        margin-top: 8px;
+        padding-top: 6px;
+        background: linear-gradient(180deg, rgba(8, 13, 28, 0) 0%, rgba(8, 13, 28, 0.96) 24%);
+      }
+      #lb-self-pinned .lb-row {
+        border: 1.5px solid rgba(251, 191, 36, 0.7) !important;
+        background: rgba(120, 53, 15, 0.35) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      }
+
+      /* In-Match Ping Pill & Reconnecting Banner */
+      #match-ping-pill {
+        position: absolute;
+        top: max(8px, env(safe-area-inset-top));
+        left: calc(max(8px, env(safe-area-inset-left)) + 286px);
+        z-index: 66;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: rgba(6, 10, 24, 0.82);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        color: #e2e8f0;
+        font-size: 10px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      html[data-device-profile="mobile-portrait"] #match-ping-pill {
+        top: calc(max(8px, env(safe-area-inset-top)) + 168px);
+        left: max(8px, env(safe-area-inset-left));
+      }
+      #reconnect-banner {
+        position: absolute;
+        top: calc(max(8px, env(safe-area-inset-top)) + 44px);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 92;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(120, 53, 15, 0.92);
+        border: 1.5px solid #fbbf24;
+        color: #fef3c7;
+        font-size: 11.5px;
+        font-weight: 900;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+
+      /* Audio Sync Test Flash */
+      #btn-test-audio-sync.flash-sync {
+        background: linear-gradient(135deg, #f59e0b, #fde047) !important;
+        color: #090d16 !important;
+        border-color: #fef08a !important;
+        box-shadow: 0 0 22px rgba(251, 191, 36, 0.85);
+        transform: scale(1.03);
+      }
     </style>
   </head>
   <body>
@@ -5032,6 +5643,8 @@
         </div>
 
         <div id="squad-hud-panel" class="hidden" aria-label="Squad status"></div>
+        <div id="match-ping-pill" class="hidden" aria-label="Connection latency">🟢 28ms</div>
+        <div id="reconnect-banner" class="hidden" role="status" aria-live="polite">🔄 Reconnecting to squad...</div>
         <div id="quick-comms-wheel" class="hidden" role="menu" aria-label="Tactical Quick Comms">
           <button type="button" class="comm-wheel-btn" data-ar-click="sendQuickComm" data-ar-arg="enemy">⚠️ Enemy Here!</button>
           <button type="button" class="comm-wheel-btn" data-ar-click="sendQuickComm" data-ar-arg="heal">✚ Need Healing!</button>
@@ -5249,73 +5862,66 @@
         </div>
       </div>
 
-      <!-- LOBBY SCREEN (ZERO-SCROLL 100DVH MOBILE LANDSCAPE APP SHELL) -->
+      <!-- LOBBY SCREEN (DE-CRAMPED 100DVH DUAL-ORIENTATION APP SHELL) -->
       <div id="lobby-screen" class="overlay-screen">
-        <!-- Compact Top Bar (44px max height) -->
+        <!-- Slim Top Header (<= 48px): Currencies, Status Dot, Quick Mute, Settings -->
         <header class="lobby-topbar">
-          <div class="lobby-profile-cluster" role="button" tabindex="0" data-ar-click="openAccountModal" title="Account &amp; Friend Code" aria-label="Open Account Profile">
-            <strong id="lobby-player-name" class="lobby-brand-name">Champion</strong>
-            <span id="lobby-friend-code-tag" class="lobby-code-chip">ARC-XXXX</span>
-            <div class="lvl-pill" title="Player Level & Arcane Progression">
-              <div class="lvl-pill-top">
-                <span>⭐ <span id="lobby-level">LVL 1</span></span>
-                <span id="lobby-xp-text" style="font-size: 9.5px; color: #cbd5e1; font-weight: 700;">0/100 XP</span>
-              </div>
-              <div class="xp-track"><div id="lobby-xp-fill" class="xp-fill"></div></div>
-            </div>
-          </div>
-
           <div class="lobby-currency-strip" aria-label="Player currencies">
-            <span class="lobby-curr-item" title="Coins">🪙 <span id="lobby-gold">0</span></span>
-            <span class="lobby-curr-sep" aria-hidden="true">·</span>
-            <span class="lobby-curr-item" title="Astral Crystals">🔮 <span id="lobby-crystals">0</span></span>
-            <span class="lobby-curr-sep" aria-hidden="true">·</span>
-            <span class="lobby-curr-item" title="Gems">💎 <span id="lobby-gems">0</span></span>
-            <span class="lobby-curr-sep" aria-hidden="true">·</span>
-            <span class="lobby-curr-item" title="Spendable XP">⚡ <span id="lobby-spendable-xp">0</span></span>
+            <span class="lobby-curr-pill" title="Coins">🪙 <span id="lobby-gold">0</span></span>
+            <span class="lobby-curr-pill" title="Astral Crystals">🔮 <span id="lobby-crystals">0</span></span>
+            <span class="lobby-curr-pill" title="Gems">💎 <span id="lobby-gems">0</span></span>
+            <span id="lobby-spendable-xp" class="hidden">0</span>
           </div>
 
           <div class="lobby-topbar-actions">
-            <button type="button" id="btn-friends" class="lobby-icon-btn" data-ar-click="openFriendsModal" title="Friends &amp; Squads" aria-label="Open Friends and Squads">👥<span id="friends-unread-badge" class="unread-dot-badge hidden">0</span></button>
-            <button type="button" id="btn-leaderboard" class="lobby-icon-btn" data-ar-click="openLeaderboard" data-ar-arg="wins" title="Global Top-50 Leaderboard" aria-label="Open Global Leaderboard">🏆</button>
-            <button type="button" id="btn-combat-guide" class="lobby-icon-btn" data-ar-click="openCombatGuide" title="Combat Guide" aria-label="Open Combat Guide">📜</button>
+            <span id="lobby-status-dot" class="lobby-status-dot" title="Local Sandbox Mode" aria-label="Connection status"></span>
+            <button type="button" id="btn-quick-mute" class="lobby-icon-btn" data-ar-click="toggleQuickMute" title="Quick Audio Mute" aria-label="Toggle audio mute" aria-pressed="false">🔊</button>
             <button type="button" id="btn-settings" class="lobby-icon-btn" data-ar-click="openSettings" title="Settings" aria-label="Open Settings">⚙️</button>
             <button type="button" id="btn-operator" class="lobby-icon-btn" data-ar-click="triggerOperatorAccess" title="Demo Supplies" aria-label="Open Demo Supplies">✨</button>
           </div>
         </header>
 
-        <!-- Clean 3-Zone Landscape Grid: 30% Missions/Squad/Stats | 40% Showcase | 30% Action Dock -->
+        <!-- Dual-Orientation Body: Landscape 3-Col | Portrait Balanced Stack -->
         <main class="lobby-shell-grid">
-          <!-- Left Panel (30%): 4-Slot Squad Roster + Daily Missions + Career Stats -->
-          <section class="lobby-left-panel" aria-label="Squad, Daily Missions and Career Stats">
-            <div id="squad-roster-strip" class="squad-roster-card" aria-label="Friend Squad Roster">
-              <div class="squad-roster-head">
+          <!-- Left Column (<= 3 Compact Pills): Profile + Daily Missions + Single-Row Squad Pill -->
+          <section class="lobby-left-panel" aria-label="Profile, Daily Missions and Squad">
+            <button type="button" id="lobby-profile-pill" class="lobby-compact-pill" data-ar-click="openAccountModal" aria-label="Open Account Profile">
+              <div class="lobby-profile-pill-main">
+                <div class="lobby-profile-pill-top">
+                  <strong id="lobby-player-name" class="lobby-brand-name">Champion</strong>
+                  <span id="lobby-friend-code-tag" class="lobby-code-chip">ARC-XXXX</span>
+                </div>
+                <div class="lobby-profile-pill-xp">
+                  <span>⭐ <span id="lobby-level">LVL 1</span></span>
+                  <div class="lobby-mini-xp-track"><div id="lobby-xp-fill" class="lobby-mini-xp-fill"></div></div>
+                  <span id="lobby-xp-text" style="font-size: 9px; color: #cbd5e1;">0/100</span>
+                </div>
+              </div>
+            </button>
+
+            <div class="lobby-quick-pills-row">
+              <button type="button" id="btn-open-missions" class="lobby-compact-pill" data-ar-click="openMissionsModal" aria-label="Open Daily Missions">
+                <div class="lobby-profile-pill-main">
+                  <span style="font-size: 11px; font-weight: 900; color: #f8fafc; white-space: nowrap;">📜 Missions</span>
+                  <span id="missions-pill-sub" style="font-size: 9.5px; font-weight: 700; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">0/3 Ready</span>
+                </div>
+                <span id="missions-unread-badge" class="missions-pill-badge hidden">0</span>
+              </button>
+              <button type="button" id="btn-open-ranks" class="lobby-compact-pill" data-ar-click="openLeaderboard" aria-label="Open Global Top-50 Leaderboard" style="justify-content: center; border-color: rgba(251, 191, 36, 0.34);">
+                <span style="font-size: 11px; font-weight: 900; color: #fde68a; white-space: nowrap;">🏆 Ranks</span>
+              </button>
+            </div>
+
+            <div id="squad-roster-strip" class="squad-compact-card" role="button" tabindex="0" data-ar-click="openFriendsModal" aria-label="Open Squad and Friends">
+              <div class="squad-compact-head">
                 <span id="squad-header-label">SQUAD (1/4)</span>
                 <button type="button" id="btn-copy-squad-code" class="squad-code-pill" data-ar-click="copySquadRoomCode" title="Copy Room Code">SQ-XXXX 📋</button>
               </div>
-              <div id="squad-slots-grid" class="squad-slots-grid"></div>
-              <div id="squad-actions-row" class="squad-actions-row hidden">
-                <button type="button" id="btn-squad-ready" class="squad-mini-btn ready-on" data-ar-click="toggleSquadReady">✓ READY</button>
-                <button type="button" id="btn-squad-leave" class="squad-mini-btn" data-ar-click="leaveCurrentSquad" style="color: #fca5a5;">Leave</button>
-              </div>
-            </div>
-            <div id="daily-missions-panel" class="daily-missions-panel">
-              <div class="daily-missions-head">
-                <span>Daily Missions</span>
-                <button type="button" id="btn-reroll-mission" class="dm-reroll-btn" data-ar-click="rerollDailyMissionAd" aria-label="Watch ad to reroll a daily mission">📺 Reroll</button>
-              </div>
-              <div id="daily-missions-list" class="daily-missions-list"></div>
-            </div>
-            <div class="lobby-career-strip" role="group" aria-label="Career statistics">
-              <span class="lobby-career-stat"><strong id="career-wins">0</strong> Wins</span>
-              <span aria-hidden="true">·</span>
-              <span class="lobby-career-stat"><strong id="career-kills">0</strong> Elims</span>
-              <span aria-hidden="true">·</span>
-              <span class="lobby-career-stat"><strong id="career-matches">0</strong> Matches</span>
+              <div id="squad-slots-grid" class="squad-mini-row"></div>
             </div>
           </section>
 
-          <!-- Center Stage (40%): Open Uncluttered Champion Showcase -->
+          <!-- Center Stage: Unobstructed Champion Showcase -->
           <section id="champion-stage" class="lobby-center-stage" aria-label="Champion Showcase">
             <div class="showcase-carousel-row">
               <button type="button" id="btn-prev-hero" class="showcase-arrow-btn" data-ar-click="cycleLobbyHero" data-ar-arg="-1" aria-label="Previous champion">&lsaquo;</button>
@@ -5343,17 +5949,11 @@
             </div>
           </section>
 
-          <!-- Right Action Dock (30%): Thumb-Aligned Actions + Anchored PLAY -->
+          <!-- Right Action Dock: Primary PLAY CTA + Quick Guide & HUD Editor -->
           <aside class="lobby-right-dock" aria-label="Primary actions">
-            <div class="lobby-dock-secondary">
-              <button type="button" id="btn-open-shop" class="lobby-dock-btn" data-ar-click="openShop" data-ar-arg="characters">
-                <span>🛒 ARCANE SHOP</span>
-                <span class="lobby-dock-btn-sub">Heroes · Runes</span>
-              </button>
-              <button type="button" id="btn-open-upgrades" class="lobby-dock-btn" data-ar-click="openStatsUpgrades">
-                <span>⚡ FIGHTER UPGRADES</span>
-                <span class="lobby-dock-btn-sub">Stats · Career</span>
-              </button>
+            <div class="lobby-quick-tools-row">
+              <button type="button" id="btn-combat-guide" class="lobby-quick-tool-btn" data-ar-click="openCombatGuide" title="Combat Guide">📖 Guide</button>
+              <button type="button" id="btn-lobby-hud-editor" class="lobby-quick-tool-btn" data-ar-click="openHudEditor" title="Custom HUD Layout">🎛️ HUD</button>
             </div>
             <button type="button" id="btn-lobby-play" class="lobby-play-cta" data-ar-click="startBattle">
               <span>⚔️</span>
@@ -5361,6 +5961,48 @@
             </button>
           </aside>
         </main>
+
+        <!-- 5-Tab Bottom Navigation Bar (<= 48px, >= 72px tap width on 360px phones) -->
+        <nav id="lobby-bottom-nav" aria-label="Primary lobby navigation">
+          <button type="button" id="nav-tab-heroes" class="lobby-nav-btn active" data-ar-click="lobbyNavTab" data-ar-arg="heroes">
+            <span class="lobby-nav-icon">🧙</span>
+            <span class="lobby-nav-label">Heroes</span>
+          </button>
+          <button type="button" id="nav-tab-shop" class="lobby-nav-btn" data-ar-click="lobbyNavTab" data-ar-arg="shop">
+            <span class="lobby-nav-icon">🛒</span>
+            <span class="lobby-nav-label">Shop</span>
+          </button>
+          <button type="button" id="nav-tab-upgrades" class="lobby-nav-btn" data-ar-click="lobbyNavTab" data-ar-arg="upgrades">
+            <span class="lobby-nav-icon">⚡</span>
+            <span class="lobby-nav-label">Upgrades</span>
+          </button>
+          <button type="button" id="nav-tab-social" class="lobby-nav-btn" data-ar-click="lobbyNavTab" data-ar-arg="social">
+            <span class="lobby-nav-icon">👥</span>
+            <span class="lobby-nav-label">Social</span>
+            <span id="friends-unread-badge" class="unread-dot-badge hidden">0</span>
+          </button>
+          <button type="button" id="nav-tab-account" class="lobby-nav-btn" data-ar-click="lobbyNavTab" data-ar-arg="account">
+            <span class="lobby-nav-icon">👤</span>
+            <span class="lobby-nav-label">Account</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- DAILY MISSIONS DRAWER MODAL (DEDICATED SCROLLABLE DRAWER) -->
+      <div id="missions-modal" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="missions-modal-title">
+        <div class="missions-drawer-shell">
+          <div class="auth-gate-head">
+            <div>
+              <h2 id="missions-modal-title" style="font-size: 16px; font-weight: 900; color: #fde68a; margin: 0;">🎯 DAILY MISSIONS</h2>
+              <div style="font-size: 10.5px; color: #94a3b8; font-weight: 700;">Resets Daily · <span id="daily-missions-reset">Today</span></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button type="button" id="btn-reroll-mission" class="dm-reroll-btn" data-ar-click="rerollDailyMissionAd" aria-label="Watch ad to reroll a daily mission">📺 Reroll</button>
+              <button type="button" class="modal-back-btn" style="width: auto; min-height: 34px; padding: 0 12px;" data-ar-click="closeMissionsModal" aria-label="Close Daily Missions">✕</button>
+            </div>
+          </div>
+          <div id="daily-missions-list" class="missions-drawer-body"></div>
+        </div>
       </div>
 
       <!-- SHOP OVERLAY (SPACIOUS LANDSCAPE SPLIT-PANE MODAL) -->
@@ -5655,6 +6297,26 @@
                 </div>
                 <span class="settings-tile-desc">Tactile vibration pulses on spell hits and launches.</span>
               </div>
+
+              <div class="settings-tile span-2" style="border-color: rgba(168, 85, 247, 0.38);">
+                <div class="settings-tile-head">
+                  <label class="settings-tile-label" for="toggle-bt-early">🎧 Bluetooth Early-Trigger Mode</label>
+                  <input type="checkbox" id="toggle-bt-early" style="accent-color: #a855f7;" data-ar-change="onBtEarlyTriggerToggle">
+                </div>
+                <span class="settings-tile-desc">Fires attack, spell, and dash audio immediately on finger press (frame 0 anticipation) to mask wireless earbud delay.</span>
+              </div>
+
+              <div class="settings-tile span-2" style="border-color: rgba(56, 189, 248, 0.35);">
+                <div class="settings-tile-head">
+                  <label class="settings-tile-label" for="slider-audio-offset">⏱️ Audio Cue Sync Offset</label>
+                  <span id="audio-offset-val" style="font-size: 12px; font-weight: 800; color: #7dd3fc;">0 ms</span>
+                </div>
+                <span class="settings-tile-desc">Fine-tune scheduled audio cues (-150 ms to +150 ms). <span id="audio-latency-readout" style="color: #94a3b8; font-weight: 700;">HW Latency: --</span></span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="range" min="-150" max="150" step="10" value="0" id="slider-audio-offset" class="settings-slider" style="flex: 1;" data-ar-input="onAudioOffsetChange">
+                  <button type="button" id="btn-test-audio-sync" class="btn-lobby-sec" data-ar-click="testAudioSync" style="padding: 6px 12px; font-size: 11.5px; white-space: nowrap; border-color: rgba(251, 191, 36, 0.5); color: #fde68a;">🔔 Test Sync</button>
+                </div>
+              </div>
             </div>
 
             <!-- Controls Tab -->
@@ -5747,7 +6409,7 @@
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
                   <button type="button" id="btn-cloud-manage" class="btn-lobby-sec" data-ar-click="openAccountModal" style="justify-content: center; border-color: rgba(168, 85, 247, 0.5); color: #e9d5ff;">👤 Account</button>
                   <button type="button" id="btn-cloud-sync-now" class="btn-lobby-sec" data-ar-click="cloudSyncNow" style="justify-content: center; border-color: rgba(52, 211, 153, 0.45); color: #6ee7b7;">↻ Sync Now</button>
-                  <button type="button" id="btn-cloud-signout" class="btn-lobby-sec" data-ar-click="cloudSignOut" style="justify-content: center; border-color: rgba(248, 113, 113, 0.45); color: #fca5a5;">🚪 Sign Out</button>
+                  <button type="button" id="btn-cloud-signout" class="btn-lobby-sec" data-ar-click="requestCloudSignOut" style="justify-content: center; border-color: rgba(248, 113, 113, 0.45); color: #fca5a5;">🚪 Sign Out</button>
                 </div>
               </div>
 
@@ -5799,40 +6461,83 @@
               <button type="button" id="tab-lb-elims" class="split-tab-btn" data-ar-click="switchLeaderboardTab" data-ar-arg="eliminations" role="tab" aria-selected="false">⚔️ Eliminations</button>
             </div>
           </aside>
-          <div class="split-modal-pane">
-            <div id="leaderboard-list" class="lb-list" role="list" aria-label="Top 50 players"></div>
+          <div class="split-modal-pane" style="display: flex; flex-direction: column;">
+            <div id="leaderboard-list" class="lb-list" style="flex: 1 1 auto;" role="list" aria-label="Top 50 players"></div>
+            <div id="lb-self-pinned" aria-label="Your current rank"></div>
           </div>
         </div>
       </div>
 
-      <!-- ACCOUNT MODAL (FRIEND CODE + GUEST-TO-EMAIL UPGRADE + SIGN OUT) -->
-      <div id="account-modal" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="account-modal-title" style="z-index: 225; background: rgba(2, 6, 23, 0.88);">
-        <div class="auth-gate-shell" style="max-width: 420px;">
+      <!-- DEDICATED ACCOUNT TAB MODAL (SINGLE SOURCE OF TRUTH) -->
+      <div id="account-modal" class="overlay-screen hidden" role="dialog" aria-modal="true" aria-labelledby="account-modal-title" style="z-index: 225; background: rgba(2, 6, 23, 0.9);">
+        <div class="acct-modal-shell">
           <div class="auth-gate-head">
-            <h2 id="account-modal-title" style="font-size: 16px; font-weight: 900; color: #fde68a;">ARCANE ACCOUNT</h2>
-            <button type="button" class="modal-back-btn" style="width: auto; min-height: 34px; padding: 0 12px;" data-ar-click="closeAccountModal">✕</button>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; background: rgba(15,23,42,0.88); border: 1px solid rgba(56,189,248,0.35); border-radius: 10px; padding: 10px;">
             <div>
-              <div id="acct-display-name" style="font-size: 14px; font-weight: 900; color: #f8fafc;">Champion</div>
-              <div id="acct-provider-badge" style="font-size: 10.5px; font-weight: 700; color: #94a3b8;">Guest Account</div>
+              <h2 id="account-modal-title" style="font-size: 16px; font-weight: 900; color: #fde68a; margin: 0;">👤 ARCANE ACCOUNT</h2>
+              <div id="acct-last-synced" style="font-size: 10px; font-weight: 700; color: #94a3b8;">Last Synced: Not synced yet</div>
             </div>
-            <button type="button" id="btn-copy-friend-code" class="squad-code-pill" data-ar-click="copyMyFriendCode" style="font-size: 11px; padding: 6px 10px;">ARC-XXXX 📋</button>
+            <button type="button" class="modal-back-btn" style="width: auto; min-height: 34px; padding: 0 12px;" data-ar-click="closeAccountModal" aria-label="Close Account">✕</button>
           </div>
 
-          <div id="acct-upgrade-box" class="hidden" style="background: rgba(168,85,247,0.12); border: 1px solid rgba(192,132,252,0.45); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+          <!-- Identity Header -->
+          <div class="acct-identity-card">
+            <img id="acct-portrait-img" class="acct-portrait-img" alt="Champion portrait" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                <strong id="acct-display-name" style="font-size: 15px; font-weight: 900; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Champion</strong>
+                <span id="acct-provider-badge" class="lobby-code-chip" style="font-size: 9.5px;">Guest Account</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; color: #fde68a;">
+                <span id="acct-level-label">LVL 1</span>
+                <div class="lobby-mini-xp-track"><div id="acct-xp-fill" class="lobby-mini-xp-fill"></div></div>
+                <span id="acct-xp-text" style="font-size: 9.5px; color: #cbd5e1;">0/100 XP</span>
+              </div>
+              <div style="display: flex; gap: 5px; margin-top: 2px;">
+                <input type="text" id="acct-edit-name-input" class="auth-input" maxlength="12" placeholder="Edit Name (3-12)" aria-label="Edit display name" style="flex: 1; padding: 5px 8px; font-size: 11.5px;" />
+                <button type="button" id="btn-save-display-name" class="social-btn success" data-ar-click="submitEditDisplayName" style="white-space: nowrap;">Save Name</button>
+              </div>
+              <div id="acct-name-feedback" class="hidden" style="font-size: 10px; font-weight: 700; color: #fca5a5;"></div>
+            </div>
+          </div>
+
+          <!-- Friend Code Card -->
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(15,23,42,0.85); border: 1px solid rgba(56,189,248,0.3); border-radius: 11px; padding: 8px 10px;">
+            <div>
+              <div style="font-size: 9.5px; font-weight: 800; color: #94a3b8; letter-spacing: 0.04em;">MY FRIEND CODE</div>
+              <div style="font-size: 11px; color: #cbd5e1;">Share with friends to team up in 2–4 player squads.</div>
+            </div>
+            <div style="display: flex; gap: 5px; flex-shrink: 0;">
+              <button type="button" id="btn-copy-friend-code" class="squad-code-pill" data-ar-click="copyMyFriendCode" style="font-size: 11px; padding: 6px 10px;">ARC-XXXX 📋</button>
+              <button type="button" class="squad-code-pill" data-ar-click="shareMyFriendCode" title="Share Friend Code" style="font-size: 11px; padding: 6px 8px;">📤</button>
+            </div>
+          </div>
+
+          <!-- Guest-to-Permanent Upgrade Card -->
+          <div id="acct-upgrade-box" class="hidden" style="background: rgba(168,85,247,0.12); border: 1px solid rgba(192,132,252,0.45); border-radius: 11px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
             <div style="font-size: 11.5px; font-weight: 900; color: #e9d5ff;">🔒 Secure Your Account (Link Email &amp; Password)</div>
-            <div style="font-size: 10px; color: #cbd5e1;">Keep 100% of your coins, champions, upgrades, friends, and custom HUD layouts permanently.</div>
+            <div style="font-size: 10px; color: #cbd5e1;">Keep 100% of your coins, champions, upgrades, friends, and dual HUD layouts permanently.</div>
             <div id="acct-upgrade-error" class="auth-inline-error hidden"></div>
-            <input type="text" id="acct-upgrade-name" class="auth-input" maxlength="12" placeholder="Champion Name (optional)" />
-            <input type="email" id="acct-upgrade-email" class="auth-input" placeholder="Email address" />
-            <input type="password" id="acct-upgrade-password" class="auth-input" placeholder="New Password (6+ chars)" />
-            <button type="button" id="btn-acct-upgrade" class="btn-lobby-main" data-ar-click="submitGuestUpgrade" style="width: 100%; padding: 8px; font-size: 12px;">LINK EMAIL &amp; SECURE ACCOUNT</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <input type="text" id="acct-upgrade-name" class="auth-input" maxlength="12" placeholder="Champion Name (opt)" />
+              <input type="email" id="acct-upgrade-email" class="auth-input" placeholder="Email address" />
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <input type="password" id="acct-upgrade-password" class="auth-input" placeholder="New Password (6+ chars)" style="flex: 1;" />
+              <button type="button" id="btn-acct-upgrade" class="btn-lobby-main" data-ar-click="submitGuestUpgrade" style="padding: 8px 12px; font-size: 11.5px; white-space: nowrap;">LINK EMAIL</button>
+            </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button type="button" class="btn-lobby-sec" data-ar-click="cloudSyncNow" style="justify-content: center; border-color: rgba(52,211,153,0.45); color: #6ee7b7;">↻ Sync Now</button>
-            <button type="button" class="btn-lobby-sec" data-ar-click="cloudSignOut" style="justify-content: center; border-color: rgba(248,113,113,0.45); color: #fca5a5;">🚪 Sign Out</button>
+          <!-- Full Career Stats Grid -->
+          <div>
+            <div style="font-size: 10px; font-weight: 900; color: #94a3b8; letter-spacing: 0.05em; margin-bottom: 5px;">CAREER STATISTICS</div>
+            <div id="acct-career-grid" class="acct-career-grid"></div>
+          </div>
+
+          <!-- Cloud Sync & Session Controls -->
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px;">
+            <button type="button" class="btn-lobby-sec" data-ar-click="cloudSyncNow" style="justify-content: center; border-color: rgba(52,211,153,0.45); color: #6ee7b7; font-size: 11.5px;">↻ Sync Now</button>
+            <button type="button" class="btn-lobby-sec" data-ar-click="requestResetLocalCacheHud" style="justify-content: center; border-color: rgba(251,191,36,0.45); color: #fde68a; font-size: 11.5px;">🧹 Reset Cache</button>
+            <button type="button" class="btn-lobby-sec" data-ar-click="requestCloudSignOut" style="justify-content: center; border-color: rgba(248,113,113,0.45); color: #fca5a5; font-size: 11.5px;">🚪 Sign Out</button>
           </div>
         </div>
       </div>
@@ -5842,7 +6547,7 @@
         <div class="split-modal-shell">
           <aside class="split-modal-sidebar">
             <button type="button" class="modal-back-btn" data-ar-click="closeFriendsModal" aria-label="Back to lobby">← BACK</button>
-            <h2 id="friends-modal-title" class="split-sidebar-title">FRIENDS</h2>
+            <h2 id="friends-modal-title" class="split-sidebar-title">SOCIAL</h2>
             <div class="split-sidebar-wallet" style="flex-direction: column; gap: 4px; align-items: stretch;">
               <div style="font-size: 9.5px; color: #94a3b8; font-weight: 800;">MY FRIEND CODE</div>
               <div style="display: flex; gap: 4px;">
@@ -5853,7 +6558,7 @@
             <div class="split-tab-list" role="tablist" aria-label="Social sections">
               <button type="button" id="tab-social-friends" class="split-tab-btn active" data-ar-click="switchFriendsTab" data-ar-arg="friends" role="tab" aria-selected="true">👥 Friends</button>
               <button type="button" id="tab-social-requests" class="split-tab-btn" data-ar-click="switchFriendsTab" data-ar-arg="requests" role="tab" aria-selected="false">📩 Requests</button>
-              <button type="button" id="tab-social-join" class="split-tab-btn" data-ar-click="switchFriendsTab" data-ar-arg="join" role="tab" aria-selected="false">🛡️ Join Squad</button>
+              <button type="button" id="tab-social-join" class="split-tab-btn" data-ar-click="switchFriendsTab" data-ar-arg="join" role="tab" aria-selected="false">🛡️ Squad Room</button>
             </div>
           </aside>
           <div class="split-modal-pane" style="display: flex; flex-direction: column; gap: 10px;">
@@ -5864,6 +6569,23 @@
             <div id="friends-pane-friends" style="display: flex; flex-direction: column; gap: 7px;"></div>
             <div id="friends-pane-requests" class="hidden" style="display: flex; flex-direction: column; gap: 7px;"></div>
             <div id="friends-pane-join" class="hidden" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="settings-tile" style="border-color: rgba(168,85,247,0.4);">
+                <div class="settings-tile-head">
+                  <span id="modal-squad-title" class="settings-tile-label">Current Squad (1/4)</span>
+                  <button type="button" id="btn-modal-copy-squad" class="squad-code-pill" data-ar-click="copySquadRoomCode">SQ-XXXX 📋</button>
+                </div>
+                <div id="friends-squad-slots" class="squad-slots-grid" style="margin: 6px 0;"></div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                  <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 800; color: #cbd5e1; cursor: pointer;">
+                    <input type="checkbox" id="toggle-squad-privacy" style="accent-color: #a855f7;" data-ar-change="onSquadPrivacyToggle" />
+                    🔒 Friends Only Room
+                  </label>
+                  <div id="squad-actions-row" class="squad-actions-row hidden" style="flex: 0 0 auto; gap: 6px;">
+                    <button type="button" id="btn-squad-ready" class="squad-mini-btn ready-on" data-ar-click="toggleSquadReady">✓ READY</button>
+                    <button type="button" id="btn-squad-leave" class="squad-mini-btn" data-ar-click="leaveCurrentSquad" style="color: #fca5a5;">Leave</button>
+                  </div>
+                </div>
+              </div>
               <div class="settings-tile">
                 <div class="settings-tile-head">
                   <span class="settings-tile-label">Join Friend's Squad Room</span>
@@ -6349,11 +7071,31 @@
         'xp', 'level', 'spendableXp',
         'totalXpEarned', 'totalSurvivalTime', 'bestSurvivalTime', 'totalDamageDealt',
         'statUpgrades', 'selectedFighter', 'unlockedFighters',
-        'totalMatches', 'totalWins', 'totalKills',
-        'musicVolume', 'sfxVolume', 'voiceVolume', 'haptics', 'reducedMotion', 'graphicsQuality',
+        'totalMatches', 'totalWins', 'totalKills', 'totalRevives', 'totalTop10',
+        'musicVolume', 'sfxVolume', 'voiceVolume', 'audioSyncOffsetMs', 'btEarlyTrigger', 'quickMuted',
+        'haptics', 'reducedMotion', 'graphicsQuality',
         'autoLoot', 'batterySaver30Fps', 'orientationPref', 'arcanePassOwned',
         'deviceMode', 'touchControlsMode', 'controlScale', 'tutorialSeen', 'firstMatchTipShown'
       ];
+      function safeStorageGet(key) {
+        try { return localStorage.getItem(key); } catch (_) { return null; }
+      }
+      function safeStorageSet(key, val) {
+        try { localStorage.setItem(key, val); return true; } catch (_) { return false; }
+      }
+      function safeStorageRemove(key) {
+        try { localStorage.removeItem(key); return true; } catch (_) { return false; }
+      }
+      function cryptoRandomFloat() {
+        try {
+          if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+            const arr = new Uint32Array(1);
+            crypto.getRandomValues(arr);
+            return arr[0] / 4294967296;
+          }
+        } catch (_) {}
+        return Math.random();
+      }
       const VISION_RADIUS = 520;
       const VISION_FADE_RIM = 40;
       const VISION_INNER_RADIUS = VISION_RADIUS - VISION_FADE_RIM;
@@ -6733,9 +7475,14 @@
         totalMatches: 0,
         totalWins: 0,
         totalKills: 0,
+        totalRevives: 0,
+        totalTop10: 0,
         musicVolume: 0.5,
         sfxVolume: 0.7,
         voiceVolume: 0.9,
+        audioSyncOffsetMs: 0,
+        btEarlyTrigger: false,
+        quickMuted: false,
         haptics: true,
         reducedMotion: false,
         graphicsQuality: 'high',
@@ -6753,10 +7500,10 @@
           let data = null;
           let companionSig = null;
           try {
-            companionSig = localStorage.getItem(STORAGE_SIG_KEY);
+            companionSig = safeStorageGet(STORAGE_SIG_KEY);
             const keys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
             for (const key of keys) {
-              const raw = localStorage.getItem(key);
+              const raw = safeStorageGet(key);
               if (!raw) continue;
               const parsed = JSON.parse(raw);
               if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
@@ -6803,9 +7550,14 @@
           this.totalMatches = integer(source.totalMatches, 0);
           this.totalWins = integer(source.totalWins, 0);
           this.totalKills = integer(source.totalKills, 0);
+          this.totalRevives = integer(source.totalRevives, 0);
+          this.totalTop10 = integer(source.totalTop10, 0);
           this.musicVolume = volume(source.musicVolume, 0.5);
           this.sfxVolume = volume(source.sfxVolume, 0.7);
           this.voiceVolume = volume(source.voiceVolume, 0.9);
+          this.audioSyncOffsetMs = Math.round(finite(source.audioSyncOffsetMs, 0, -150, 150) / 10) * 10;
+          this.btEarlyTrigger = Boolean(source.btEarlyTrigger);
+          this.quickMuted = Boolean(source.quickMuted);
           this.haptics = typeof source.haptics === 'boolean' ? source.haptics : true;
           const systemReducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
           this.reducedMotion = typeof source.reducedMotion === 'boolean' ? source.reducedMotion : systemReducedMotion;
@@ -6883,11 +7635,10 @@
           for (const key of SAVE_FIELDS) snapshot[key] = this[key];
           const sig = computeSaveChecksum(snapshot);
           snapshot._sig = sig;
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
-            localStorage.setItem(STORAGE_SIG_KEY, sig);
-          } catch (error) {
-            console.warn('[Save] Progress could not be persisted; continuing in memory.', error);
+          const ok1 = safeStorageSet(STORAGE_KEY, JSON.stringify(snapshot));
+          const ok2 = safeStorageSet(STORAGE_SIG_KEY, sig);
+          if (!ok1 || !ok2) {
+            console.warn('[Save] Progress could not be persisted; continuing in memory.');
           }
           updateCurrencyUI();
         }
@@ -7026,7 +7777,7 @@
             ? Math.round(Math.max(0.8, Math.min(1.05, 0.88 * userScale)) * 100) / 100
             : Math.round(Math.max(0.82, Math.min(1.05, 0.9 * userScale)) * 100) / 100;
 
-          const dprCap = quality === 'low' ? 1 : (quality === 'medium' ? 1.25 : 1.5);
+          const dprCap = quality === 'low' ? 1.0 : (quality === 'medium' ? 1.5 : 2.0);
           const targetCombatSpan = profile === 'mobile-portrait' ? 540 : 560;
 
           let minimapSize, minimapX, minimapY;
@@ -7910,13 +8661,83 @@
         showToast('✓ Demo Supply Drop: +9,999 🪙 · +9,999 🔮 · +9,999 💎 · +9,999 ⚡ XP', false);
       }
 
-      // Audio Engine (Web Audio API with ad/focus/offline external mute gating)
+      // Hardware-Clock Audio Engine (Zero Wake-Up Burst Lag, Compressor, 12-Voice Cap, 520u Cutoff)
       const AudioEngine = {
         ctx: null,
+        masterGain: null,
+        compressor: null,
+        noiseBuffer: null,
         externalMutes: new Set(),
+        activeVoices: 0,
+        MAX_VOICES: 12,
+        SFX_COOLDOWN_MS: 40,
+        SFX_MAX_DIST: 520,
+        sfxCooldowns: new Map(),
+        lastEarlyTrigger: new Map(),
+
         isExternallyMuted() {
-          return this.externalMutes.size > 0;
+          return this.externalMutes.size > 0 || Boolean(typeof PlayerData !== 'undefined' && PlayerData.quickMuted);
         },
+
+        isPlayable() {
+          return Boolean(this.ctx && this.ctx.state === 'running' && !this.isExternallyMuted());
+        },
+
+        getMasterOut() {
+          if (this.masterGain) return this.masterGain;
+          return this.ctx ? this.ctx.destination : null;
+        },
+
+        _ensureGraph() {
+          if (!this.ctx || this.masterGain) return;
+          try {
+            const master = this.ctx.createGain();
+            master.gain.value = 0.92;
+            const comp = this.ctx.createDynamicsCompressor();
+            comp.threshold.value = -12;
+            comp.knee.value = 18;
+            comp.ratio.value = 8;
+            comp.attack.value = 0.003;
+            comp.release.value = 0.15;
+            master.connect(comp);
+            comp.connect(this.ctx.destination);
+            this.masterGain = master;
+            this.compressor = comp;
+          } catch (_) {
+            this.masterGain = null;
+            this.compressor = null;
+          }
+        },
+
+        _ensureNoiseBuffer() {
+          if (!this.ctx || this.noiseBuffer) return this.noiseBuffer;
+          try {
+            const length = Math.max(1024, Math.floor(this.ctx.sampleRate * 0.5));
+            const buffer = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+            this.noiseBuffer = buffer;
+          } catch (_) {}
+          return this.noiseBuffer;
+        },
+
+        prewarm() {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              try {
+                this.ctx = new AudioCtx({ latencyHint: 'interactive' });
+              } catch (_) {
+                try { this.ctx = new AudioCtx(); } catch (__) {}
+              }
+            }
+          }
+          if (this.ctx) {
+            this._ensureGraph();
+            this._ensureNoiseBuffer();
+          }
+        },
+
         setExternalMute(reason, muted) {
           if (muted) this.externalMutes.add(reason);
           else this.externalMutes.delete(reason);
@@ -7924,7 +8745,7 @@
           if (this.ctx) {
             if (shouldMute && this.ctx.state === 'running') {
               this.ctx.suspend().catch(() => {});
-            } else if (!shouldMute && this.ctx.state === 'suspended') {
+            } else if (!shouldMute && (this.ctx.state === 'suspended' || this.ctx.state === 'interrupted')) {
               this.ctx.resume().catch(() => {});
             }
           }
@@ -7934,65 +8755,122 @@
               : (Game && Game.state === 'PAUSED' ? PlayerData.musicVolume * 0.3 : PlayerData.musicVolume);
             Music.setVolume(targetVol);
           }
-          if (shouldMute && 'speechSynthesis' in window) {
-            try { window.speechSynthesis.cancel(); } catch (_) {}
+          if (shouldMute && typeof Announcer !== 'undefined' && Announcer.cancelAll) {
+            Announcer.cancelAll();
           }
         },
+
         init() {
-          if (!this.ctx) {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (AudioCtx) this.ctx = new AudioCtx();
-          }
-          if (this.ctx && this.ctx.state === 'suspended' && !this.isExternallyMuted()) {
+          this.prewarm();
+          if (this.ctx && (this.ctx.state === 'suspended' || this.ctx.state === 'interrupted') && !this.isExternallyMuted()) {
             this.ctx.resume().catch(() => { /* A later user gesture will unlock audio. */ });
           }
         },
-        playTone(frequency, type, duration, volume = 0.2, endFreq = null) {
-          if (!this.ctx || PlayerData.sfxVolume <= 0 || this.isExternallyMuted()) return;
+
+        getLatencyReport() {
+          if (!this.ctx) return 'HW Latency: tap screen to measure';
+          const base = Number.isFinite(this.ctx.baseLatency) ? this.ctx.baseLatency : null;
+          const out = Number.isFinite(this.ctx.outputLatency) ? this.ctx.outputLatency : null;
+          if (base === null && out === null) return 'HW Latency: browser managed';
+          const totalMs = Math.round(((base || 0) + (out || 0)) * 1000);
+          return `HW Latency: ~${totalMs} ms`;
+        },
+
+        getSpatialGain(worldX, worldY) {
+          if (!Number.isFinite(worldX) || !Number.isFinite(worldY)) return 1;
+          const anchor = (typeof SquadEngine !== 'undefined' && SquadEngine.getVisionAnchor)
+            ? SquadEngine.getVisionAnchor()
+            : (typeof Game !== 'undefined' ? Game.player : null);
+          if (!anchor) return 1;
+          const dist = Math.hypot(worldX - anchor.x, worldY - anchor.y);
+          if (dist > this.SFX_MAX_DIST) return 0;
+          if (dist <= 90) return 1;
+          const norm = 1 - (dist - 90) / (this.SFX_MAX_DIST - 90);
+          return Math.max(0, Math.min(1, norm * norm));
+        },
+
+        _canSpawnVoice(key) {
+          if (this.activeVoices >= this.MAX_VOICES) return false;
+          if (key) {
+            const now = performance.now();
+            const prev = this.sfxCooldowns.get(key) || 0;
+            if (now - prev < this.SFX_COOLDOWN_MS) return false;
+            this.sfxCooldowns.set(key, now);
+          }
+          return true;
+        },
+
+        _scheduleStartTime(delaySec = 0, applyCueOffset = false) {
+          const now = this.ctx.currentTime;
+          const offsetSec = applyCueOffset ? (Number(PlayerData.audioSyncOffsetMs || 0) / 1000) : 0;
+          return Math.max(now, now + Math.max(0, delaySec) + offsetSec);
+        },
+
+        playTone(frequency, type, duration, volume = 0.2, endFreq = null, delaySec = 0, voiceKey = null, spatialGain = 1) {
+          if (!this.isPlayable() || PlayerData.sfxVolume <= 0 || spatialGain <= 0.001) return;
+          if (!this._canSpawnVoice(voiceKey)) return;
           try {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = type;
-            const now = this.ctx.currentTime;
-            osc.frequency.setValueAtTime(frequency, now);
+            const start = this._scheduleStartTime(delaySec, false);
+            const dur = Math.max(0.02, Number(duration) || 0.1);
+            const peak = Math.max(0.0005, Math.min(1, volume * PlayerData.sfxVolume * spatialGain));
+            osc.frequency.setValueAtTime(Math.max(20, frequency), start);
             if (endFreq) {
-              osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), now + duration);
+              osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), start + dur);
             }
-            gain.gain.setValueAtTime(Math.max(0.0001, volume * PlayerData.sfxVolume), now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            const attack = Math.min(0.005, dur * 0.2);
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.linearRampToValueAtTime(peak, start + attack);
+            gain.gain.exponentialRampToValueAtTime(0.0005, start + dur);
             osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + duration);
-          } catch(e) {}
+            gain.connect(this.getMasterOut());
+            this.activeVoices++;
+            osc.onended = () => {
+              this.activeVoices = Math.max(0, this.activeVoices - 1);
+              try { osc.disconnect(); } catch (_) {}
+              try { gain.disconnect(); } catch (_) {}
+            };
+            osc.start(start);
+            osc.stop(start + dur + 0.01);
+          } catch (_) {}
         },
-        playNoise(duration, volume = 0.15) {
-          if (!this.ctx || PlayerData.sfxVolume <= 0 || this.isExternallyMuted()) return;
+
+        playNoise(duration, volume = 0.15, delaySec = 0, voiceKey = null, spatialGain = 1) {
+          if (!this.isPlayable() || PlayerData.sfxVolume <= 0 || spatialGain <= 0.001) return;
+          if (!this._canSpawnVoice(voiceKey)) return;
+          const buffer = this._ensureNoiseBuffer();
+          if (!buffer) return;
           try {
-            const bufferSize = this.ctx.sampleRate * duration;
-            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-              data[i] = Math.random() * 2 - 1;
-            }
             const noise = this.ctx.createBufferSource();
             noise.buffer = buffer;
             const gain = this.ctx.createGain();
-            const now = this.ctx.currentTime;
-            gain.gain.setValueAtTime(Math.max(0.0001, volume * PlayerData.sfxVolume), now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            const start = this._scheduleStartTime(delaySec, false);
+            const dur = Math.max(0.02, Math.min(0.48, Number(duration) || 0.12));
+            const peak = Math.max(0.0005, Math.min(1, volume * PlayerData.sfxVolume * spatialGain));
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.linearRampToValueAtTime(peak, start + 0.004);
+            gain.gain.exponentialRampToValueAtTime(0.0005, start + dur);
             noise.connect(gain);
-            gain.connect(this.ctx.destination);
-            noise.start(now);
-          } catch(e) {}
+            gain.connect(this.getMasterOut());
+            this.activeVoices++;
+            noise.onended = () => {
+              this.activeVoices = Math.max(0, this.activeVoices - 1);
+              try { noise.disconnect(); } catch (_) {}
+              try { gain.disconnect(); } catch (_) {}
+            };
+            noise.start(start, 0, dur);
+          } catch (_) {}
         },
-        playSample(key, volume = 1, pitchVariation = 0, channel = 'sfx') {
-          if (this.isExternallyMuted()) return false;
-          if (!this.ctx) this.init();
-          if (!this.ctx) return false;
-          if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => { /* Audio remains silent until unlocked. */ });
+
+        playSample(key, volume = 1, pitchVariation = 0, channel = 'sfx', spatialGain = 1) {
+          if (!this.isPlayable() || spatialGain <= 0.001) return false;
+          const channelVolume = channel === 'voice' ? PlayerData.voiceVolume : PlayerData.sfxVolume;
+          if (channelVolume <= 0) return false;
           const buffer = typeof AssetLoader !== 'undefined' ? AssetLoader.getBuffer(key) : null;
           if (!buffer) return false;
+          if (!this._canSpawnVoice(key)) return true;
           try {
             const src = this.ctx.createBufferSource();
             src.buffer = buffer;
@@ -8000,100 +8878,203 @@
               src.playbackRate.value = 1 + (Math.random() * 2 - 1) * pitchVariation;
             }
             const gain = this.ctx.createGain();
-            const channelVolume = channel === 'voice' ? PlayerData.voiceVolume : PlayerData.sfxVolume;
-            gain.gain.value = Math.max(0, Math.min(1, volume * channelVolume));
+            const start = this.ctx.currentTime;
+            const target = Math.max(0.0005, Math.min(1, volume * channelVolume * spatialGain));
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.linearRampToValueAtTime(target, start + 0.004);
             src.connect(gain);
-            gain.connect(this.ctx.destination);
-            src.start(0);
+            gain.connect(this.getMasterOut());
+            this.activeVoices++;
+            src.onended = () => {
+              this.activeVoices = Math.max(0, this.activeVoices - 1);
+              try { src.disconnect(); } catch (_) {}
+              try { gain.disconnect(); } catch (_) {}
+            };
+            src.start(start);
             return true;
-          } catch(e) {
+          } catch (_) {
             return false;
           }
         },
-        sfxSword() {
-          if (this.playSample('sfx_sword_whoosh', 0.85, 0.08)) return;
-          this.playTone(1200, 'sine', 0.05, 0.25);
-          this.playNoise(0.12, 0.2);
-          this.playTone(420, 'triangle', 0.1, 0.2, 180);
+
+        playEarlyTriggerSfx(action) {
+          if (!PlayerData.btEarlyTrigger || !this.isPlayable()) return;
+          const now = performance.now();
+          this.lastEarlyTrigger.set(action, now);
+          if (action === 'sword') this.sfxSword(null, null, true);
+          else if (action === 'spell') this.sfxSpell(Game.player && Game.player.data ? Game.player.data.spellType : 'EMBER', null, null, true);
+          else if (action === 'dash') this.sfxDash(null, null, true);
+          else if (action === 'art') this.sfxArt(Game.player && Game.player.data ? Game.player.data.artName : '', true);
+          else if (action === 'mana') this.playTone(760, 'sine', 0.07, 0.12, 420, 0, 'mana');
         },
-        sfxSpell(type) {
+
+        consumeEarlyTrigger(action) {
+          if (!PlayerData.btEarlyTrigger) return false;
+          const ts = this.lastEarlyTrigger.get(action);
+          if (!ts) return false;
+          this.lastEarlyTrigger.delete(action);
+          return (performance.now() - ts) <= 260;
+        },
+
+        sfxSword(wx = null, wy = null, skipEarlyCheck = false) {
+          if (!skipEarlyCheck && wx === null && this.consumeEarlyTrigger('sword')) return;
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
+          if (this.playSample('sfx_sword_whoosh', 0.85, 0.08, 'sfx', sg)) return;
+          this.playTone(1200, 'sine', 0.05, 0.22, null, 0, 'sword', sg);
+          this.playNoise(0.11, 0.18, 0, null, sg);
+          this.playTone(420, 'triangle', 0.1, 0.18, 180, 0, null, sg);
+        },
+
+        sfxSpell(type, wx = null, wy = null, skipEarlyCheck = false) {
+          if (!skipEarlyCheck && wx === null && this.consumeEarlyTrigger('spell')) return;
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
           const sfxKey = type === 'EMBER' ? 'sfx_spell_ember' : (type === 'AQUA' ? 'sfx_spell_aqua' : 'sfx_spell_shadow');
-          if (this.playSample(sfxKey, 0.85, 0.05)) return;
+          if (this.playSample(sfxKey, 0.85, 0.05, 'sfx', sg)) return;
           if (type === 'EMBER') {
-            this.playTone(320, 'sawtooth', 0.18, 0.18, 140);
+            this.playTone(320, 'sawtooth', 0.18, 0.18, 140, 0, 'spell_ember', sg);
           } else if (type === 'AQUA') {
-            this.playTone(850, 'sine', 0.22, 0.2, 440);
+            this.playTone(850, 'sine', 0.22, 0.2, 440, 0, 'spell_aqua', sg);
           } else {
-            this.playTone(700, 'square', 0.14, 0.15, 200);
+            this.playTone(700, 'square', 0.14, 0.15, 200, 0, 'spell_shadow', sg);
           }
         },
-        sfxHit() {
-          if (this.playSample('sfx_sword_hit', 0.9, 0.08)) return;
-          this.playTone(95, 'square', 0.12, 0.35, 45);
-          this.playNoise(0.08, 0.2);
+
+        sfxHit(wx = null, wy = null) {
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
+          if (this.playSample('sfx_sword_hit', 0.9, 0.08, 'sfx', sg)) return;
+          this.playTone(95, 'square', 0.12, 0.32, 45, 0, 'hit', sg);
+          this.playNoise(0.08, 0.18, 0, null, sg);
         },
-        sfxDash() {
-          if (this.playSample('sfx_dash', 0.85, 0.05)) return;
-          this.playNoise(0.18, 0.15);
-          this.playTone(300, 'sine', 0.18, 0.15, 600);
+
+        sfxDash(wx = null, wy = null, skipEarlyCheck = false) {
+          if (!skipEarlyCheck && wx === null && this.consumeEarlyTrigger('dash')) return;
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
+          if (this.playSample('sfx_dash', 0.85, 0.05, 'sfx', sg)) return;
+          this.playNoise(0.16, 0.14, 0, 'dash', sg);
+          this.playTone(300, 'sine', 0.18, 0.15, 600, 0, null, sg);
         },
-        sfxArt(name) {
+
+        sfxArt(name, skipEarlyCheck = false) {
+          if (!skipEarlyCheck && this.consumeEarlyTrigger('art')) return;
           if (this.playSample('sfx_art_cast', 0.95, 0)) return;
-          this.playTone(180, 'sawtooth', 0.6, 0.45, 70);
-          this.playNoise(0.35, 0.3);
+          this.playTone(180, 'sawtooth', 0.55, 0.4, 70, 0, 'art');
+          this.playNoise(0.32, 0.28, 0, null);
         },
+
         sfxOutOfMana() {
-          this.playTone(140, 'triangle', 0.15, 0.25, 110);
+          this.playTone(140, 'triangle', 0.15, 0.22, 110, 0, 'oom');
         },
+
         sfxPurchase() {
           if (this.playSample('sfx_loot_pickup', 0.8, 0.05)) return;
-          this.playTone(523, 'triangle', 0.1, 0.3);
-          setTimeout(() => this.playTone(659, 'triangle', 0.15, 0.35), 100);
-          setTimeout(() => this.playTone(784, 'triangle', 0.25, 0.4), 220);
+          this.playTone(523, 'triangle', 0.1, 0.28, null, 0, 'purchase');
+          this.playTone(659, 'triangle', 0.15, 0.32, null, 0.10, null);
+          this.playTone(784, 'triangle', 0.25, 0.36, null, 0.22, null);
         },
+
         sfxVictory() {
-          this.playTone(523, 'triangle', 0.2, 0.35);
-          setTimeout(() => this.playTone(659, 'triangle', 0.25, 0.35), 180);
-          setTimeout(() => this.playTone(784, 'triangle', 0.5, 0.4), 360);
+          this.playTone(523, 'triangle', 0.2, 0.32, null, 0, 'victory');
+          this.playTone(659, 'triangle', 0.25, 0.32, null, 0.18, null);
+          this.playTone(784, 'triangle', 0.5, 0.38, null, 0.36, null);
         },
+
         sfxDefeat() {
           if (this.playSample('sfx_death', 0.9, 0)) return;
-          this.playTone(280, 'sawtooth', 0.4, 0.3, 90);
+          this.playTone(280, 'sawtooth', 0.4, 0.28, 90, 0, 'defeat');
         },
+
         sfxWarning() {
-          this.playTone(880, 'sine', 0.12, 0.28, 660);
+          this.playTone(880, 'sine', 0.12, 0.26, 660, 0, 'warn');
         },
-        sfxSteamEruption() {
-          this.playNoise(0.28, 0.26);
-          this.playTone(210, 'sine', 0.24, 0.28, 68);
-          this.playTone(980, 'triangle', 0.14, 0.14, 420);
+
+        sfxSyncTestChime(delaySec = 0) {
+          if (!this.isPlayable()) return;
+          const start = this._scheduleStartTime(delaySec, true);
+          try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(988, start);
+            osc.frequency.exponentialRampToValueAtTime(1318, start + 0.12);
+            const peak = Math.max(0.05, (PlayerData.sfxVolume || 0.7) * 0.42);
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.linearRampToValueAtTime(peak, start + 0.004);
+            gain.gain.exponentialRampToValueAtTime(0.0005, start + 0.16);
+            osc.connect(gain);
+            gain.connect(this.getMasterOut());
+            osc.onended = () => {
+              try { osc.disconnect(); } catch (_) {}
+              try { gain.disconnect(); } catch (_) {}
+            };
+            osc.start(start);
+            osc.stop(start + 0.18);
+          } catch (_) {}
         },
-        sfxShadowflame() {
-          this.playTone(540, 'sawtooth', 0.16, 0.26, 130);
-          this.playNoise(0.18, 0.22);
-          this.playTone(1280, 'square', 0.08, 0.12, 320);
+
+        sfxSteamEruption(wx = null, wy = null) {
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
+          this.playNoise(0.26, 0.24, 0, 'steam', sg);
+          this.playTone(210, 'sine', 0.24, 0.26, 68, 0, null, sg);
+          this.playTone(980, 'triangle', 0.14, 0.13, 420, 0, null, sg);
         },
-        sfxAbyssalUndertow() {
-          this.playTone(460, 'sine', 0.26, 0.26, 120);
-          this.playTone(230, 'triangle', 0.28, 0.22, 85);
+
+        sfxShadowflame(wx = null, wy = null) {
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
+          this.playTone(540, 'sawtooth', 0.16, 0.24, 130, 0, 'shadowflame', sg);
+          this.playNoise(0.18, 0.2, 0, null, sg);
+          this.playTone(1280, 'square', 0.08, 0.11, 320, 0, null, sg);
         },
+
+        sfxAbyssalUndertow(wx = null, wy = null) {
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
+          this.playTone(460, 'sine', 0.26, 0.24, 120, 0, 'undertow', sg);
+          this.playTone(230, 'triangle', 0.28, 0.2, 85, 0, null, sg);
+        },
+
         sfxSupplyCrate() {
-          this.playTone(587, 'triangle', 0.12, 0.26, 880);
-          setTimeout(() => this.playTone(880, 'sine', 0.18, 0.26, 1175), 90);
+          this.playTone(587, 'triangle', 0.12, 0.24, 880, 0, 'crate');
+          this.playTone(880, 'sine', 0.18, 0.24, 1175, 0.09, null);
         },
-        sfxWallSlam() {
-          this.playTone(115, 'sawtooth', 0.22, 0.42, 38);
-          this.playTone(280, 'square', 0.08, 0.22, 95);
+
+        sfxWallSlam(wx = null, wy = null) {
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
+          this.playTone(115, 'sawtooth', 0.22, 0.38, 38, 0, 'slam', sg);
+          this.playTone(280, 'square', 0.08, 0.2, 95, 0, null, sg);
         },
-        sfxBarrelExplode() {
-          this.playTone(92, 'sawtooth', 0.34, 0.45, 28);
-          setTimeout(() => this.playTone(240, 'triangle', 0.18, 0.24, 70), 40);
+
+        sfxBarrelExplode(wx = null, wy = null) {
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
+          this.playTone(92, 'sawtooth', 0.34, 0.4, 28, 0, 'barrel', sg);
+          this.playTone(240, 'triangle', 0.18, 0.22, 70, 0.04, null, sg);
         },
-        sfxGeothermErupt() {
-          this.playTone(165, 'sawtooth', 0.28, 0.32, 62);
-          this.playTone(420, 'sine', 0.22, 0.2, 880);
+
+        sfxGeothermErupt(wx = null, wy = null) {
+          const sg = wx !== null ? this.getSpatialGain(wx, wy) : 1;
+          if (sg <= 0.001) return;
+          this.playTone(165, 'sawtooth', 0.28, 0.3, 62, 0, 'geo', sg);
+          this.playTone(420, 'sine', 0.22, 0.18, 880, 0, null, sg);
         }
       };
+
+      // Unlock single shared AudioContext on first user pointer/touch gesture
+      (() => {
+        const unlockOnce = () => {
+          AudioEngine.init();
+          window.removeEventListener('pointerdown', unlockOnce, true);
+          window.removeEventListener('touchstart', unlockOnce, true);
+        };
+        window.addEventListener('pointerdown', unlockOnce, { capture: true, passive: true });
+        window.addEventListener('touchstart', unlockOnce, { capture: true, passive: true });
+      })();
 
       // ==========================================
       // ==========================================
@@ -8305,16 +9286,19 @@
       };
 
       // ==========================================
-      // ADAPTIVE MULTI-STATE MUSIC ENGINE (1.5s CROSSFADE + SYNTH FALLBACK)
+      // ADAPTIVE MULTI-STATE MUSIC ENGINE (WEB AUDIO LOOKAHEAD SCHEDULER)
       // ==========================================
       const Music = {
         currentGain: null,
         currentSource: null,
         currentTrack: null,
         timer: null,
+        schedulerPaused: false,
         nextNoteTime: 0,
         step: 0,
         crossfadeSec: 1.5,
+        LOOKAHEAD_WINDOW_SEC: 0.1,
+        LOOKAHEAD_TICK_MS: 25,
 
         resolveStem(track) {
           if (track === 'climax') return 'climax';
@@ -8356,13 +9340,14 @@
 
           this.currentTrack = stem;
           this.currentSource = null;
+          this.schedulerPaused = false;
 
           const gain = ctx.createGain();
           const targetVol = AudioEngine.isExternallyMuted() ? 0 : Math.max(0, Math.min(1, PlayerData.musicVolume));
           const now = ctx.currentTime;
           gain.gain.setValueAtTime(0.0001, now);
           gain.gain.linearRampToValueAtTime(Math.max(0.0001, targetVol), now + fadeSec);
-          gain.connect(ctx.destination);
+          gain.connect(AudioEngine.getMasterOut());
           this.currentGain = gain;
 
           const audioKey = stem === 'climax' ? 'bgm_climax' : (stem === 'combat' ? 'bgm_combat' : 'bgm_lobby');
@@ -8374,7 +9359,7 @@
               src.buffer = buffer;
               src.loop = true;
               src.connect(gain);
-              src.start(0);
+              src.start(AudioEngine.ctx.currentTime);
               this.currentSource = src;
             } else {
               this.startSynthFallback(stem);
@@ -8389,21 +9374,40 @@
         startSynthFallback(stem) {
           const ctx = AudioEngine.ctx;
           if (!ctx || !this.currentGain || this.timer) return;
-          this.nextNoteTime = ctx.currentTime + 0.06;
+          this.nextNoteTime = ctx.currentTime + 0.05;
           this.step = 0;
-          this.timer = setInterval(() => this.schedule(), 90);
+          this.schedulerPaused = false;
+          this.timer = setInterval(() => this.schedule(), this.LOOKAHEAD_TICK_MS);
           this.schedule();
+        },
+
+        pauseScheduler() {
+          this.schedulerPaused = true;
+        },
+
+        resumeScheduler() {
+          this.schedulerPaused = false;
+          if (AudioEngine.ctx && this.timer) {
+            this.nextNoteTime = AudioEngine.ctx.currentTime + 0.05;
+          }
         },
 
         schedule() {
           const ctx = AudioEngine.ctx;
-          if (!ctx || !this.currentGain || ctx.state !== 'running') return;
+          if (this.schedulerPaused || !ctx || !this.currentGain || ctx.state !== 'running' || AudioEngine.isExternallyMuted()) return;
+          const now = ctx.currentTime;
+          // Cleanly reset playback cursor after tab/WebView throttling so notes never burst-stack
+          if (this.nextNoteTime < now - 0.1 || this.nextNoteTime > now + 1.5) {
+            this.nextNoteTime = now + 0.05;
+          }
           const lobbyNotes = [220, 277.18, 329.63, 440, 329.63, 277.18, 246.94, 329.63];
           const battleNotes = [110, 164.81, 220, 146.83, 196, 246.94, 220, 174.61];
           const climaxNotes = [146.83, 155.56, 220, 233.08, 293.66, 233.08, 220, 155.56];
           const notes = this.currentTrack === 'climax' ? climaxNotes : (this.currentTrack === 'combat' ? battleNotes : lobbyNotes);
           const beat = this.currentTrack === 'climax' ? 0.19 : (this.currentTrack === 'combat' ? 0.24 : 0.42);
-          while (this.nextNoteTime < ctx.currentTime + 0.32) {
+          let guard = 0;
+          while (this.nextNoteTime < now + this.LOOKAHEAD_WINDOW_SEC && guard < 8) {
+            guard++;
             const index = this.step % notes.length;
             this.scheduleTone(notes[index], this.nextNoteTime, beat * 0.78, this.currentTrack === 'lobby' ? 'sine' : 'triangle', 0.055);
             if (index % 4 === 0) {
@@ -8425,21 +9429,22 @@
           oscillator.type = type;
           oscillator.frequency.setValueAtTime(frequency, start);
           envelope.gain.setValueAtTime(0.0001, start);
-          envelope.gain.exponentialRampToValueAtTime(level, start + 0.025);
+          envelope.gain.linearRampToValueAtTime(level, start + 0.015);
           envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
           oscillator.connect(envelope);
           envelope.connect(this.currentGain);
+          oscillator.onended = () => {
+            try { oscillator.disconnect(); } catch (_) {}
+            try { envelope.disconnect(); } catch (_) {}
+          };
           oscillator.start(start);
           oscillator.stop(start + duration + 0.02);
-          oscillator.onended = () => {
-            oscillator.disconnect();
-            envelope.disconnect();
-          };
         },
 
         stop() {
           if (this.timer) clearInterval(this.timer);
           this.timer = null;
+          this.schedulerPaused = false;
           const ctx = AudioEngine.ctx;
           const gain = this.currentGain;
           const src = this.currentSource;
@@ -8468,32 +9473,57 @@
       };
 
       // ==========================================
-      // ANNOUNCER (PART B)
+      // ZERO-QUEUE ANNOUNCER (ANDROID WEBVIEW SAFE + 1.2S COOLDOWN)
       // ==========================================
       const Announcer = {
         lastPlayed: {},
+        lastGlobalAt: 0,
+        COOLDOWN_MS: 1200,
         messages: {
           victory_royale: 'Victory Royale!', first_blood: 'First blood!', double_kill: 'Double kill!',
           triple_kill: 'Triple kill!', quad_kill: 'Quad kill!', rampage: 'Rampage!',
           storm_closing: 'The storm is closing.', sudden_death: 'Sudden death.',
           eliminated: 'You were eliminated.', match_start: 'Battle begins.', one_alive: 'One rival remains.', level_up: 'Level up!'
         },
+        cancelAll() {
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            try {
+              if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+                window.speechSynthesis.cancel();
+              }
+            } catch (_) {}
+          }
+        },
         play(key, minGapMs = 1500) {
-          if (AudioEngine.isExternallyMuted()) return;
+          if (AudioEngine.isExternallyMuted() || PlayerData.voiceVolume <= 0) return;
           const now = performance.now();
+          const highPriority = key === 'victory_royale' || key === 'eliminated';
+          if (!highPriority && now - this.lastGlobalAt < this.COOLDOWN_MS) return;
           if (this.lastPlayed[key] && now - this.lastPlayed[key] < minGapMs) return;
           this.lastPlayed[key] = now;
+          this.lastGlobalAt = now;
           if (AudioEngine.playSample('voice_' + key, 0.9, 0, 'voice')) return;
           const message = this.messages[key];
-          if (!message || PlayerData.voiceVolume <= 0 || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+          if (!message) return;
+          const hasTTS = typeof window !== 'undefined' && 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+          if (!hasTTS) {
+            AudioEngine.playTone(660, 'triangle', 0.14, 0.22, 880, 0, 'announcer_chime');
+            if (typeof showToast === 'function') showToast(`📣 ${message}`, '#fde68a', 2200);
+            return;
+          }
           try {
+            const synth = window.speechSynthesis;
+            if (synth.speaking || synth.pending) {
+              synth.cancel();
+            }
+            if (typeof synth.resume === 'function') synth.resume();
             const utterance = new SpeechSynthesisUtterance(message);
-            utterance.volume = PlayerData.voiceVolume * 0.82;
+            utterance.volume = Math.max(0, Math.min(1, PlayerData.voiceVolume * 0.82));
             utterance.rate = 1.04;
             utterance.pitch = 0.9;
-            window.speechSynthesis.speak(utterance);
-          } catch (error) {
-            console.debug('[Audio] Speech announcer unavailable.', error);
+            synth.speak(utterance);
+          } catch (_) {
+            AudioEngine.playTone(660, 'triangle', 0.14, 0.22, 880, 0, 'announcer_chime');
           }
         }
       };
@@ -8696,8 +9726,8 @@
       function getDprCapForQuality(quality) {
         const q = quality || PlayerData.graphicsQuality || 'high';
         if (q === 'low') return 1.0;
-        if (q === 'medium') return 1.25;
-        return 1.5;
+        if (q === 'medium') return 1.5;
+        return 2.0;
       }
 
       function resizeCanvas() {
@@ -10145,6 +11175,7 @@
           const aimActions = { 'btn-sword': 'sword', 'btn-spell': 'spell', 'btn-mana': 'mana', 'btn-art': 'art' };
           const beginAim = (button, action, clientX, clientY) => {
             AudioEngine.init();
+            if (PlayerData.btEarlyTrigger) AudioEngine.playEarlyTriggerSfx(action);
             isAiming = true;
             aimAction = action;
             isCancelAimHovered = false;
@@ -10241,7 +11272,10 @@
             finalizeAim(false);
           });
 
-          this.bindButton('btn-dash', 'dash', () => Game.playerAction('dash'));
+          this.bindButton('btn-dash', 'dash', () => {
+            if (PlayerData.btEarlyTrigger) AudioEngine.playEarlyTriggerSfx('dash');
+            Game.playerAction('dash');
+          });
 
           const superButton = document.getElementById('btn-super');
           superButton.addEventListener('touchstart', event => {
@@ -10449,7 +11483,7 @@
           let dy = clientY - this.joystickCenterY;
           let distance = Math.hypot(dx, dy);
           const maxRange = this.maxRange || 45;
-          const deadzone = maxRange * 0.14;
+          const deadzone = maxRange * 0.10;
           if (distance > maxRange) {
             dx = dx / distance * maxRange;
             dy = dy / distance * maxRange;
@@ -13818,7 +14852,7 @@
           this.countdownSeconds = STORM_PHASES[0].safeDuration;
           this.damageTimer = 0;
           this.timerInPhase = 0;
-          this.nextLightningAt = 3 + Math.random() * 4;
+          this.nextLightningAt = 3 + cryptoRandomFloat() * 4;
           this.lastPhaseAnnounced = 0;
           this.cratesDroppedPhases = {};
         },
@@ -14375,8 +15409,8 @@
               let sx = cx;
               let sy = cy;
               for (let attempt = 0; attempt < 20; attempt++) {
-                const a = Math.random() * Math.PI * 2;
-                const d = (0.15 + Math.random() * 0.65) * maxR;
+                const a = cryptoRandomFloat() * Math.PI * 2;
+                const d = (0.15 + cryptoRandomFloat() * 0.65) * maxR;
                 const tx = Math.max(240, Math.min(ARENA_WIDTH - 240, cx + Math.cos(a) * d));
                 const ty = Math.max(240, Math.min(ARENA_HEIGHT - 240, cy + Math.sin(a) * d));
                 if (isSafeDeployment(tx, ty, 38)) { sx = tx; sy = ty; break; }
@@ -14888,6 +15922,7 @@
           PlayerData.gems += earnedGems;
           PlayerData.totalMatches++;
           if (isVictory) PlayerData.totalWins++;
+          if (placement <= 10) PlayerData.totalTop10 = (PlayerData.totalTop10 || 0) + 1;
           PlayerData.totalKills += kills;
           PlayerData.totalSurvivalTime = (PlayerData.totalSurvivalTime || 0) + survivalRounded;
           PlayerData.bestSurvivalTime = Math.max(PlayerData.bestSurvivalTime || 0, survivalRounded);
@@ -16567,11 +17602,13 @@
         }
       }, true);
 
-      // Focus & visibility safety: auto-pause active matches and mute Web Audio/Music
+      // Focus & visibility safety: auto-pause active matches, pause lookahead cursor, cancel speech, release inputs
       function handleFocusLoss() {
         if (Game.state === 'PLAYING' || Game.state === 'DROPPING') pauseGame();
         releaseScreenWakeLock();
         Input.reset();
+        if (typeof Music !== 'undefined' && Music.pauseScheduler) Music.pauseScheduler();
+        if (typeof Announcer !== 'undefined' && Announcer.cancelAll) Announcer.cancelAll();
         if (!hiddenMusicMode && Music.currentTrack) {
           hiddenMusicMode = Music.currentTrack;
         }
@@ -16581,6 +17618,7 @@
       function handleFocusRestore() {
         lastTime = performance.now();
         AudioEngine.setExternalMute('focus', false);
+        if (typeof Music !== 'undefined' && Music.resumeScheduler) Music.resumeScheduler();
         if (Game.state === 'PLAYING' || Game.state === 'DROPPING' || Game.state === 'PAUSED') {
           acquireScreenWakeLock();
         }
@@ -16595,6 +17633,7 @@
         if (document.hidden) handleFocusLoss();
         else handleFocusRestore();
       });
+      window.addEventListener('pagehide', handleFocusLoss);
       window.addEventListener('blur', handleFocusLoss);
       window.addEventListener('focus', handleFocusRestore);
 
@@ -16650,6 +17689,8 @@
         if (quickComms && !quickComms.classList.contains('hidden')) { quickComms.classList.add('hidden'); return true; }
         const acctModal = document.getElementById('account-modal');
         if (acctModal && !acctModal.classList.contains('hidden')) { closeAccountModal(); return true; }
+        const missionsModal = document.getElementById('missions-modal');
+        if (missionsModal && !missionsModal.classList.contains('hidden')) { closeMissionsModal(); return true; }
         const friendsModal = document.getElementById('friends-modal');
         if (friendsModal && !friendsModal.classList.contains('hidden')) { closeFriendsModal(); return true; }
         if (typeof HudEditor !== 'undefined' && HudEditor.isOpen) { HudEditor.close(false); return true; }
@@ -17224,6 +18265,18 @@
           const hasRerollable = Array.isArray(PlayerData.dailyMissions) && PlayerData.dailyMissions.some(m => m && !m.claimed);
           rerollBtn.disabled = !hasRerollable;
         }
+        const missions = Array.isArray(PlayerData.dailyMissions) ? PlayerData.dailyMissions : [];
+        const claimableCount = missions.filter(m => m && !m.claimed && (m.progress || 0) >= m.target).length;
+        const completedCount = missions.filter(m => m && (m.claimed || (m.progress || 0) >= m.target)).length;
+        const pillSub = document.getElementById('missions-pill-sub');
+        if (pillSub) {
+          pillSub.textContent = claimableCount > 0 ? `${claimableCount} Ready to Claim!` : `${completedCount}/${missions.length || 3} Done`;
+        }
+        const badgeEl = document.getElementById('missions-unread-badge');
+        if (badgeEl) {
+          badgeEl.textContent = String(claimableCount);
+          badgeEl.classList.toggle('hidden', claimableCount <= 0);
+        }
       }
 
       async function rerollDailyMissionAd() {
@@ -17324,6 +18377,7 @@
       function closeStatsUpgrades() {
         const screen = document.getElementById('stats-upgrades-screen');
         if (screen) screen.classList.add('hidden');
+        setLobbyNavActive('heroes');
         updateLobbyShowcase();
       }
 
@@ -17411,6 +18465,14 @@
         PlayerData.spendableXp = res.remainingXp;
         PlayerData.statUpgrades = res.upgrades;
         PlayerData.save();
+        if (typeof CloudBridge !== 'undefined') {
+          CloudBridge.request('atomicSpend', {
+            currency: 'xp',
+            amount: res.cost,
+            statKey,
+            nextTier: res.upgrades[statKey]
+          });
+        }
         AudioEngine.sfxPurchase();
         showToast(`⚡ ${STAT_UPGRADE_DEFS[statKey].label} upgraded to Rank ${res.upgrades[statKey]}!`, false);
         renderStatsUpgradesModal();
@@ -17820,6 +18882,20 @@
         toggleItemDetails(false);
         Input.reset();
         isPaused = false;
+        while (killFeedTimers.length) clearTimeout(killFeedTimers.pop());
+        const resetPoolList = [
+          projectilePool, particlePool, damageTextPool, lootPool, emberPool,
+          supplyCratePool, reactionRingPool, steamCloudPool, hitArcPool, frostPatchPool
+        ];
+        for (let pIdx = 0; pIdx < resetPoolList.length; pIdx++) {
+          const pool = resetPoolList[pIdx];
+          if (!Array.isArray(pool)) continue;
+          for (let j = 0; j < pool.length; j++) {
+            if (pool[j] && typeof pool[j] === 'object') pool[j].active = false;
+          }
+        }
+        document.getElementById('match-ping-pill')?.classList.add('hidden');
+        document.getElementById('reconnect-banner')?.classList.add('hidden');
         if (typeof SquadEngine !== 'undefined') SquadEngine.onMatchExit();
         if (typeof CloudBridge !== 'undefined') CloudBridge.request('leaveSquadMatch', { clearToken: true });
         transitionTo(() => {
@@ -17906,6 +18982,7 @@
       function closeShop() {
         transitionTo(() => {
           document.getElementById('shop-screen').classList.add('hidden');
+          setLobbyNavActive('heroes');
           updateLobbyShowcase();
         });
       }
@@ -17985,6 +19062,9 @@
         PlayerData.unlockedRunes.push(runeId);
         PlayerData.equippedRune = runeId;
         PlayerData.save();
+        if (typeof CloudBridge !== 'undefined') {
+          CloudBridge.request('atomicSpend', { currency: 'coins', amount: rune.costGold, unlockField: 'unlockedRunes', unlockId: runeId });
+        }
         AudioEngine.sfxPurchase();
         showToast(`⚡ ${rune.name} unlocked and equipped!`, false);
         renderRuneCards();
@@ -18105,6 +19185,9 @@
         PlayerData.unlockedDropSkins.push(skinId);
         PlayerData.selectedDropSkin = skinId;
         PlayerData.save();
+        if (typeof CloudBridge !== 'undefined') {
+          CloudBridge.request('atomicSpend', { currency: 'crystals', amount: cost, unlockField: 'unlockedTrails', unlockId: skinId });
+        }
         AudioEngine.sfxPurchase();
         showToast(`✓ ${DROP_SKINS[skinId].name} Unlocked!`, false);
         renderDropSkinCards();
@@ -18187,6 +19270,14 @@
         PlayerData.unlockedFighters.push(charKey);
         PlayerData.selectedFighter = charKey;
         PlayerData.save();
+        if (typeof CloudBridge !== 'undefined') {
+          CloudBridge.request('atomicSpend', {
+            currency: gemCost > 0 ? 'gems' : 'coins',
+            amount: gemCost > 0 ? gemCost : goldCost,
+            unlockField: 'unlockedChampions',
+            unlockId: charKey
+          });
+        }
 
         AudioEngine.sfxPurchase();
         showToast(`${CHARACTER_DATA[charKey].name} Unlocked!`, false);
@@ -18205,12 +19296,17 @@
       // SETTINGS & TUTORIAL LOGIC (PART H)
       // ==========================================
       function openSettings(initialTab = 'audio') {
+        Input.reset();
         const screen = document.getElementById('settings-screen');
         if (!screen) return;
         const sm = document.getElementById('slider-music'); if (sm) sm.value = PlayerData.musicVolume;
         const ss = document.getElementById('slider-sfx'); if (ss) ss.value = PlayerData.sfxVolume;
         const sv = document.getElementById('slider-voice'); if (sv) sv.value = PlayerData.voiceVolume;
         const th = document.getElementById('toggle-haptics'); if (th) th.checked = PlayerData.haptics;
+        const bt = document.getElementById('toggle-bt-early'); if (bt) bt.checked = Boolean(PlayerData.btEarlyTrigger);
+        const ao = document.getElementById('slider-audio-offset'); if (ao) ao.value = String(PlayerData.audioSyncOffsetMs || 0);
+        const aov = document.getElementById('audio-offset-val'); if (aov) aov.textContent = `${PlayerData.audioSyncOffsetMs || 0} ms`;
+        const lat = document.getElementById('audio-latency-readout'); if (lat) lat.textContent = AudioEngine.getLatencyReport();
         const motion = document.getElementById('toggle-motion'); if (motion) motion.checked = PlayerData.reducedMotion;
         const al = document.getElementById('toggle-autoloot'); if (al) al.checked = PlayerData.autoLoot !== false;
         const b30 = document.getElementById('toggle-battery30'); if (b30) b30.checked = Boolean(PlayerData.batterySaver30Fps);
@@ -18831,6 +19927,57 @@
         PlayerData.voiceVolume = parseFloat(val);
       }
 
+      function syncQuickMuteButton() {
+        const btn = document.getElementById('btn-quick-mute');
+        if (!btn) return;
+        const muted = Boolean(PlayerData.quickMuted);
+        btn.textContent = muted ? '🔇' : '🔊';
+        btn.classList.toggle('muted-active', muted);
+        btn.setAttribute('aria-pressed', String(muted));
+      }
+
+      function toggleQuickMute() {
+        PlayerData.quickMuted = !PlayerData.quickMuted;
+        PlayerData.save();
+        syncQuickMuteButton();
+        AudioEngine.setExternalMute('quickmute', PlayerData.quickMuted);
+        if (!PlayerData.quickMuted) {
+          AudioEngine.init();
+          Music.setVolume(PlayerData.musicVolume);
+        }
+        showToast(PlayerData.quickMuted ? '🔇 Audio Muted' : '🔊 Audio Unmuted', '#7dd3fc');
+      }
+
+      function onBtEarlyTriggerToggle(val) {
+        PlayerData.btEarlyTrigger = Boolean(val);
+        PlayerData.save();
+        showToast(PlayerData.btEarlyTrigger ? '🎧 Bluetooth Early-Trigger Mode ON' : '🎧 Bluetooth Early-Trigger Mode OFF', '#c084fc');
+      }
+
+      function onAudioOffsetChange(val) {
+        const n = Math.max(-150, Math.min(150, Math.round((Number(val) || 0) / 10) * 10));
+        PlayerData.audioSyncOffsetMs = n;
+        const label = document.getElementById('audio-offset-val');
+        if (label) label.textContent = `${n > 0 ? '+' : ''}${n} ms`;
+        const lat = document.getElementById('audio-latency-readout');
+        if (lat) lat.textContent = AudioEngine.getLatencyReport();
+      }
+
+      function testAudioSync() {
+        AudioEngine.init();
+        const btn = document.getElementById('btn-test-audio-sync');
+        const lat = document.getElementById('audio-latency-readout');
+        if (lat) lat.textContent = AudioEngine.getLatencyReport();
+        const baseDelaySec = 0.16;
+        AudioEngine.sfxSyncTestChime(baseDelaySec);
+        if (btn) {
+          setTimeout(() => {
+            btn.classList.add('flash-sync');
+            setTimeout(() => btn.classList.remove('flash-sync'), 180);
+          }, Math.round(baseDelaySec * 1000));
+        }
+      }
+
       function onHapticsToggle(val) {
         PlayerData.haptics = Boolean(val);
       }
@@ -19215,12 +20362,26 @@
         if (tipText) tipText.textContent = tips[tipIndex];
       }, 2000);
 
+      AudioEngine.prewarm();
+      syncQuickMuteButton();
+      if (PlayerData.quickMuted) AudioEngine.setExternalMute('quickmute', true);
+
       AssetLoader.load((loaded, total) => {
         const pct = Math.round((loaded / total) * 100);
         if (progressFill) progressFill.style.width = pct + '%';
         const st = document.getElementById('loading-status-text');
         if (st) st.textContent = `INITIALIZING REALM... (${pct}%)`;
       }).then(() => {
+        // Pre-decode BGM buffers and gate Demo Supplies button via DEV_DEMO_ENABLED
+        if (AudioEngine.ctx) {
+          ['bgm_lobby', 'bgm_combat', 'bgm_climax'].forEach(k => AssetLoader.decodeAudioKey(k).catch(() => {}));
+        }
+        CloudBridge.request('getDevFlags').then((flags) => {
+          const opBtn = document.getElementById('btn-operator');
+          if (opBtn && flags && flags.devDemoEnabled === false) {
+            opBtn.classList.add('hidden');
+          }
+        });
         clearInterval(tipInterval);
         if (loadingScreen) {
           loadingScreen.style.opacity = '0';
@@ -19422,6 +20583,7 @@
           const pill = document.getElementById('cloud-sync-status-pill');
           const desc = document.getElementById('cloud-sync-account-desc');
           const sandboxBadge = document.getElementById('sandbox-mode-badge');
+          const statusDot = document.getElementById('lobby-status-dot');
           const lobbyCode = document.getElementById('lobby-friend-code-tag');
           const acctName = document.getElementById('acct-display-name');
           const acctProv = document.getElementById('acct-provider-badge');
@@ -19432,16 +20594,78 @@
 
           const codeText = state.friendCode || 'ARC-XXXX';
           if (sandboxBadge) sandboxBadge.classList.toggle('hidden', !state.sandboxMode);
+          if (statusDot) {
+            const isOnline = typeof navigator === 'undefined' || navigator.onLine !== false;
+            statusDot.classList.toggle('offline', !isOnline);
+            statusDot.classList.toggle('online', isOnline && Boolean(state.signedIn && !state.sandboxMode));
+            statusDot.title = !isOnline ? 'Offline' : (state.signedIn && !state.sandboxMode ? 'Cloud Connected' : 'Local Sandbox Mode');
+          }
           if (lobbyCode) lobbyCode.textContent = codeText;
           if (acctCodeBtn) acctCodeBtn.textContent = `${codeText} 📋`;
           if (friendsCodeBtn) friendsCodeBtn.textContent = `${codeText} 📋`;
-          if (acctName) acctName.textContent = state.displayName || PlayerData.playerName || 'Champion';
+          const activeName = state.displayName || PlayerData.playerName || 'Champion';
+          if (acctName) acctName.textContent = activeName;
+          const editNameInput = document.getElementById('acct-edit-name-input');
+          if (editNameInput && document.activeElement !== editNameInput) {
+            editNameInput.placeholder = activeName;
+          }
           if (acctProv) {
             acctProv.textContent = state.isAnonymous
-              ? 'Guest Account (Unlinked)'
-              : (state.authProvider === 'google' ? `Google Account · ${state.email || ''}` : `Email Account · ${state.email || ''}`);
+              ? 'Guest Account'
+              : (state.authProvider === 'google' ? `Google · ${state.email || 'Linked'}` : `Email · ${state.email || 'Linked'}`);
           }
           if (upgradeBox) upgradeBox.classList.toggle('hidden', !state.isAnonymous);
+
+          // Unified Account Modal portrait, XP bar, last synced, and Career Stats Grid
+          const acctPortrait = document.getElementById('acct-portrait-img');
+          if (acctPortrait && typeof AssetLoader !== 'undefined') {
+            const charKey = PlayerData.selectedFighter || 'BERSERKER';
+            AssetLoader.bindPortraitFallback(acctPortrait, charKey);
+            const src = AssetLoader.getPortraitSrc(charKey);
+            if (acctPortrait.getAttribute('src') !== src) acctPortrait.src = src;
+          }
+          const lv = PlayerData.level || 1;
+          const reqXp = getXpRequiredForLevel(lv);
+          const curXp = lv >= MAX_PLAYER_LEVEL ? reqXp : Math.min(reqXp, PlayerData.xp || 0);
+          const acctLv = document.getElementById('acct-level-label');
+          if (acctLv) acctLv.textContent = `LVL ${lv}`;
+          const acctXpFill = document.getElementById('acct-xp-fill');
+          if (acctXpFill) acctXpFill.style.width = `${Math.min(100, Math.round((curXp / Math.max(1, reqXp)) * 100))}%`;
+          const acctXpText = document.getElementById('acct-xp-text');
+          if (acctXpText) acctXpText.textContent = lv >= MAX_PLAYER_LEVEL ? 'MAX' : `${curXp}/${reqXp} XP`;
+          const lastSyncedEl = document.getElementById('acct-last-synced');
+          if (lastSyncedEl) {
+            const ts = state.lastSyncedAt || (state.profile && state.profile.updatedAt);
+            lastSyncedEl.textContent = ts
+              ? `Last Synced: ${new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+              : (state.sandboxMode ? 'Local Sandbox Mode · Ready for Cloud' : 'Last Synced: Pending');
+          }
+          const careerGrid = document.getElementById('acct-career-grid');
+          if (careerGrid) {
+            const matches = PlayerData.totalMatches || 0;
+            const wins = PlayerData.totalWins || 0;
+            const winRate = matches > 0 ? `${Math.round((wins / matches) * 100)}%` : '0%';
+            const tiles = [
+              { label: 'Wins', value: wins.toLocaleString('en-US') },
+              { label: 'Elims', value: (PlayerData.totalKills || 0).toLocaleString('en-US') },
+              { label: 'Matches', value: matches.toLocaleString('en-US') },
+              { label: 'Win Rate', value: winRate },
+              { label: 'Revives', value: (PlayerData.totalRevives || 0).toLocaleString('en-US') },
+              { label: 'Top 10', value: (PlayerData.totalTop10 || 0).toLocaleString('en-US') },
+              { label: 'Damage', value: (PlayerData.totalDamageDealt || 0).toLocaleString('en-US') },
+              { label: 'Best Time', value: formatDurationShort(PlayerData.bestSurvivalTime || 0) }
+            ];
+            careerGrid.replaceChildren(...tiles.map(t => {
+              const box = document.createElement('div');
+              box.className = 'acct-stat-tile';
+              const strong = document.createElement('strong');
+              strong.textContent = t.value;
+              const span = document.createElement('span');
+              span.textContent = t.label;
+              box.append(strong, span);
+              return box;
+            }));
+          }
 
           if (pill) {
             pill.textContent = state.statusLabel || 'Cloud Setup Pending · Local Sandbox Mode';
@@ -19449,7 +20673,7 @@
           }
           if (desc) {
             desc.textContent = state.signedIn
-              ? `${state.displayName || PlayerData.playerName} (${codeText}) · ${state.isAnonymous ? 'Guest account — tap Account to link Email & Password.' : 'Cloud Profile, Friends & Dual HUD synced.'}`
+              ? `${activeName} (${codeText}) · ${state.isAnonymous ? 'Guest account — open Account tab to link Email & Password.' : 'Cloud Profile, Friends & Dual HUD synced.'}`
               : 'Sign in via Account Login Gate to sync progression, Friends, Squads, and Top-50 Leaderboard.';
           }
           if (lbBadge) {
@@ -19460,7 +20684,9 @@
         async function syncProfile(silent = false) {
           const res = await request('syncProfile', buildProfilePayload());
           if (res && res.ok) {
+            state.lastSyncedAt = Date.now();
             if (res.profile) applyAuthProfileToLocal(res.profile, state);
+            refreshUI();
             if (!silent) showToast('☁️ Profile, Friends & Dual HUD synced!', '#34d399');
           } else if (!silent) {
             showToast('💾 Local save updated.', '#7dd3fc');
@@ -19540,12 +20766,14 @@
         checkTutorial();
         CloudBridge.request('checkReconnectToken').then((tk) => {
           if (tk && tk.matchId && typeof SquadEngine !== 'undefined' && !SquadEngine.matchId) {
-            showConfirmModal(
-              'RECONNECT TO SQUAD?',
-              'Your squad match is still active (12s grace window). Rejoin now?',
-              'Rejoin Match',
-              () => SquadEngine.joinLeaderMatch(tk.matchId)
-            );
+            openConfirmModal({
+              icon: '🛡️',
+              title: 'RECONNECT TO SQUAD?',
+              message: 'Your squad match is still active (12s grace window). Rejoin now?',
+              confirmLabel: 'Rejoin Match',
+              cancelLabel: 'Dismiss',
+              onConfirm: () => SquadEngine.joinLeaderMatch(tk.matchId)
+            });
           }
         });
       }
@@ -19628,11 +20856,58 @@
         }
       }
 
+      function setLobbyNavActive(tab) {
+        const tabs = ['heroes', 'shop', 'upgrades', 'social', 'account'];
+        const active = tabs.includes(tab) ? tab : 'heroes';
+        for (let i = 0; i < tabs.length; i++) {
+          const btn = document.getElementById(`nav-tab-${tabs[i]}`);
+          if (btn) btn.classList.toggle('active', tabs[i] === active);
+        }
+      }
+
+      function lobbyNavTab(tab) {
+        AudioEngine.init();
+        Input.reset();
+        setLobbyNavActive(tab);
+        if (tab === 'heroes') {
+          closeShop();
+          closeStatsUpgrades();
+          closeFriendsModal();
+          closeAccountModal();
+          closeLeaderboard();
+          closeMissionsModal();
+        } else if (tab === 'shop') {
+          openShop('characters');
+        } else if (tab === 'upgrades') {
+          openStatsUpgrades('upgrades');
+        } else if (tab === 'social') {
+          openFriendsModal();
+        } else if (tab === 'account') {
+          openAccountModal();
+        }
+      }
+
+      function openMissionsModal() {
+        AudioEngine.init();
+        Input.reset();
+        renderDailyMissions();
+        document.getElementById('missions-modal')?.classList.remove('hidden');
+      }
+
+      function closeMissionsModal() {
+        document.getElementById('missions-modal')?.classList.add('hidden');
+        setLobbyNavActive('heroes');
+      }
+
       function openAccountModal() {
         AudioEngine.init();
+        Input.reset();
+        setLobbyNavActive('account');
         CloudBridge.refreshUI();
         const err = document.getElementById('acct-upgrade-error');
         if (err) { err.textContent = ''; err.classList.add('hidden'); }
+        const nameFb = document.getElementById('acct-name-feedback');
+        if (nameFb) { nameFb.textContent = ''; nameFb.classList.add('hidden'); }
         const modal = document.getElementById('account-modal');
         if (modal) modal.classList.remove('hidden');
         if (window.ArcaneNativeBridge && window.ArcaneNativeBridge.pushNavState) {
@@ -19643,6 +20918,59 @@
       function closeAccountModal() {
         const modal = document.getElementById('account-modal');
         if (modal) modal.classList.add('hidden');
+        setLobbyNavActive('heroes');
+      }
+
+      async function submitEditDisplayName() {
+        AudioEngine.init();
+        const input = document.getElementById('acct-edit-name-input');
+        const fb = document.getElementById('acct-name-feedback');
+        const raw = (input?.value || '').trim();
+        const res = await CloudBridge.request('updateDisplayName', { newName: raw });
+        if (res && res.ok) {
+          PlayerData.playerName = res.displayName || raw;
+          PlayerData.save();
+          if (input) input.value = '';
+          if (fb) { fb.textContent = ''; fb.classList.add('hidden'); }
+          CloudBridge.refreshUI();
+          updateLobbyShowcase();
+          showToast(`✓ Champion name updated to ${PlayerData.playerName}!`, '#34d399');
+        } else if (fb) {
+          fb.textContent = (res && res.error) || 'Use 3-12 letters, numbers, or underscores (no reserved prefixes).';
+          fb.classList.remove('hidden');
+        }
+      }
+
+      function requestCloudSignOut() {
+        openConfirmModal({
+          icon: '🚪',
+          title: 'SIGN OUT?',
+          message: 'Sign out of your Arcane account on this device? Your cloud progression remains safely backed up.',
+          confirmLabel: 'Sign Out',
+          cancelLabel: 'Stay Signed In',
+          onConfirm: () => { cloudSignOut(); }
+        });
+      }
+
+      function requestResetLocalCacheHud() {
+        openConfirmModal({
+          icon: '🧹',
+          title: 'RESET LOCAL CACHE & HUD?',
+          message: 'Clear cached local HUD profiles and temporary sandbox data on this device? Your cloud account data is unaffected.',
+          confirmLabel: 'Reset Cache',
+          cancelLabel: 'Cancel',
+          onConfirm: async () => {
+            await CloudBridge.request('resetLocalCache');
+            safeStorageRemove(HUD_LAYOUT_STORAGE_KEY);
+            safeStorageRemove(HUD_LAYOUT_LANDSCAPE_KEY);
+            safeStorageRemove(HUD_LAYOUT_PORTRAIT_KEY);
+            if (typeof HudLayoutManager !== 'undefined') {
+              HudLayoutManager.load();
+              HudLayoutManager.apply(HudLayoutManager.saved);
+            }
+            showToast('🧹 Local cache and HUD layouts reset to defaults.', '#fde68a');
+          }
+        });
       }
 
       async function submitGuestUpgrade() {
@@ -19663,10 +20991,8 @@
 
       function copyMyFriendCode() {
         const code = CloudBridge.state.friendCode || 'ARC-XXXX';
-        if (window.ArcaneNativeBridge && window.ArcaneNativeBridge.shareText) {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(code).catch(() => {});
-          }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).catch(() => {});
         }
         showToast(`📋 Copied Friend Code: ${code}`, '#7dd3fc');
       }
@@ -19779,13 +21105,17 @@
         }
 
         function renderSquadRoster() {
-          const grid = document.getElementById('squad-slots-grid');
+          const miniRow = document.getElementById('squad-slots-grid');
+          const modalGrid = document.getElementById('friends-squad-slots');
           const header = document.getElementById('squad-header-label');
+          const modalTitle = document.getElementById('modal-squad-title');
           const codeBtn = document.getElementById('btn-copy-squad-code');
+          const modalCodeBtn = document.getElementById('btn-modal-copy-squad');
+          const privacyToggle = document.getElementById('toggle-squad-privacy');
           const actRow = document.getElementById('squad-actions-row');
           const readyBtn = document.getElementById('btn-squad-ready');
           const playLabel = document.getElementById('lobby-play-label');
-          if (!grid) return;
+          if (!miniRow) return;
 
           const sq = snapshot.squad;
           const myUid = CloudBridge.state.uid || snapshot.uid;
@@ -19802,9 +21132,16 @@
           const count = memberList.length;
           const leaderUid = (sq && sq.leaderUid) || (memberList[0] && memberList[0].uid);
           const amLeader = leaderUid === myUid;
+          const roomCode = (sq && (sq.roomCode || sq.squadId)) || 'SQ-LOCAL';
 
           if (header) header.textContent = `SQUAD (${count}/4)`;
-          if (codeBtn) codeBtn.textContent = `${(sq && (sq.roomCode || sq.squadId)) || 'SQ-LOCAL'} 📋`;
+          if (modalTitle) modalTitle.textContent = `Current Squad (${count}/4)`;
+          if (codeBtn) codeBtn.textContent = `${roomCode} 📋`;
+          if (modalCodeBtn) modalCodeBtn.textContent = `${roomCode} 📋`;
+          if (privacyToggle) {
+            privacyToggle.checked = Boolean(sq && sq.isPrivate);
+            privacyToggle.disabled = !amLeader;
+          }
           if (actRow) actRow.classList.toggle('hidden', count <= 1);
           if (readyBtn && myUid && membersObj[myUid]) {
             const isRdy = Boolean(membersObj[myUid].ready);
@@ -19823,32 +21160,59 @@
             }
           }
 
-          let html = '';
+          // 1. Sleek single-row compact Squad Pill in Lobby
+          let miniHtml = '';
           for (let i = 0; i < 4; i++) {
             const m = memberList[i];
             if (m) {
               const isLdr = m.uid === leaderUid;
               const isRdy = Boolean(m.ready || isLdr);
               const src = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(m.championId) : '';
-              const fb = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitFallbackSrc(m.championId) : '';
-              html += `
-                <div class="squad-slot ${isRdy ? 'is-ready' : ''}">
-                  ${isLdr ? '<span class="squad-slot-crown" title="Squad Leader">👑</span>' : ''}
-                  ${amLeader && !isLdr ? `<button type="button" class="squad-slot-kick" data-ar-click="kickSquadMember" data-ar-arg="${escapeHtmlSafe(m.uid)}" title="Remove">×</button>` : ''}
-                  <img class="squad-slot-avatar" src="${src}" data-fallback-src="${fb}" data-champ="${escapeHtmlSafe(m.championId || 'BERSERKER')}" alt="${escapeHtmlSafe(m.displayName)}" crossorigin="anonymous" />
-                  <div class="squad-slot-name">${escapeHtmlSafe(m.displayName)}</div>
-                  <div class="squad-slot-meta ${isRdy ? '' : 'waiting'}">${isRdy ? '✓ READY' : 'WAIT'}</div>
+              miniHtml += `
+                <div class="squad-mini-avatar-wrap ${isRdy ? 'is-ready' : ''}" title="${escapeHtmlSafe(m.displayName)}">
+                  ${isLdr ? '<span class="squad-mini-crown">👑</span>' : ''}
+                  <img class="squad-slot-avatar" src="${src}" data-champ="${escapeHtmlSafe(m.championId || 'BERSERKER')}" alt="${escapeHtmlSafe(m.displayName)}" crossorigin="anonymous" />
+                  <span class="squad-mini-dot ${isRdy ? 'ready' : ''}"></span>
                 </div>`;
             } else {
-              html += `<button type="button" class="squad-slot empty-slot" data-ar-click="openFriendsModal" title="Invite Friend">+ Invite</button>`;
+              miniHtml += `<span class="squad-mini-add" aria-hidden="true">+</span>`;
             }
           }
-          grid.innerHTML = html;
-          grid.querySelectorAll('img.squad-slot-avatar').forEach(img => {
+          miniRow.innerHTML = miniHtml;
+          miniRow.querySelectorAll('img.squad-slot-avatar').forEach(img => {
             if (typeof AssetLoader !== 'undefined' && AssetLoader.bindPortraitFallback) {
               AssetLoader.bindPortraitFallback(img, img.dataset.champ || 'BERSERKER');
             }
           });
+
+          // 2. Full 4-slot Squad Room Roster inside #friends-modal
+          if (modalGrid) {
+            let fullHtml = '';
+            for (let i = 0; i < 4; i++) {
+              const m = memberList[i];
+              if (m) {
+                const isLdr = m.uid === leaderUid;
+                const isRdy = Boolean(m.ready || isLdr);
+                const src = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(m.championId) : '';
+                fullHtml += `
+                  <div class="squad-slot ${isRdy ? 'is-ready' : ''}">
+                    ${isLdr ? '<span class="squad-slot-crown" title="Squad Leader">👑</span>' : ''}
+                    ${amLeader && !isLdr ? `<button type="button" class="squad-slot-kick" data-ar-click="kickSquadMember" data-ar-arg="${escapeHtmlSafe(m.uid)}" title="Remove">×</button>` : ''}
+                    <img class="squad-slot-avatar" src="${src}" data-champ="${escapeHtmlSafe(m.championId || 'BERSERKER')}" alt="${escapeHtmlSafe(m.displayName)}" crossorigin="anonymous" />
+                    <div class="squad-slot-name">${escapeHtmlSafe(m.displayName)}</div>
+                    <div class="squad-slot-meta ${isRdy ? '' : 'waiting'}">${isRdy ? '✓ READY' : 'WAIT'}</div>
+                  </div>`;
+              } else {
+                fullHtml += `<button type="button" class="squad-slot empty-slot" data-ar-click="switchFriendsTab" data-ar-arg="friends" title="Invite Friend">+ Invite</button>`;
+              }
+            }
+            modalGrid.innerHTML = fullHtml;
+            modalGrid.querySelectorAll('img.squad-slot-avatar').forEach(img => {
+              if (typeof AssetLoader !== 'undefined' && AssetLoader.bindPortraitFallback) {
+                AssetLoader.bindPortraitFallback(img, img.dataset.champ || 'BERSERKER');
+              }
+            });
+          }
         }
 
         function renderFriendsLists() {
@@ -19919,6 +21283,8 @@
 
       function openFriendsModal() {
         AudioEngine.init();
+        Input.reset();
+        setLobbyNavActive('social');
         CloudBridge.request('refreshFriends');
         SocialUI.renderAll();
         document.getElementById('friends-modal')?.classList.remove('hidden');
@@ -19928,8 +21294,15 @@
       }
       function closeFriendsModal() {
         document.getElementById('friends-modal')?.classList.add('hidden');
+        setLobbyNavActive('heroes');
       }
       function switchFriendsTab(tab) { SocialUI.switchTab(tab); }
+      async function onSquadPrivacyToggle(checked) {
+        const res = await CloudBridge.request('setSquadPrivacy', { isPrivate: Boolean(checked) });
+        if (res && res.ok) {
+          showToast(checked ? '🔒 Squad Room set to Friends Only.' : '🌐 Squad Room open via Room Code.', '#c084fc');
+        }
+      }
 
       async function sendFriendRequestFromUI() {
         const input = document.getElementById('friend-search-input');
@@ -20112,6 +21485,26 @@
             }
             applyRemoteBotAndWorldSnapshot(d.payload);
             renderDropPins();
+          } else if (d.eventType === 'network' && d.payload) {
+            const pingPill = document.getElementById('match-ping-pill');
+            const recBanner = document.getElementById('reconnect-banner');
+            const ms = Math.max(1, Math.round(Number(d.payload.pingMs) || 28));
+            const icon = ms <= 80 ? '🟢' : (ms <= 160 ? '🟡' : '🔴');
+            if (pingPill && (Game.state === 'PLAYING' || Game.state === 'DROPPING')) {
+              pingPill.textContent = `${icon} ${ms}ms`;
+              pingPill.classList.remove('hidden');
+            }
+            if (recBanner) {
+              recBanner.classList.toggle('hidden', !Boolean(d.payload.reconnecting));
+            }
+          } else if (d.eventType === 'fx' && d.payload) {
+            const fx = d.payload;
+            // Drop stale remote SFX (>350ms old) so network jitter never triggers delayed sounds
+            if (fx.ts && Date.now() - Number(fx.ts) > 350) return;
+            if (fx.kind === 'sword') AudioEngine.sfxSword(fx.x, fx.y, true);
+            else if (fx.kind === 'spell') AudioEngine.sfxSpell(fx.spellType || 'EMBER', fx.x, fx.y, true);
+            else if (fx.kind === 'dash') AudioEngine.sfxDash(fx.x, fx.y, true);
+            else if (fx.kind === 'hit') AudioEngine.sfxHit(fx.x, fx.y);
           }
         });
 
@@ -20737,6 +22130,34 @@
             AssetLoader.bindPortraitFallback(imgEl, imgEl.dataset.champ || 'BERSERKER');
           }
         });
+
+        // Pinned Current Player Rank Row
+        const selfPinnedEl = document.getElementById('lb-self-pinned');
+        if (selfPinnedEl) {
+          const selfIdx = merged.findIndex(e => e.isSelf);
+          const selfRank = selfIdx >= 0 ? selfIdx + 1 : merged.length;
+          const selfRow = selfIdx >= 0 ? merged[selfIdx] : selfEntry;
+          const heroData = CHARACTER_DATA[selfRow.champion] || CHARACTER_DATA.BERSERKER;
+          const portraitSrc = typeof AssetLoader !== 'undefined' ? AssetLoader.getPortraitSrc(selfRow.champion) : '';
+          const metricVal = sortKey === 'eliminations'
+            ? `${Number(selfRow.eliminations || 0).toLocaleString('en-US')} ⚔️`
+            : `${Number(selfRow.wins || 0).toLocaleString('en-US')} 🏆`;
+          const subText = `LVL ${selfRow.level || 1} · ${heroData.name} · ${selfRow.wins || 0}W / ${selfRow.eliminations || 0}K`;
+          selfPinnedEl.innerHTML = `
+            <div class="lb-row is-self" role="listitem">
+              <span class="lb-rank">#${selfRank}</span>
+              <img class="lb-avatar" src="${portraitSrc}" data-champ="${escapeHtmlSafe(selfRow.champion || 'BERSERKER')}" alt="${escapeHtmlSafe(heroData.name)}" crossorigin="anonymous" referrerpolicy="no-referrer" />
+              <div class="lb-info">
+                <div class="lb-name">${escapeHtmlSafe(selfRow.playerName)} (YOU)</div>
+                <div class="lb-sub">${escapeHtmlSafe(subText)}</div>
+              </div>
+              <div class="lb-metric">${metricVal}</div>
+            </div>`;
+          const pinnedImg = selfPinnedEl.querySelector('img.lb-avatar');
+          if (pinnedImg && typeof AssetLoader !== 'undefined' && AssetLoader.bindPortraitFallback) {
+            AssetLoader.bindPortraitFallback(pinnedImg, pinnedImg.dataset.champ || 'BERSERKER');
+          }
+        }
       }
 
       // ==========================================
@@ -20870,6 +22291,7 @@
         closeImportSavePanel: () => toggleImportSavePanel(false),
         closeItemDetails: () => toggleItemDetails(false),
         closeLeaderboard: () => closeLeaderboard(),
+        closeMissionsModal: () => closeMissionsModal(),
         closeOperatorModal: () => closeOperatorModal(),
         closeSettings: () => closeSettings(),
         closeShop: () => closeShop(),
@@ -20897,11 +22319,13 @@
         kickSquadMember: (arg) => kickSquadMember(arg),
         leaveCurrentSquad: () => leaveCurrentSquad(),
         leaveMatchToLobby: () => returnToLobby(true),
+        lobbyNavTab: (arg) => lobbyNavTab(arg),
         openAccountModal: () => openAccountModal(),
         openCombatGuide: () => openCombatGuide(),
         openFriendsModal: () => openFriendsModal(),
         openHudEditor: () => openHudEditor(),
         openLeaderboard: (arg) => openLeaderboard(arg || 'wins'),
+        openMissionsModal: () => openMissionsModal(),
         openSettings: (arg) => openSettings(arg || 'audio'),
         openShop: (arg) => openShop(arg || 'characters'),
         openStatsUpgrades: (arg) => openStatsUpgrades(arg || 'upgrades'),
@@ -20913,6 +22337,8 @@
         purchaseGemPack: (arg) => purchaseGemPack(arg),
         recheckAdBlocker: () => recheckAdBlocker(),
         removeFriendConfirm: (arg, arg2) => removeFriendConfirm(arg, arg2),
+        requestCloudSignOut: () => requestCloudSignOut(),
+        requestResetLocalCacheHud: () => requestResetLocalCacheHud(),
         rerollDailyMissionAd: () => rerollDailyMissionAd(),
         resetHudEditorLayout: () => resetHudEditorLayout(),
         resetPlayerProgress: () => resetPlayerProgress(),
@@ -20929,6 +22355,7 @@
         shareMyFriendCode: () => shareMyFriendCode(),
         startBattle: () => startBattle(),
         startOrHoldRevive: () => startOrHoldRevive(),
+        submitEditDisplayName: () => submitEditDisplayName(),
         submitGuestUpgrade: () => submitGuestUpgrade(),
         submitName: () => submitName(),
         switchAuthTab: (arg) => switchAuthTab(arg),
@@ -20937,6 +22364,7 @@
         switchSettingsTab: (arg) => switchSettingsTab(arg),
         switchShopTab: (arg) => switchShopTab(arg),
         switchUpgradesTab: (arg) => switchUpgradesTab(arg),
+        testAudioSync: () => testAudioSync(),
         toggleAutoAim: () => toggleAutoAim(),
         toggleFollowLeader: () => toggleFollowLeader(),
         toggleHudEditorSnap: () => toggleHudEditorSnap(),
@@ -20946,6 +22374,7 @@
         togglePasswordVis: (arg) => togglePasswordVis(arg),
         togglePause: () => togglePause(),
         toggleQuickCommsWheel: () => toggleQuickCommsWheel(),
+        toggleQuickMute: () => toggleQuickMute(),
         toggleQuickUseFanout: () => toggleQuickUseFanout(),
         toggleSquadReady: () => toggleSquadReady(),
         toggleZoom: () => toggleZoom(),
@@ -20958,11 +22387,14 @@
       const UI_CHANGE_ACTIONS = Object.freeze({
         onAutoLootToggle: (el) => onAutoLootToggle(el.checked),
         onBatterySaverToggle: (el) => onBatterySaverToggle(el.checked),
+        onBtEarlyTriggerToggle: (el) => onBtEarlyTriggerToggle(el.checked),
         onHapticsToggle: (el) => onHapticsToggle(el.checked),
-        onReducedMotionToggle: (el) => onReducedMotionToggle(el.checked)
+        onReducedMotionToggle: (el) => onReducedMotionToggle(el.checked),
+        onSquadPrivacyToggle: (el) => onSquadPrivacyToggle(el.checked)
       });
 
       const UI_INPUT_ACTIONS = Object.freeze({
+        onAudioOffsetChange: (el) => onAudioOffsetChange(el.value),
         onControlScaleChange: (el) => onControlScaleChange(el.value),
         onHudEditorOpacityInput: (el) => onHudEditorOpacityInput(el.value),
         onHudEditorScaleInput: (el) => onHudEditorScaleInput(el.value),

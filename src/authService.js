@@ -20,13 +20,18 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  runTransaction,
   serverTimestamp,
 } from 'firebase/firestore';
 import {
   getFirebaseServices,
   isFirebaseConfigured,
   isRtdbConfigured,
+  isSandboxMode,
+  isSimBroadcastEnabled,
   SIM_CHANNEL_NAME,
+  SANDBOX_STORAGE_KEYS,
+  CLOUD_CACHE_STORAGE_KEYS,
   OperationType,
   handleFirestoreError,
   testFirestoreConnection,
@@ -34,9 +39,10 @@ import {
 
 // Excludes visually confusing characters 0, O, 1, I
 export const FRIEND_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const SIM_USERS_KEY = 'arcane_royale_sim_users_v1';
-const SIM_SESSION_KEY = 'arcane_royale_sim_session_v1';
-const SIM_CODES_KEY = 'arcane_royale_sim_friendcodes_v1';
+const SIM_USERS_KEY = SANDBOX_STORAGE_KEYS.users;
+const SIM_SESSION_KEY = SANDBOX_STORAGE_KEYS.session;
+const SIM_CODES_KEY = SANDBOX_STORAGE_KEYS.friendCodes;
+const RESERVED_NAME_PREFIX_RE = /^(admin|system|warbrite|dev)/i;
 
 export function generateFriendCode(rng = Math.random) {
   let code = '';
@@ -47,10 +53,27 @@ export function generateFriendCode(rng = Math.random) {
   return `ARC-${code}`;
 }
 
+export function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, (ch) => {
+    switch (ch) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      default: return ch;
+    }
+  });
+}
+
 export function validateChampionName(raw) {
-  const cleaned = String(raw || '').trim().replace(/[^a-zA-Z0-9_]/g, '');
-  if (cleaned.length < 3 || cleaned.length > 12) {
+  const trimmed = String(raw || '').trim();
+  const cleaned = trimmed.replace(/[^a-zA-Z0-9_]/g, '');
+  if (!/^[a-zA-Z0-9_]{3,12}$/.test(trimmed) || cleaned.length < 3 || cleaned.length > 12) {
     return { valid: false, cleaned: cleaned.slice(0, 12), error: 'Champion Name must be 3–12 letters, numbers, or underscores.' };
+  }
+  if (RESERVED_NAME_PREFIX_RE.test(cleaned)) {
+    return { valid: false, cleaned: cleaned.slice(0, 12), error: 'That name prefix is reserved (Admin, System, Warbrite, Dev).' };
   }
   return { valid: true, cleaned, error: null };
 }
@@ -167,6 +190,7 @@ function hashSimPassword(pw) {
 }
 
 function createSimChannel() {
+  if (!isSimBroadcastEnabled()) return null;
   if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined') return null;
   try {
     return new BroadcastChannel(SIM_CHANNEL_NAME);
@@ -244,6 +268,7 @@ class AuthServiceImpl {
     this.user = null;
     this.profile = null;
     this.ready = false;
+    this.lastSyncedAt = 0;
     this.sandboxAuth = !isFirebaseConfigured();
     this.sandboxRtdb = !isRtdbConfigured();
     this.listeners = new Set();
@@ -258,20 +283,32 @@ class AuthServiceImpl {
     }
   }
 
+  _persistCloudCache(profile) {
+    if (!profile || this.sandboxAuth) return;
+    writeJsonStorage(CLOUD_CACHE_STORAGE_KEYS.profile, profile);
+    writeJsonStorage(CLOUD_CACHE_STORAGE_KEYS.meta, { lastSyncedAt: this.lastSyncedAt || Date.now() });
+  }
+
   getState() {
     const isSandbox = this.sandboxAuth || this.sandboxRtdb;
     const provider = this.profile?.authProvider || (this.user?.isAnonymous ? 'anonymous' : 'password');
-    let statusLabel = 'Cloud Setup Pending · Local Sandbox Mode';
+    let statusLabel = 'Local Sandbox';
     if (!this.sandboxAuth && this.user) {
       if (this.sandboxRtdb) {
         statusLabel = this.user.isAnonymous
-          ? 'Cloud Auth (Guest) · Sandbox Squads'
-          : 'Cloud Auth Connected · Sandbox Squads';
+          ? 'Guest Account · Sandbox Squads'
+          : provider === 'google'
+            ? 'Google Account · Sandbox Squads'
+            : 'Email Account · Sandbox Squads';
       } else {
-        statusLabel = this.user.isAnonymous ? 'Cloud Sync Active (Guest)' : 'Cloud Sync Connected';
+        statusLabel = this.user.isAnonymous
+          ? 'Guest Account'
+          : provider === 'google'
+            ? 'Google Account'
+            : 'Email Account';
       }
     } else if (this.user && this.sandboxAuth) {
-      statusLabel = 'Cloud Setup Pending · Local Sandbox Mode';
+      statusLabel = this.user.isAnonymous ? 'Local Sandbox (Guest)' : 'Local Sandbox';
     }
     return {
       ready: this.ready,
@@ -287,6 +324,7 @@ class AuthServiceImpl {
       friendCode: this.profile?.friendCode || null,
       authProvider: provider,
       profile: this.profile,
+      lastSyncedAt: this.lastSyncedAt,
       statusLabel,
     };
   }
@@ -629,7 +667,7 @@ class AuthServiceImpl {
     }
 
     const { auth } = getFirebaseServices();
-    if (auth && !this.sandboxAuth) {
+    if (auth && !this.sandboxAuth && !isSandboxMode()) {
       try {
         const cred = await signInAnonymously(auth);
         await updateProfile(cred.user, { displayName: finalName }).catch(() => null);
@@ -858,8 +896,10 @@ class AuthServiceImpl {
           isPublic: true,
           updatedAt: serverTimestamp(),
         });
+        this.lastSyncedAt = Date.now();
+        this._persistCloudCache(finalMerged);
         this._emit();
-        return { ok: true, action: 'updated', profile: finalMerged };
+        return { ok: true, action: 'updated', profile: finalMerged, lastSyncedAt: this.lastSyncedAt };
       } catch (err) {
         try {
           handleFirestoreError(err, OperationType.WRITE, `users/${uid}`);
@@ -870,8 +910,152 @@ class AuthServiceImpl {
     }
 
     // Persist in local sandbox user store (keeps Friends/Leaderboard/Reload in sync)
+    this.lastSyncedAt = Date.now();
     this._saveSandboxAccount(uid, this.user.email, null, merged);
-    return { ok: true, action: 'sandbox_saved', profile: merged };
+    return { ok: true, action: 'sandbox_saved', profile: merged, lastSyncedAt: this.lastSyncedAt };
+  }
+
+  async updateDisplayName(newName) {
+    if (!this.user) return { ok: false, error: 'Sign in first to edit your Champion Name.' };
+    const check = validateChampionName(newName);
+    if (!check.valid) return { ok: false, error: check.error };
+    const clean = check.cleaned;
+    const lower = clean.toLowerCase();
+    const uid = this.user.uid;
+
+    const { auth, db } = getFirebaseServices();
+    if (auth && auth.currentUser && db && !this.sandboxAuth) {
+      try {
+        await updateProfile(auth.currentUser, { displayName: clean }).catch(() => null);
+        await updateDoc(doc(db, 'users', uid), {
+          displayName: clean,
+          displayNameLower: lower,
+          updatedAtMs: Date.now(),
+          updatedAt: serverTimestamp(),
+        });
+        this.user = { ...this.user, displayName: clean };
+        if (this.profile) {
+          this.profile = { ...this.profile, displayName: clean, displayNameLower: lower, updatedAtMs: Date.now() };
+          this.lastSyncedAt = Date.now();
+          this._persistCloudCache(this.profile);
+        }
+        this._emit();
+        return { ok: true, displayName: clean, state: this.getState() };
+      } catch (err) {
+        return { ok: false, error: formatFriendlyAuthError(err) };
+      }
+    }
+
+    const updatedProfile = {
+      ...(this.profile || buildDefaultUserDoc(uid, clean, 'anonymous', generateFriendCode())),
+      displayName: clean,
+      displayNameLower: lower,
+      updatedAtMs: Date.now(),
+    };
+    const codes = readJsonStorage(SIM_CODES_KEY, {});
+    if (updatedProfile.friendCode && codes[updatedProfile.friendCode]) {
+      codes[updatedProfile.friendCode].displayName = clean;
+      writeJsonStorage(SIM_CODES_KEY, codes);
+    }
+    this.lastSyncedAt = Date.now();
+    this._saveSandboxAccount(uid, this.user.email, null, updatedProfile);
+    return { ok: true, sandbox: true, displayName: clean, state: this.getState() };
+  }
+
+  async spendCurrencyTransaction({
+    costCoins = 0,
+    costCrystals = 0,
+    costGems = 0,
+    patch = {},
+  } = {}) {
+    const cCoins = Math.max(0, Math.floor(Number(costCoins) || 0));
+    const cCrystals = Math.max(0, Math.floor(Number(costCrystals) || 0));
+    const cGems = Math.max(0, Math.floor(Number(costGems) || 0));
+    if (!this.user) {
+      return { ok: true, localOnly: true };
+    }
+    const uid = this.user.uid;
+    const { db, auth } = getFirebaseServices();
+    if (db && auth?.currentUser && !this.sandboxAuth) {
+      const ref = doc(db, 'users', uid);
+      try {
+        const resultProfile = await runTransaction(db, async (tx) => {
+          const snap = await tx.get(ref);
+          if (!snap.exists()) {
+            throw new Error('Cloud profile not initialized.');
+          }
+          const cur = snap.data();
+          const curCoins = Number(cur.coins || 0);
+          const curCrystals = Number(cur.crystals || 0);
+          const curGems = Number(cur.gems || 0);
+          if (curCoins < cCoins || curCrystals < cCrystals || curGems < cGems) {
+            throw new Error('Insufficient currency balance.');
+          }
+          const next = {
+            ...patch,
+            coins: curCoins - cCoins,
+            crystals: curCrystals - cCrystals,
+            gems: curGems - cGems,
+            updatedAtMs: Date.now(),
+            updatedAt: serverTimestamp(),
+          };
+          tx.update(ref, next);
+          return {
+            ...cur,
+            ...patch,
+            coins: curCoins - cCoins,
+            crystals: curCrystals - cCrystals,
+            gems: curGems - cGems,
+            updatedAtMs: Date.now(),
+          };
+        });
+        this.profile = resultProfile;
+        this.lastSyncedAt = Date.now();
+        this._persistCloudCache(resultProfile);
+        this._emit();
+        return { ok: true, transactional: true, profile: resultProfile };
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : 'Transaction failed.' };
+      }
+    }
+
+    // Atomic local sandbox balance verification + update
+    const cur = this.profile || buildDefaultUserDoc(uid, this.user.displayName || 'ArcaneHero', 'anonymous', generateFriendCode());
+    const curCoins = Number(cur.coins || 0);
+    const curCrystals = Number(cur.crystals || 0);
+    const curGems = Number(cur.gems || 0);
+    if (curCoins < cCoins || curCrystals < cCrystals || curGems < cGems) {
+      return { ok: false, error: 'Insufficient currency balance.' };
+    }
+    const nextProfile = {
+      ...cur,
+      ...patch,
+      coins: curCoins - cCoins,
+      crystals: curCrystals - cCrystals,
+      gems: curGems - cGems,
+      updatedAtMs: Date.now(),
+    };
+    this.lastSyncedAt = Date.now();
+    this._saveSandboxAccount(uid, this.user.email, null, nextProfile);
+    return { ok: true, sandbox: true, profile: nextProfile };
+  }
+
+  resetLocalCacheAndHud() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(CLOUD_CACHE_STORAGE_KEYS.profile);
+        localStorage.removeItem(CLOUD_CACHE_STORAGE_KEYS.meta);
+        const toRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (k.startsWith('arcane_cloud_cache_') || k.startsWith('arcane_royale_hud_'))) {
+            toRemove.push(k);
+          }
+        }
+        toRemove.forEach((k) => localStorage.removeItem(k));
+      }
+    } catch {}
+    return { ok: true };
   }
 }
 

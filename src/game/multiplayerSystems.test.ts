@@ -141,19 +141,21 @@ test('createSeededRng is deterministic for same seed and distinct across seeds',
   }
 });
 
-test('packAoiBots filters by 950u AOI radius, tracks deadIds, and round-trips via unpackAoiBots', () => {
-  assert.equal(AOI_RADIUS, 950);
+test('packAoiBots filters by 600u AOI radius, tracks deadIds, and round-trips via unpackAoiBots', () => {
+  assert.equal(AOI_RADIUS, 600);
   const bots = [
     { netId: 1, isAlive: true, x: 1000, y: 1000, facingAngle: 1.24, hp: 112.4, animState: 'walk', charKey: 'TIDECALLER', primedElement: 'WATER' },
     { netId: 2, isAlive: true, x: 5000, y: 5000, facingAngle: 0, hp: 140, animState: 'idle', charKey: 'BERSERKER', primedElement: null },
     { netId: 3, isAlive: false, x: 1020, y: 1020, facingAngle: 0, hp: 0, animState: 'idle', charKey: 'SHADOW', primedElement: null },
-    { netId: 4, isAlive: true, x: 1800, y: 1000, facingAngle: -0.5, hp: 85, animState: 'attack', charKey: 'SHADOW', primedElement: 'DARK' },
+    { netId: 4, isAlive: true, x: 1550, y: 1050, facingAngle: -0.5, hp: 85, animState: 'attack', charKey: 'SHADOW', primedElement: 'DARK' },
+    { netId: 5, isAlive: true, x: 1800, y: 1050, facingAngle: 0.2, hp: 90, animState: 'walk', charKey: 'BERSERKER', primedElement: 'FIRE' },
   ];
   const humans = [{ alive: true, x: 1050, y: 1050 }];
   const packed = packAoiBots(bots, humans);
 
-  assert.equal(packed.aliveCount, 3);
+  assert.equal(packed.aliveCount, 4);
   assert.deepEqual(packed.deadIds, [3]);
+  // Bot 1 (70u) and Bot 4 (500u) included; Bot 2 (>5000u) and Bot 5 (750u > 600u) excluded
   assert.equal(packed.tuples.length, 2);
   assert.equal(packed.tuples[0].length, 8);
 

@@ -35,11 +35,19 @@ service cloud.firestore {
     }
 
     function isValidDisplayName(name) {
-      return name is string && name.size() >= 3 && name.size() <= 12 && name.matches('^[a-zA-Z0-9_]+$');
+      return name is string
+        && name.size() >= 3
+        && name.size() <= 12
+        && name.matches('^[a-zA-Z0-9_]+$')
+        && !name.lower().matches('^(admin|system|warbrite|dev).*');
     }
 
     function isValidLowerName(name) {
-      return name is string && name.size() >= 3 && name.size() <= 12 && name.matches('^[a-z0-9_]+$');
+      return name is string
+        && name.size() >= 3
+        && name.size() <= 12
+        && name.matches('^[a-z0-9_]+$')
+        && !name.matches('^(admin|system|warbrite|dev).*');
     }
 
     function isValidFriendCode(code) {
@@ -76,6 +84,23 @@ service cloud.firestore {
 
     function isValidOptionalMap(data, key, maxKeys) {
       return !(key in data) || (data[key] is map && data[key].keys().size() <= maxKeys);
+    }
+
+    function isValidTierVal(m, k) {
+      return !(k in m) || (m[k] is int && m[k] >= 0 && m[k] <= 25);
+    }
+
+    function isValidStatTiers(data) {
+      return !('statTiers' in data)
+        || (data.statTiers is map
+          && data.statTiers.keys().size() <= 8
+          && isValidTierVal(data.statTiers, 'PWR')
+          && isValidTierVal(data.statTiers, 'FOC')
+          && isValidTierVal(data.statTiers, 'AGI')
+          && isValidTierVal(data.statTiers, 'VIT')
+          && isValidTierVal(data.statTiers, 'maxHealth')
+          && isValidTierVal(data.statTiers, 'movementSpeed')
+          && isValidTierVal(data.statTiers, 'attackPower'));
     }
 
     function isValidOptionalStringOrNull(data, key, maxLen) {
@@ -116,7 +141,7 @@ service cloud.firestore {
         && isValidOptionalStringOrNull(data, 'equippedRune', 32)
         && isValidOptionalList(data, 'unlockedTrails', 12)
         && isValidOptionalStringOrNull(data, 'equippedTrail', 32)
-        && isValidOptionalMap(data, 'statTiers', 8)
+        && isValidStatTiers(data)
         && isValidCareerStats(data.careerStats)
         && isValidOptionalMap(data, 'hudLayouts', 4)
         && (!('createdAtMs' in data) || (data.createdAtMs is int && data.createdAtMs >= 0))
@@ -130,7 +155,7 @@ service cloud.firestore {
     // ==========================================
     match /users/{userId} {
       allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || existing().isPublic == true);
-      allow list: if isSignedIn() && resource.data.isPublic == true;
+      allow list: if isSignedIn() && resource.data.isPublic == true && request.query.limit <= 50;
       allow create: if isValidId(userId)
         && isOwner(userId)
         && isValidUserProfile(incoming())
@@ -143,6 +168,13 @@ service cloud.firestore {
         && incoming().friendCode == existing().friendCode
         && incoming().createdAt == existing().createdAt
         && incoming().updatedAt == request.time
+        // PRODUCTION LAUNCH: tighten to 2500 coins / 0 direct gem grants once DEV_DEMO_ENABLED = false and server IAP is live
+        && (incoming().coins - existing().coins) <= 10000
+        && (incoming().crystals - existing().crystals) <= 10000
+        && (incoming().gems - existing().gems) <= 10000
+        && (incoming().xp - existing().xp) <= 2500
+        && (incoming().careerStats.wins - existing().careerStats.wins) <= 1
+        && (incoming().careerStats.elims - existing().careerStats.elims) <= 49
         && incoming().diff(existing()).affectedKeys().hasOnly([
           'displayName', 'displayNameLower', 'authProvider', 'isPublic',
           'level', 'xp', 'coins', 'crystals', 'gems',
