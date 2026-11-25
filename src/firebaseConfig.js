@@ -200,7 +200,7 @@ export async function testFirestoreConnection() {
   if (connectionCheckPromise) return connectionCheckPromise;
   connectionCheckPromise = (async () => {
     try {
-      await withTimeout(getDocFromServer(doc(db, 'test', 'connection')), 5000, 'firestore-timeout');
+      await getDocFromServer(doc(db, 'test', 'connection'));
       console.info('[FirebaseConfig] Cloud Firestore connection verified.', {
         projectId: FIREBASE_CONFIG.projectId,
         firestoreDatabaseId: FIREBASE_CONFIG.firestoreDatabaseId,
@@ -208,6 +208,7 @@ export async function testFirestoreConnection() {
       return true;
     } catch (error) {
       const code = String(error?.code || '');
+      const message = error instanceof Error ? error.message : String(error);
       if (code === 'permission-denied' || code === 'not-found') {
         console.info('[FirebaseConfig] Cloud Firestore backend reachable (security rules active).', {
           code,
@@ -216,15 +217,16 @@ export async function testFirestoreConnection() {
         });
         return true;
       }
-      if (error instanceof Error && error.message.includes('the client is offline')) {
+      if (error instanceof Error && message.includes('the client is offline')) {
         console.error('Please check your Firebase configuration.');
+      } else {
+        console.warn('[FirebaseConfig] Cloud Firestore startup probe did not complete cleanly:', {
+          code: code || 'connection-warning',
+          message,
+          projectId: FIREBASE_CONFIG.projectId,
+          firestoreDatabaseId: FIREBASE_CONFIG.firestoreDatabaseId,
+        });
       }
-      console.error('[FirebaseConfig] Cloud Firestore connection check failed:', {
-        code: code || 'connection-error',
-        message: error instanceof Error ? error.message : String(error),
-        projectId: FIREBASE_CONFIG.projectId,
-        firestoreDatabaseId: FIREBASE_CONFIG.firestoreDatabaseId,
-      });
       return false;
     } finally {
       connectionCheckPromise = null;
@@ -262,14 +264,14 @@ export async function runFirebaseDiagnostics() {
         detail: 'Firebase Auth failed to initialize. Check your Firebase web config.',
       };
 
-  // 2 & 3. Run Cloud Firestore and Realtime Database probes in parallel (<= 3.5s max)
+  // 2 & 3. Run Cloud Firestore and Realtime Database probes in parallel
   const checkFirestore = async () => {
     if (!db) {
       return { ok: false, label: 'Offline', detail: 'Firestore not initialized.' };
     }
     try {
       const probeRef = currentUser ? doc(db, 'users', currentUser.uid) : doc(db, 'test', 'connection');
-      await withTimeout(getDocFromServer(probeRef), 3500, 'firestore-timeout');
+      await withTimeout(getDocFromServer(probeRef), 10000, 'firestore-timeout');
       return {
         ok: true,
         label: 'Connected',
